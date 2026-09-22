@@ -6,13 +6,14 @@ for (const line of topology.lines) {
         const [a, ad] = line.stations[i - 1], [b, bd] = line.stations[i];
         const from = `tra:${a}`, to = `tra:${b}`;
         const distance = Math.abs(Number(bd) - Number(ad));
-        if (!Number.isFinite(distance) || distance <= 0) continue;
+        if (!Number.isFinite(distance) || distance < 0) continue;
         for (const [x, y] of [[from, to], [to, from]]) {
             if (!graph.has(x)) graph.set(x, new Map());
             graph.get(x)!.set(y, Math.min(graph.get(x)!.get(y) ?? Infinity, distance));
         }
     }
 }
+const distanceMaps = new Map<string, Map<string, number>>();
 const routes = new Map<string, Map<string, string>>();
 const paths = new Map<string, string[]>();
 /** Expand skipped stops using the official rail network, rather than straight-line geography. */
@@ -40,6 +41,7 @@ export function passedRailStations(from: string, to: string): string[] {
             }
         }
         routes.set(from, previous);
+        distanceMaps.set(from, distances);
     }
     const previous = routes.get(from)!;
     const path = [to];
@@ -52,4 +54,13 @@ export function passedRailStations(from: string, to: string): string[] {
     }
     paths.set(key, path);
     return path;
+}
+
+/** Mainline steps must approach the destination, avoiding a long one-way loop around Taiwan. */
+export function approachesDestination(from: string, to: string, destination: string): boolean {
+    if (!graph.has(from) || !graph.has(to) || !graph.has(destination)) return true;
+    passedRailStations(destination, from);
+    const distances = distanceMaps.get(destination)!;
+    const before = distances.get(from), after = distances.get(to);
+    return before === undefined || after === undefined || after <= before;
 }

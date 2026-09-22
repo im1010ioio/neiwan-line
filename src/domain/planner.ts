@@ -1,5 +1,5 @@
 import type { Journey, Leg, Train } from "./types";
-import { passedRailStations } from "./rail-path";
+import { passedRailStations, approachesDestination } from "./rail-path";
 import { addDays } from "./query";
 
 export interface PlannerFilters { traMaxMinutes?: number; thsrMaxMinutes?: number; metroMaxMinutes?: number; reservedOnly?: boolean; directOnly?: boolean; }
@@ -34,8 +34,10 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
     const start = Date.parse(`${date}T00:00:00+08:00`);
     const end = Date.parse(`${addDays(date, 1)}T00:00:00+08:00`);
     const usesHighSpeed = origin.startsWith("thsr:") || destination.startsWith("thsr:");
+    const railTarget = destination.startsWith("thsr:") ? "tra:1194" : destination;
     const connections = trains.filter(t => t.operator === "tra" || usesHighSpeed).flatMap(train =>
         train.stops.slice(0, -1).map((from, i) => ({ train, from, to: train.stops[i + 1], i })))
+        .filter(c => c.train.operator !== "tra" || (branchStations.has(c.from.station) && branchStations.has(c.to.station)) || approachesDestination(c.from.station, c.to.station, railTarget))
         .filter(c => !filters.reservedOnly || c.train.reserved === true || (branchStations.has(c.from.station) && branchStations.has(c.to.station)))
         .filter(c => c.from.departure >= start && c.from.departure < end + 86400000)
         .sort((a, b) => a.from.departure - b.from.departure || a.i - b.i);

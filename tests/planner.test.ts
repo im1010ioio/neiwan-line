@@ -130,6 +130,9 @@ it("跳停列車不能掩蓋先南下竹南、高雄再北上板橋的折返", (
     expect(planJourneys(trains, "tra:1208", "tra:1020", "2026-09-21")).toEqual([]);
     trains.push(train("north", [["tra:1210", "08:56"], ["tra:1020", "10:00"]]));
     expect(planJourneys(trains, "tra:1208", "tra:1020", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["branch", "shuttle", "north"]]);
+    for (const t of trains) for (const stop of t.stops) if (stop.station === "tra:1020") stop.station = "tra:1000";
+    expect(planJourneys(trains, "tra:1208", "tra:1000", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["branch", "shuttle", "north"]]);
+
 });
 
 it("回程也排除越過板橋後折返，正常南下幹線與竹中換車仍保留", () => {
@@ -146,4 +149,16 @@ it("回程也排除越過板橋後折返，正常南下幹線與竹中換車仍�
         train("south", [["tra:1210", "09:05"], ["tra:1250", "09:20"], ["tra:4400", "12:00"]]),
     ];
     expect(planJourneys(southbound, "tra:1208", "tra:4400", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["branch", "south"]]);
+});
+
+it("不列出經南迴與東部繞一圈到台北，正常北上經板橋到台北仍可搭", () => {
+    const trains = [
+        train("branch", [["tra:1208", "08:00"], ["tra:1210", "09:00"]]),
+        train("south", [["tra:1210", "09:05"], ["tra:4400", "12:00"]]),
+        train("east", [["tra:4400", "12:05"], ["tra:6000", "14:00"]]),
+        train("circle", [["tra:6000", "14:05"], ["tra:1000", "18:00"]]),
+    ];
+    expect(planJourneys(trains, "tra:1208", "tra:1000", "2026-09-21")).toEqual([]);
+    trains.push(train("north", [["tra:1210", "09:06"], ["tra:1020", "09:55"], ["tra:1010", "10:00"], ["tra:1000", "10:05"]]));
+    expect(planJourneys(trains, "tra:1208", "tra:1000", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["branch", "north"]]);
 });
