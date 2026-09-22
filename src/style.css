@@ -456,3 +456,21 @@ footer a:hover, footer .text-button:hover, .privacy a { color: var(--primary); }
 }
 
 input::placeholder { color: var(--muted); opacity: 1; }
+
+/* Keep installed windows clear of camera cutouts and the home indicator. */
+body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+.site-header { height: calc(72px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
+footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
+.consent-banner { bottom: calc(20px + env(safe-area-inset-bottom)); }
+.home-screen-help summary { cursor: pointer; color: var(--primary); padding-block: 10px; min-height: 44px; }
+.home-screen-help summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 4px; }
+@media (display-mode: standalone) {
+    .home-screen-help { display: none; }
+}
+@media (min-width: 641px) {
+    .site-header { height: calc(88px + env(safe-area-inset-top)); }
+}
+@media (max-width: 640px) {
+    footer { padding-bottom: calc(230px + env(safe-area-inset-bottom)); }
+    .consent-banner { bottom: calc(14px + env(safe-area-inset-bottom)); }
+}

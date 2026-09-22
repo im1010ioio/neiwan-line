@@ -1,0 +1,26 @@
+{
+    "id": "./",
+    "name": "內灣線轉乘",
+    "short_name": "內灣線轉乘",
+    "description": "查詢內灣線往返台鐵、高鐵與機場捷運的班次與轉乘行程。",
+    "lang": "zh-Hant-TW",
+    "start_url": "./",
+    "scope": "./",
+    "display": "standalone",
+    "background_color": "#f0f1f5",
+    "theme_color": "#f0f1f5",
+    "icons": [
+        {
+            "src": "./icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "./icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ]
+}
