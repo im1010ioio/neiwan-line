@@ -474,3 +474,12 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
     footer { padding-bottom: calc(230px + env(safe-area-inset-bottom)); }
     .consent-banner { bottom: calc(14px + env(safe-area-inset-bottom)); }
 }
+
+.schedule-status { display: flex; align-items: flex-start; gap: 10px; flex-wrap: wrap; padding: 14px 16px; margin-bottom: 24px; border: 1px solid var(--line); border-radius: 14px; color: var(--muted); background: var(--surface-soft); font-size: 13px; }
+.schedule-status > div { flex: 1 1 190px; min-width: 0; }
+.schedule-status strong { display: block; font-size: 14px; font-weight: 600; }
+.schedule-status p { margin: 4px 0 0; line-height: 1.6; }
+.schedule-status-dot { width: 7px; height: 7px; margin-top: 7px; border-radius: 50%; background: currentColor; flex: 0 0 7px; }
+.schedule-status--ready { color: var(--success); background: var(--success-bg); border-color: color-mix(in srgb, var(--success) 25%, var(--surface)); }
+.schedule-status--warning { color: var(--route-tag-ink); background: var(--route-tag-bg); border-color: color-mix(in srgb, var(--warning-line) 45%, var(--surface)); }
+.schedule-status > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }

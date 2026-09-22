@@ -328,3 +328,36 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     await expect(page.getByRole("heading", { name: "班表尚未更新" })).toBeVisible();
     await expect(page.locator(".journey-card")).toHaveCount(0);
 });
+
+test("班表狀態依搭乘日期判斷，昨日取得的未來班表仍可使用", async ({ page }) => {
+    const status = page.locator(".schedule-status");
+    await expect(status).toHaveClass(/schedule-status--ready/);
+    await expect(status).toContainText("2026/09/21 班表已取得");
+    await expect(status).toContainText("2026/09/21 04:30");
+    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-22");
+    await expect(status).toHaveClass(/schedule-status--ready/);
+    await page.clock.setFixedTime(new Date("2026-09-22T08:00:00+08:00"));
+    await page.reload();
+    await expect(status).toHaveClass(/schedule-status--ready/);
+    await expect(status).toContainText("2026/09/22 班表已取得");
+    await expect(status).toContainText("最後更新：2026/09/21 04:30");
+    await expect(status.getByRole("link", { name: "手動更新" })).toHaveCount(0);
+    const position = await page.evaluate(() => ({
+        statusTop: document.querySelector(".schedule-status")!.getBoundingClientRect().top,
+        statusBottom: document.querySelector(".schedule-status")!.getBoundingClientRect().bottom,
+        queryBottom: document.querySelector(".search-panel")!.getBoundingClientRect().bottom,
+        resultsTop: document.querySelector("#results")!.getBoundingClientRect().top,
+    }));
+    expect(position.statusTop).toBeGreaterThanOrEqual(position.queryBottom);
+    expect(position.statusBottom).toBeLessThanOrEqual(position.resultsTop);
+});
+
+
+test("所選日期缺少班表時，顯示日期與內灣線手動更新入口", async ({ page }) => {
+    await page.route("**/data/*.json", route => route.fulfill({ status: 404, body: "" }));
+    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-23");
+    const status = page.locator(".schedule-status");
+    await expect(status).toHaveClass(/schedule-status--warning/);
+    await expect(status).toContainText("2026/09/23 班表尚未取得");
+    await expect(status.getByRole("link", { name: "手動更新" })).toHaveAttribute("href", "https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml");
+});
