@@ -386,7 +386,5 @@ button.transfer-hint { min-height: 44px; text-align: left; line-height: 1.6; }
 .privacy hr { margin: 32px 0; border: 0; border-top: 1px solid var(--line); }
 .privacy a { overflow-wrap: anywhere; }
 
-.metro-filter { margin-top: 20px; }
-.metro-filter p { font-size: 14px; color: var(--muted); line-height: 1.7; }
 .train-tag.tymc { background: var(--primary-soft); color: var(--primary-ink); }
 .operator-tabs button { min-width: 0; white-space: nowrap; }
