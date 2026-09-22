@@ -46,6 +46,9 @@ it("機捷去回程必經竹中、六家、高鐵新竹及桃園，A18 本身只
     const outgoing = [train("N", "tra", [["tra:1208", "07:30"], ["tra:1193", "08:00"]]), train("L", "tra", [["tra:1193", "08:05"], ["tra:1194", "08:10"]]), train("H", "thsr", [["thsr:1030", "08:25"], ["thsr:1020", "09:00"]])];
     const journeys = planAirportJourneys(outgoing, "tra:1208", "tymc:A12", date, {}, snapshot);
     expect(journeys).toHaveLength(2);
+    expect(planAirportJourneys(outgoing, "tra:1208", "tymc:A12", date, { thsrMaxMinutes: 40, metroMaxMinutes: 11 }, snapshot)).toHaveLength(1);
+    expect(planAirportJourneys(outgoing, "tra:1208", "tymc:A12", date, { thsrMaxMinutes: 40, metroMaxMinutes: 12 }, snapshot)).toHaveLength(1);
+    expect(planAirportJourneys(outgoing, "tra:1208", "tymc:A12", date, { thsrMaxMinutes: 40, metroMaxMinutes: 13 }, snapshot)).toHaveLength(2);
     expect(journeys[0].legs.map(l => l.operator)).toEqual(["tra", "tra", "thsr", "tymc"]);
     expect(planAirportJourneys(outgoing, "tra:1208", "tymc:A18", date, {}, snapshot)[0]).toMatchObject({ arrival: at("09:10"), accessWalk: { destination: "tymc:A18" } });
     const returning = [train("H", "thsr", [["thsr:1020", "08:30"], ["thsr:1030", "09:00"]]), train("L", "tra", [["tra:1194", "09:10"], ["tra:1193", "09:15"]]), train("N", "tra", [["tra:1193", "09:20"], ["tra:1208", "10:00"]])];
@@ -60,8 +63,8 @@ it("機捷轉乘至少十分鐘且嚴格小於設定上限，儲存車種不影�
     expect(filterAvailability("tra:1208", "tymc:A12")).toEqual({ reserved: false, direct: false });
     let saved = "";
     const storage = { removeItem: () => { saved = ""; }, getItem: () => saved, setItem: (_: string, value: string) => { saved = value; } };
-    saveFilters(storage, { reservedOnly: true, directOutbound: true, directReturn: true, metroService: "express" });
-    expect(loadFilters(storage).metroService).toBe("express");
+    storage.setItem("neiwan.filters.v1", JSON.stringify({ reservedOnly: true, directOutbound: true, directReturn: true, metroService: "express" }));
+    expect(loadFilters(storage)).toEqual({ reservedOnly: true, directOutbound: true, directReturn: true });
 });
 it("午夜班次屬前一營運日，且不得越過該班終點", () => {
     const night = structuredClone(snapshot);

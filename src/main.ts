@@ -7,7 +7,7 @@ import { defaults, loadPreferences, savePreferences, PREFERENCES_KEY } from "./p
 import type { StorageLike } from "./preferences";
 import type { DayData, Journey, Station } from "./domain/types";
 import { loadMetro } from "./metro-loader";
-import type { MetroSnapshot, MetroService } from "./domain/metro";
+import type { MetroSnapshot } from "./domain/metro";
 import { loadDay } from "./data-loader";
 import { CONSENT_KEY, createAnalytics } from "./analytics";
 import type { Consent } from "./analytics";
@@ -82,7 +82,7 @@ function results() {
     if (phase === "missing") return `<div class="empty-state" role="status"><span class="empty-icon">◷</span><h2>班表尚未更新</h2><p>所選日期的${preferences.other.startsWith("tymc:") ? "台鐵、高鐵或機捷" : preferences.other.startsWith("thsr:") ? "台鐵或高鐵" : "台鐵"}資料尚未完整取得。請稍後再試，或查看官方班表。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     if (phase === "error") return `<div class="empty-state" role="alert"><h2>暫時無法整理行程</h2><p>請重新讀取班表後再試。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     const visible = filterJourneys(journeys, { date: preferences.date, time, showPast }, new Date());
-    if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘須未滿 ${preferences.traMaxMinutes} 分鐘，高鐵接駁須未滿 ${preferences.thsrMaxMinutes} 分鐘。可在設定中調整。</p>${(Object.values(activeRouteFilters()).some(Boolean) || (preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" && filters.metroService && filters.metroService !== "all")) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
+    if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘須未滿 ${preferences.traMaxMinutes} 分鐘，高鐵接駁須未滿 ${preferences.thsrMaxMinutes} 分鐘。${preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" ? `機捷接駁須未滿 ${preferences.metroMaxMinutes} 分鐘。` : ""}可在設定中調整。</p>${Object.values(activeRouteFilters()).some(Boolean) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
     return `<div class="results-heading"><h2>可搭行程 <span>${visible.length} 組</span></h2><span>依出發時間排序</span></div><div class="journey-list">${(showAll ? visible : visible.slice(0, 3)).map(card).join("")}</div>${visible.length > 3 ? `<button id="show-all" class="secondary show-all">${showAll ? "收合為前 3 組" : `顯示全部 ${visible.length} 組`}</button>` : ""}`;
 }
 function card(journey: Journey) {
@@ -134,7 +134,7 @@ function privacyPage() {
         <hr>
         <h2>隱私權聲明</h2>
         <h3>查詢偏好與本機儲存</h3>
-        <p>本網站不要求您註冊帳號或提供姓名、電子郵件等身分資料。為了方便下次使用，本網站使用瀏覽器的 localStorage 記住起迄站、方向、查詢日期、出發準備時間、台鐵轉乘與高鐵接駁上限、機捷車種、對號列車及各方向的「內灣新竹直達車」篩選，以及您對網站分析的選擇。</p>
+        <p>本網站不要求您註冊帳號或提供姓名、電子郵件等身分資料。為了方便下次使用，本網站使用瀏覽器的 localStorage 記住起迄站、方向、查詢日期、出發準備時間、台鐵轉乘、高鐵與機捷接駁上限、對號列車及各方向的「內灣新竹直達車」篩選，以及您對網站分析的選擇。</p>
         <p>這些查詢偏好儲存在您的瀏覽器，不會跨裝置同步，也不會作為分析事件傳送給 GA。手動出發時間與「顯示已過組合」不會跨次開啟保留；查詢日期過期後會自動切回今天，起迄站與方向維持原設定。本機偏好會保留到您清除網站資料或使用下方清除功能為止。</p>
         <h3>Cookie 與 Google Analytics 分析</h3>
         <p>只有在您選擇允許 Cookie 與 GA 分析後，本網站才會載入已設定的 Google Analytics，統計瀏覽量及開啟設定、查看隱私說明、展開行程等一般互動。分析不包含起迄站、搭乘日期、出發時間、準備時間、轉乘上限或查詢結果。</p>
@@ -177,7 +177,7 @@ function activeRouteFilters() {
 }
 function filterControls() {
     const available = filterAvailability(preferences.neiwan, preferences.other);
-    if (preferences.other.startsWith("tymc:")) return `<div class="metro-filter"><p>經高鐵新竹、桃園站轉乘機捷 A18。</p>${preferences.other !== "tymc:A18" ? `<label>機捷車種<select id="metro-service" aria-label="機捷車種"><option value="all" ${(filters.metroService ?? "all") === "all" ? "selected" : ""}>全部車種</option><option value="express" ${filters.metroService === "express" ? "selected" : ""}>僅直達車</option><option value="local" ${filters.metroService === "local" ? "selected" : ""}>僅普通車</option></select></label><p class="filter-note">依停靠 A18 與所選車站的班次查詢；僅直達車可能沒有符合班次。機捷抵達時間依官方旅行時間預估，不含臨時加班車或誤點，請預留緩衝。</p>` : '<p class="filter-note">A18 與高鐵桃園站間以步行銜接，不需搭乘機捷列車。</p>'}<p class="filter-note"><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷最新班表與臨時調整 ↗</a></p></div>`;
+    if (preferences.other.startsWith("tymc:")) return `<div class="metro-filter"><p>經高鐵新竹、桃園站轉乘機捷 A18。</p>${preferences.other !== "tymc:A18" ? `<p class="filter-note">依停靠 A18 與所選車站的班次查詢。機捷抵達時間依官方旅行時間預估，不含臨時加班車或誤點，請預留緩衝。</p>` : '<p class="filter-note">A18 與高鐵桃園站間以步行銜接，不需搭乘機捷列車。</p>'}<p class="filter-note"><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷最新班表與臨時調整 ↗</a></p></div>`;
     if (!available.reserved && !available.direct) return "";
     const active = activeRouteFilters();
     return `<div class="journey-filters" aria-label="行程篩選">${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${available.reserved ? '<p class="filter-note">對號列車篩選適用於幹線，內灣線與六家線仍可搭區間車。</p>' : ""}</div>`;
@@ -187,7 +187,7 @@ function persistFilters() {
 }
 function render() {
     const privacy = location.hash === "#privacy";
-    app.innerHTML = `${heading()}${notice ? `<div class="notice" role="status">${escapeHtml(notice)}</div>` : ""}${privacy ? privacyPage() : `<main><section class="intro"><p class="eyebrow accent">NEIWAN LINE · RAIL JOURNEYS</p><h1>內灣線轉乘攻略</h1><p>往來內灣老街，查詢班次再也不麻煩。</p></section><section class="search-panel" aria-label="車班查詢條件"><div class="route-picker">${endpointButton(preferences.reversed ? "other" : "neiwan", "起")}<span class="route-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></span>${endpointButton(preferences.reversed ? "neiwan" : "other", "迄")}<button id="swap" class="swap-button" aria-label="交換起迄站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></svg></button></div><div class="query-controls"><label><span class="eyebrow">出發日期</span><select id="date" aria-label="出發日期">${dateOptions(new Date()).map(([value, label]) => `<option value="${value}" ${value === preferences.date ? "selected" : ""}>${label}</option>`).join("")}</select></label><label><span class="eyebrow">出發時間</span><select id="time" aria-label="出發時間">${preferences.date === today ? `<option value="now" ${time === "now" ? "selected" : ""}>現在出發</option>` : ""}<option value="all" ${time === "all" ? "selected" : ""}>全天</option>${Array.from({ length: 20 }, (_, i) => `${String(i + 4).padStart(2, "0")}:00`).map(value => `<option value="${value}" ${time === value ? "selected" : ""}>${value} 以後</option>`).join("")}</select></label></div>${filterControls()}<div class="filter-row">${preferences.date === today ? `<label class="checkbox"><input type="checkbox" id="past" ${showPast ? "checked" : ""}>顯示已過組合</label>${showPast ? '<span class="muted">包含已發車行程</span>' : ""}` : '<span class="muted">未來班表 · 預定班次</span>'}<button type="button" id="transfer-settings" class="transfer-hint text-button" aria-label="調整轉乘時間上限">台鐵 5–未滿 ${preferences.traMaxMinutes} 分 · 高鐵接駁 10–未滿 ${preferences.thsrMaxMinutes} 分 · 調整</button></div></section><section id="results" aria-label="查詢結果">${results()}</section>${statusLine()}<section class="features-note"><div><span class="eyebrow">下次，慢慢探索</span><h2>內灣線特色</h2><p>列車、車站、景點、故事與美食，內容準備中。</p></div><span class="outline-badge">即將推出</span></section></main>`}${footer()}${consentBanner()}<dialog id="station-dialog" aria-labelledby="station-dialog-title"></dialog><dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-header"><h2 id="settings-title">查詢與隱私設定</h2><button class="icon-button close-settings" aria-label="關閉設定">×</button></div><div class="settings-body"><label for="preparation">出發準備時間（分鐘）</label><p>少於這段時間的班次會顯示黃色提醒，不會隱藏。</p><input id="preparation" type="number" min="0" max="180" step="1" value="${preferences.preparation}"><label for="tra-max">台鐵轉乘上限（分鐘）</label><p>至少 5 分鐘、未滿此上限；可設定 6–180 分鐘。</p><input id="tra-max" type="number" min="6" max="180" step="1" value="${preferences.traMaxMinutes}"><label for="thsr-max">高鐵接駁上限（分鐘）</label><p>含六家與高鐵新竹間步行，至少 10 分鐘、未滿此上限；可設定 11–180 分鐘。</p><input id="thsr-max" type="number" min="11" max="180" step="1" value="${preferences.thsrMaxMinutes}"><button id="save-settings" class="primary">儲存設定</button><hr><h3>網站分析</h3><p id="analytics-consent-status" role="status" aria-live="polite">${consentLabel()}</p>${analytics.configured ? "" : "<p>網站尚未啟用 GA，目前不會傳送分析資料；你的同意選擇仍會保留。</p>"}<div class="privacy-actions"><button class="secondary" id="settings-allow" aria-pressed="${consent === 'granted'}">允許分析</button><button class="secondary" id="settings-deny" aria-pressed="${consent === 'denied'}">拒絕分析</button></div><a href="#privacy" id="settings-privacy">閱讀隱私權與使用條款</a></div></dialog>`;
+    app.innerHTML = `${heading()}${notice ? `<div class="notice" role="status">${escapeHtml(notice)}</div>` : ""}${privacy ? privacyPage() : `<main><section class="intro"><p class="eyebrow accent">NEIWAN LINE · RAIL JOURNEYS</p><h1>內灣線轉乘攻略</h1><p>往來內灣老街，查詢班次再也不麻煩。</p></section><section class="search-panel" aria-label="車班查詢條件"><div class="route-picker">${endpointButton(preferences.reversed ? "other" : "neiwan", "起")}<span class="route-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></span>${endpointButton(preferences.reversed ? "neiwan" : "other", "迄")}<button id="swap" class="swap-button" aria-label="交換起迄站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></svg></button></div><div class="query-controls"><label><span class="eyebrow">出發日期</span><select id="date" aria-label="出發日期">${dateOptions(new Date()).map(([value, label]) => `<option value="${value}" ${value === preferences.date ? "selected" : ""}>${label}</option>`).join("")}</select></label><label><span class="eyebrow">出發時間</span><select id="time" aria-label="出發時間">${preferences.date === today ? `<option value="now" ${time === "now" ? "selected" : ""}>現在出發</option>` : ""}<option value="all" ${time === "all" ? "selected" : ""}>全天</option>${Array.from({ length: 20 }, (_, i) => `${String(i + 4).padStart(2, "0")}:00`).map(value => `<option value="${value}" ${time === value ? "selected" : ""}>${value} 以後</option>`).join("")}</select></label></div>${filterControls()}<div class="filter-row">${preferences.date === today ? `<label class="checkbox"><input type="checkbox" id="past" ${showPast ? "checked" : ""}>顯示已過組合</label>${showPast ? '<span class="muted">包含已發車行程</span>' : ""}` : '<span class="muted">未來班表 · 預定班次</span>'}<button type="button" id="transfer-settings" class="transfer-hint text-button" aria-label="調整轉乘時間上限">台鐵 5–未滿 ${preferences.traMaxMinutes} 分 · 高鐵接駁 10–未滿 ${preferences.thsrMaxMinutes} 分${preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" ? ` · 機捷接駁 10–未滿 ${preferences.metroMaxMinutes} 分` : ""} · 調整</button></div></section><section id="results" aria-label="查詢結果">${results()}</section>${statusLine()}<section class="features-note"><div><span class="eyebrow">下次，慢慢探索</span><h2>內灣線特色</h2><p>列車、車站、景點、故事與美食，內容準備中。</p></div><span class="outline-badge">即將推出</span></section></main>`}${footer()}${consentBanner()}<dialog id="station-dialog" aria-labelledby="station-dialog-title"></dialog><dialog id="settings-dialog" aria-labelledby="settings-title"><div class="dialog-header"><h2 id="settings-title">查詢與隱私設定</h2><button class="icon-button close-settings" aria-label="關閉設定">×</button></div><div class="settings-body"><label for="preparation">出發準備時間（分鐘）</label><p>少於這段時間的班次會顯示黃色提醒，不會隱藏。</p><input id="preparation" type="number" min="0" max="180" step="1" value="${preferences.preparation}"><label for="tra-max">台鐵轉乘上限（分鐘）</label><p>至少 5 分鐘、未滿此上限；可設定 6–180 分鐘。</p><input id="tra-max" type="number" min="6" max="180" step="1" value="${preferences.traMaxMinutes}"><label for="thsr-max">高鐵接駁上限（分鐘）</label><p>含六家與高鐵新竹間步行，至少 10 分鐘、未滿此上限；可設定 11–180 分鐘。</p><input id="thsr-max" type="number" min="11" max="180" step="1" value="${preferences.thsrMaxMinutes}"><label for="metro-max">機捷接駁上限（分鐘）</label><p>含高鐵桃園與機捷 A18 間步行，至少 10 分鐘、未滿此上限；可設定 11–180 分鐘。</p><input id="metro-max" type="number" min="11" max="180" step="1" value="${preferences.metroMaxMinutes}"><button id="save-settings" class="primary">儲存設定</button><hr><h3>網站分析</h3><p id="analytics-consent-status" role="status" aria-live="polite">${consentLabel()}</p>${analytics.configured ? "" : "<p>網站尚未啟用 GA，目前不會傳送分析資料；你的同意選擇仍會保留。</p>"}<div class="privacy-actions"><button class="secondary" id="settings-allow" aria-pressed="${consent === 'granted'}">允許分析</button><button class="secondary" id="settings-deny" aria-pressed="${consent === 'denied'}">拒絕分析</button></div><a href="#privacy" id="settings-privacy">閱讀隱私權與使用條款</a></div></dialog>`;
     bind();
 }
 function on(id: string, event: string, handler: (event: Event) => void) { document.getElementById(id)?.addEventListener(event, handler); }
@@ -196,7 +196,6 @@ function bind() {
     on("reserved-filter", "change", event => { filters.reservedOnly = (event.target as HTMLInputElement).checked; persistFilters(); showAll = showPast; void refresh(); });
     on("direct-filter", "change", event => { filters[preferences.reversed ? "directReturn" : "directOutbound"] = (event.target as HTMLInputElement).checked; persistFilters(); showAll = showPast; void refresh(); });
     on("clear-filters", "click", () => {
-        filters.metroService = "all";
         filters.reservedOnly = false;
         filters[preferences.reversed ? "directReturn" : "directOutbound"] = false;
         persistFilters(); void refresh();
@@ -217,16 +216,17 @@ function bind() {
         const input = document.querySelector<HTMLInputElement>("#preparation")!;
         const traMax = document.querySelector<HTMLInputElement>("#tra-max")!;
         const thsrMax = document.querySelector<HTMLInputElement>("#thsr-max")!;
-        for (const field of [input, traMax, thsrMax]) {
+        const metroMax = document.querySelector<HTMLInputElement>("#metro-max")!;
+        for (const field of [input, traMax, thsrMax, metroMax]) {
             field.required = true;
             if (!field.reportValidity()) return;
         }
         preferences.preparation = Number(input.value);
         preferences.traMaxMinutes = Number(traMax.value);
         preferences.thsrMaxMinutes = Number(thsrMax.value);
+        preferences.metroMaxMinutes = Number(metroMax.value);
         persist(); showAll = showPast; void refresh();
     });
-    on("metro-service", "change", event => { filters.metroService = (event.target as HTMLSelectElement).value as MetroService; persistFilters(); void refresh(); });
     on("clear-preferences", "click", () => { try { storage?.removeItem(PREFERENCES_KEY); storage?.removeItem(FILTERS_KEY); } catch {} filters = loadFilters(); preferences = defaults(today); time = "now"; showPast = false; showAll = false; notice = "查詢偏好已清除。"; void refresh(); });
 }
 function openStations(role: "neiwan" | "other") {
@@ -278,7 +278,7 @@ async function refresh() {
     worker.onmessage = event => { if (event.data.id !== requestId) return; journeys = event.data.journeys ?? []; phase = event.data.error ? "error" : "ready"; worker?.terminate(); worker = undefined;
         renderAfterLoad(); };
     worker.onerror = () => { if (id !== requestId) return; phase = "error"; worker?.terminate(); worker = undefined; renderAfterLoad(); };
-    worker.postMessage({ id, metro, metroService: filters.metroService ?? "all", trains: data.trains, origin, destination, date: preferences.date, filters: { traMaxMinutes: preferences.traMaxMinutes, thsrMaxMinutes: preferences.thsrMaxMinutes, ...activeRouteFilters() } });
+    worker.postMessage({ id, metro, trains: data.trains, origin, destination, date: preferences.date, filters: { traMaxMinutes: preferences.traMaxMinutes, thsrMaxMinutes: preferences.thsrMaxMinutes, metroMaxMinutes: preferences.metroMaxMinutes, ...activeRouteFilters() } });
 }
 window.addEventListener("hashchange", () => { if (location.hash === "#privacy") analytics.track("open_privacy"); render(); window.scrollTo(0, 0); });
 setInterval(() => {
@@ -289,7 +289,7 @@ setInterval(() => {
         void refresh();
     } else if (!document.querySelector("dialog[open]") && location.hash !== "#privacy") {
         const resultsElement = document.getElementById("results");
-        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.metroService = "all"; filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(); }); }
+        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(); }); }
     }
 }, 30000);
 void refresh();

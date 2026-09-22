@@ -7,14 +7,14 @@ const memory = () => {
 };
 it("重新開啟保留站點方向與準備時間，過期日期回今天", () => {
     const store = memory();
-    savePreferences(store, { neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: "2026-09-20", preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40 });
-    expect(loadPreferences(store, today).value).toEqual({ neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40 });
+    savePreferences(store, { neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: "2026-09-20", preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
+    expect(loadPreferences(store, today).value).toEqual({ neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
 });
 it("損壞欄位不清除其他有效偏好，兩端同站則回預設", () => {
     const store = memory();
-    savePreferences(store, { neiwan: "bad", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40 });
+    savePreferences(store, { neiwan: "bad", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
     expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { neiwan: "tra:1208", other: "thsr:1000", preparation: 15, reversed: true } });
-    savePreferences(store, { neiwan: "tra:1193", other: "tra:1193", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40 });
+    savePreferences(store, { neiwan: "tra:1193", other: "tra:1193", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
     expect(loadPreferences(store, today).value).toMatchObject({ neiwan: "tra:1208", other: "tra:1210", reversed: false });
 });
 it("儲存空間被封鎖時仍可查詢，不拋出錯誤", () => {
@@ -56,5 +56,20 @@ it("篩選僅在路線適用時提供，竹中端點及同側車站不提供竹�
     expect(filterAvailability("tra:1193", "tra:1000")).toEqual({ reserved: true, direct: false });
     for (const other of ["tra:1194", "thsr:1000", "thsr:1030"]) {
         expect(filterAvailability("tra:1208", other)).toEqual({ reserved: false, direct: false });
+    }
+});
+
+it("機捷上限獨立保存，舊設定沿用原高鐵上限，無效值回預設", () => {
+    const store = memory();
+    const original = loadPreferences(store, today).value;
+    expect(original.metroMaxMinutes).toBe(40);
+    savePreferences(store, { ...original, thsrMaxMinutes: 50, metroMaxMinutes: 25 });
+    expect(loadPreferences(store, today).value).toMatchObject({ thsrMaxMinutes: 50, metroMaxMinutes: 25 });
+    const { metroMaxMinutes, ...legacy } = original;
+    store.setItem("neiwan.preferences.v1", JSON.stringify({ ...legacy, thsrMaxMinutes: 60 }));
+    expect(loadPreferences(store, today)).toMatchObject({ reset: false, value: { thsrMaxMinutes: 60, metroMaxMinutes: 60 } });
+    for (const invalid of [10, 181, 12.5, "40"]) {
+        store.setItem("neiwan.preferences.v1", JSON.stringify({ ...original, metroMaxMinutes: invalid }));
+        expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { metroMaxMinutes: 40 } });
     }
 });

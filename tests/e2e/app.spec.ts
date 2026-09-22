@@ -270,7 +270,7 @@ test("主要站標示適用台鐵選單與搜尋，保留同站停用且支援�
     await expect(page.getByRole("button", { name: "新竹 與迄站相同", exact: true })).toContainText("與迄站相同");
 });
 
-test("機捷全站選單、車種篩選與雙向查詢可保存，缺資料不混用台鐵結果", async ({ page }, testInfo) => {
+test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套用", async ({ page }, testInfo) => {
     const at = (time: string) => Date.parse(`2026-09-21T${time}:00+08:00`);
     const train = (id: string, operator: string, stops: [string, string][]) => ({ id, number: id, operator, service: id, stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) });
     await page.route("**/data/2026-09-21.json", route => route.fulfill({ json: {
@@ -301,18 +301,28 @@ test("機捷全站選單、車種篩選與雙向查詢可保存，缺資料不�
     await page.getByRole("button", { name: "A12 機場第一航廈站", exact: true }).click();
     await expect(page.locator(".journey-card")).toHaveCount(2);
     await expect(page.getByLabel("內灣新竹直達車", { exact: true })).toHaveCount(0);
-    await page.screenshot({ path: `/tmp/neiwan-metro-${testInfo.project.name}.png`, fullPage: true });
-    await page.getByLabel("機捷車種", { exact: true }).selectOption("express");
-    await expect(page.locator(".journey-card")).toHaveCount(1);
-    await expect(page.locator(".journey-card")).toContainText("機捷直達車");
-    await expect(page.locator(".journey-card")).toContainText("抵達時間預估");
+    await expect(page.getByLabel("機捷車種", { exact: true })).toHaveCount(0);
+    await page.evaluate(() => localStorage.setItem("neiwan.filters.v1", JSON.stringify({ reservedOnly: true, directOutbound: false, directReturn: false, metroService: "express" })));
     await page.reload();
-    await expect(page.getByLabel("機捷車種", { exact: true })).toHaveValue("express");
+    await expect(page.locator(".journey-card")).toHaveCount(2);
+    await page.getByRole("button", { name: "調整轉乘時間上限" }).click();
+    await page.getByLabel("機捷接駁上限（分鐘）").fill("12");
+    await expect(page.getByLabel("高鐵接駁上限（分鐘）")).toHaveValue("40");
+    await page.getByRole("button", { name: "儲存設定", exact: true }).click();
+    await expect(page.locator(".journey-card")).toHaveCount(1);
+    await expect(page.locator(".journey-card")).toContainText("機捷普通車");
+    await page.reload();
+    await page.getByRole("button", { name: "調整轉乘時間上限" }).click();
+    await expect(page.getByLabel("機捷接駁上限（分鐘）")).toHaveValue("12");
+    await page.getByLabel("機捷接駁上限（分鐘）").fill("16");
+    await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await page.getByRole("button", { name: "交換起迄站" }).click();
+    await expect(page.locator(".journey-card")).toHaveCount(2);
+    await page.getByRole("button", { name: "調整轉乘時間上限" }).click();
+    await page.getByLabel("機捷接駁上限（分鐘）").fill("15");
+    await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await expect(page.locator(".journey-card")).toContainText("機捷直達車");
-    await page.getByLabel("機捷車種", { exact: true }).selectOption("local");
-    await expect(page.locator(".journey-card")).toContainText("機捷普通車");
     await page.route("**/data/metro.json", route => route.fulfill({ status: 404, body: "" }));
     await page.reload();
     await expect(page.getByRole("heading", { name: "班表尚未更新" })).toBeVisible();

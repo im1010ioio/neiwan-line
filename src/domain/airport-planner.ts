@@ -1,9 +1,9 @@
 import { planJourneys, type PlannerFilters } from "./planner";
-import { connectMetro, metroLegs, type MetroService, type MetroSnapshot } from "./metro";
+import { connectMetro, metroLegs, type MetroSnapshot } from "./metro";
 import { addDays } from "./query";
 import type { Journey, Train } from "./types";
 
-export function planAirportJourneys(trains: Train[], origin: string, destination: string, date: string, filters: PlannerFilters, snapshot: MetroSnapshot, service: MetroService = "all"): Journey[] {
+export function planAirportJourneys(trains: Train[], origin: string, destination: string, date: string, filters: PlannerFilters, snapshot: MetroSnapshot): Journey[] {
     const reversed = origin.startsWith("tymc:");
     const station = reversed ? origin : destination;
     const railOrigin = reversed ? "thsr:1020" : origin;
@@ -18,6 +18,6 @@ export function planAirportJourneys(trains: Train[], origin: string, destination
                 accessWalk: { origin: reversed ? station : "thsr:1020", destination: reversed ? "thsr:1020" : station, departure, arrival, position: reversed ? "start" as const : "end" as const } };
         }).filter(j => j.departure >= Date.parse(`${date}T00:00:00+08:00`) && j.departure < Date.parse(`${addDays(date, 1)}T00:00:00+08:00`));
     }
-    const legs = metroLegs(snapshot, reversed ? station : "tymc:A18", reversed ? "tymc:A18" : station, date, service);
-    return connectMetro(rail, legs, reversed, date, filters.thsrMaxMinutes ?? 40);
+    const legs = metroLegs(snapshot, reversed ? station : "tymc:A18", reversed ? "tymc:A18" : station, date, "all");
+    return connectMetro(rail, legs, reversed, date, filters.metroMaxMinutes ?? 40);
 }
