@@ -1,4 +1,5 @@
 import type { Journey, Leg, Train } from "./types";
+import { passedRailStations } from "./rail-path";
 import { addDays } from "./query";
 
 export interface PlannerFilters { traMaxMinutes?: number; thsrMaxMinutes?: number; metroMaxMinutes?: number; reservedOnly?: boolean; directOnly?: boolean; }
@@ -7,6 +8,7 @@ const branchStations = new Set(["1210", "1190", "1191", "1192", "1193", "1194", 
 interface Label {
     legs: Leg[];
     visited: Set<string>;
+    mainlineVisited: Set<string>;
 }
 
 // Keep distinct Zhuzhong connections, including when they share a later train.
@@ -44,7 +46,7 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
     for (const { train, from, to, i } of connections) {
         const candidates: Label[] = [];
         if (from.station === origin && from.departure < end) {
-            candidates.push({ legs: [], visited: new Set([origin]) });
+            candidates.push({ legs: [], visited: new Set([origin]), mainlineVisited: new Set(branchStations.has(origin) ? [] : [origin]) });
         }
         const interchange = from.station === "tra:1194" ? "thsr:1030" : from.station === "thsr:1030" ? "tra:1194" : undefined;
         const recent = (station: string): Label[] => {
@@ -70,7 +72,10 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
             }
         }
         for (const label of aboard.get(`${train.id}:${i}`)?.values() ?? []) candidates.push(label);
+        const passed = train.operator === "tra" ? passedRailStations(from.station, to.station).filter(station => !branchStations.has(station)) : [];
         for (const label of candidates) {
+            // Branch access via Hsinchu/North Hsinchu is allowed; mainline backtracking is not.
+            if (passed.some(station => label.mainlineVisited.has(station))) continue;
             if (label.visited.has(to.station)) continue;
             const last = label.legs.at(-1);
             const continuing = last?.trip === train.id;
@@ -79,7 +84,7 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                 origin: from.station, destination: to.station, departure: from.departure, arrival: to.arrival,
             };
             const legs = continuing ? [...label.legs.slice(0, -1), leg] : [...label.legs, leg];
-            const next: Label = { legs, visited: new Set([...label.visited, to.station]) };
+            const next: Label = { legs, visited: new Set([...label.visited, to.station]), mainlineVisited: new Set([...label.mainlineVisited, ...passed]) };
             const key = `${legs[0].trip}:${legs[0].departure}:${zhuzhongConnection(legs)}`;
             const onKey = `${train.id}:${i + 1}`;
             const onTrain = aboard.get(onKey) ?? new Map<string, Label>();
