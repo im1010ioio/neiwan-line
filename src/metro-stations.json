@@ -1,0 +1,134 @@
+[
+    {
+        "id": "tymc:A1",
+        "name": "A1 台北車站",
+        "operator": "tymc",
+        "county": "臺北市"
+    },
+    {
+        "id": "tymc:A2",
+        "name": "A2 三重站",
+        "operator": "tymc",
+        "county": "新北市"
+    },
+    {
+        "id": "tymc:A3",
+        "name": "A3 新北產業園區站",
+        "operator": "tymc",
+        "county": "新北市"
+    },
+    {
+        "id": "tymc:A4",
+        "name": "A4 新莊副都心站",
+        "operator": "tymc",
+        "county": "新北市"
+    },
+    {
+        "id": "tymc:A5",
+        "name": "A5 泰山站",
+        "operator": "tymc",
+        "county": "新北市"
+    },
+    {
+        "id": "tymc:A6",
+        "name": "A6 泰山貴和站",
+        "operator": "tymc",
+        "county": "新北市"
+    },
+    {
+        "id": "tymc:A7",
+        "name": "A7 體育大學站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A8",
+        "name": "A8 長庚醫院站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A9",
+        "name": "A9 林口站",
+        "operator": "tymc",
+        "county": "新北市"
+    },
+    {
+        "id": "tymc:A10",
+        "name": "A10 山鼻站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A11",
+        "name": "A11 坑口站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A12",
+        "name": "A12 機場第一航廈站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A13",
+        "name": "A13 機場第二航廈站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A14a",
+        "name": "A14a 機場旅館站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A15",
+        "name": "A15 大園站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A16",
+        "name": "A16 橫山站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A17",
+        "name": "A17 領航站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A18",
+        "name": "A18 高鐵桃園站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A19",
+        "name": "A19 桃園體育園區站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A20",
+        "name": "A20 興南站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A21",
+        "name": "A21 環北站",
+        "operator": "tymc",
+        "county": "桃園市"
+    },
+    {
+        "id": "tymc:A22",
+        "name": "A22 老街溪站",
+        "operator": "tymc",
+        "county": "桃園市"
+    }
+]

@@ -385,3 +385,11 @@ button.transfer-hint { min-height: 44px; text-align: left; line-height: 1.6; }
 .privacy li + li { margin-top: 6px; }
 .privacy hr { margin: 32px 0; border: 0; border-top: 1px solid var(--line); }
 .privacy a { overflow-wrap: anywhere; }
+
+.metro-filter { margin-top: 20px; }
+.metro-filter label { display: flex; align-items: center; gap: 12px; }
+.metro-filter p { font-size: 14px; color: var(--muted); line-height: 1.7; }
+.metro-filter select { flex: 1; min-width: 0; }
+.train-tag.tymc { background: var(--primary-soft); color: var(--primary-ink); }
+.operator-tabs button { min-width: 0; white-space: nowrap; }
+.metro-filter select { min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; color: var(--ink); background: var(--surface); font: inherit; }

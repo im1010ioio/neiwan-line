@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile, rename, readdir, unlink } from "node:fs/pro
 import { addDays, dateInTaipei } from "../src/domain/query";
 import { normalizeOds, normalizeTdx, records } from "./normalize";
 import { createTdxClient } from "./tdx-client";
-import type { DayData, Manifest, Operator, Train } from "../src/domain/types";
+import type { DayData, Manifest, RailOperator, Train } from "../src/domain/types";
 
 const directory = "public/data";
 const today = process.env.DATA_DATE || dateInTaipei();
@@ -21,7 +21,7 @@ async function get(url: string): Promise<Response> {
     if (!response.ok) throw new Error(`官方資料 HTTP ${response.status}`);
     return response;
 }
-async function tdxDay(operator: Operator, date: string): Promise<Train[]> {
+async function tdxDay(operator: RailOperator, date: string): Promise<Train[]> {
     if (!client) throw new Error("未設定 TDX 憑證");
     const prefix = operator === "tra" ? `/v3/Rail/TRA/DailyTrainTimetable/TrainDate/${date}` : `/v2/Rail/THSR/DailyTimetable/TrainDate/${date}`;
     const trains: Train[] = [];
@@ -85,7 +85,7 @@ for (const date of dates.slice(0, 7)) {
         schemaVersion: 1, date, generatedAt, coverage,
         sources: [source === "official" ? "臺鐵官方開放資料" : "TDX 台鐵", ...(coverage.thsr ? ["TDX 高鐵"] : [])],
         trains: [-1, 0, 1].flatMap(offset => ["tra", "thsr"].flatMap(op => slices.get(`${op}:${addDays(date, offset)}`)?.trains ?? [])),
-        contextCoverage: Object.fromEntries(["tra", "thsr"].map(op => [op, [-1, 0, 1].map(offset => slices.has(`${op}:${addDays(date, offset)}`))])) as Record<Operator, boolean[]>,
+        contextCoverage: Object.fromEntries(["tra", "thsr"].map(op => [op, [-1, 0, 1].map(offset => slices.has(`${op}:${addDays(date, offset)}`))])) as Record<RailOperator, boolean[]>,
     };
     // On an upstream failure preserve the previous complete file and its original update time.
     try {

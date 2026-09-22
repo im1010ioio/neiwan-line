@@ -6,6 +6,8 @@ import { dateInTaipei, dateOptions, displayTime, filterJourneys, journeyState } 
 import { defaults, loadPreferences, savePreferences, PREFERENCES_KEY } from "./preferences";
 import type { StorageLike } from "./preferences";
 import type { DayData, Journey, Station } from "./domain/types";
+import { loadMetro } from "./metro-loader";
+import type { MetroSnapshot, MetroService } from "./domain/metro";
 import { loadDay } from "./data-loader";
 import { CONSENT_KEY, createAnalytics } from "./analytics";
 import type { Consent } from "./analytics";
@@ -29,6 +31,7 @@ try {
 const analytics = createAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID, window);
 analytics.setConsent(consent);
 let data: DayData | undefined;
+let metroData: MetroSnapshot | undefined;
 let journeys: Journey[] = [];
 let phase: "loading" | "ready" | "missing" | "error" = "loading";
 let requestId = 0;
@@ -39,7 +42,7 @@ let modalCounty = "六家線";
 let search = "";
 const app = document.querySelector<HTMLDivElement>("#app")!;
 const endpoints = () => preferences.reversed ? [preferences.other, preferences.neiwan] : [preferences.neiwan, preferences.other];
-const operatorLabel = (id: string) => id.startsWith("thsr:") ? "高鐵" : "台鐵";
+const operatorLabel = (id: string) => id.startsWith("tymc:") ? "機場捷運" : id.startsWith("thsr:") ? "高鐵" : "台鐵";
 const clockText = (timestamp: string) => new Intl.DateTimeFormat("zh-TW", { timeZone: "Asia/Taipei", month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(timestamp));
 
 function persist() {
@@ -76,14 +79,14 @@ function endpointButton(role: "neiwan" | "other", position: "起" | "迄") {
 }
 function results() {
     if (phase === "loading") return `<div class="empty-state" role="status"><span class="spinner"></span><h2>正在整理可搭行程</h2><p>依班表尋找符合轉乘時間的組合。</p></div>`;
-    if (phase === "missing") return `<div class="empty-state" role="status"><span class="empty-icon">◷</span><h2>班表尚未更新</h2><p>所選日期的${preferences.other.startsWith("thsr:") ? "台鐵或高鐵" : "台鐵"}資料尚未完整取得。請稍後再試，或查看官方班表。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
+    if (phase === "missing") return `<div class="empty-state" role="status"><span class="empty-icon">◷</span><h2>班表尚未更新</h2><p>所選日期的${preferences.other.startsWith("tymc:") ? "台鐵、高鐵或機捷" : preferences.other.startsWith("thsr:") ? "台鐵或高鐵" : "台鐵"}資料尚未完整取得。請稍後再試，或查看官方班表。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     if (phase === "error") return `<div class="empty-state" role="alert"><h2>暫時無法整理行程</h2><p>請重新讀取班表後再試。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     const visible = filterJourneys(journeys, { date: preferences.date, time, showPast }, new Date());
-    if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘須未滿 ${preferences.traMaxMinutes} 分鐘，高鐵接駁須未滿 ${preferences.thsrMaxMinutes} 分鐘。可在設定中調整。</p>${Object.values(activeRouteFilters()).some(Boolean) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
+    if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘須未滿 ${preferences.traMaxMinutes} 分鐘，高鐵接駁須未滿 ${preferences.thsrMaxMinutes} 分鐘。可在設定中調整。</p>${(Object.values(activeRouteFilters()).some(Boolean) || (preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" && filters.metroService && filters.metroService !== "all")) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
     return `<div class="results-heading"><h2>可搭行程 <span>${visible.length} 組</span></h2><span>依出發時間排序</span></div><div class="journey-list">${(showAll ? visible : visible.slice(0, 3)).map(card).join("")}</div>${visible.length > 3 ? `<button id="show-all" class="secondary show-all">${showAll ? "收合為前 3 組" : `顯示全部 ${visible.length} 組`}</button>` : ""}`;
 }
 function card(journey: Journey) {
-    const stale = data?.staleOperators?.length || (data && dateInTaipei(new Date(data.generatedAt)) < today);
+    const stale = data?.staleOperators?.length || (data && dateInTaipei(new Date(data.generatedAt)) < today) || (metroData && dateInTaipei(new Date(metroData.generatedAt)) < today);
     const state = stale ? "scheduled" : journeyState(journey, preferences.date, preferences.preparation, new Date());
     const labels = { past: "已過", warning: "即將到來", upcoming: "即將到來", scheduled: stale ? "快取班表" : "預定班次" };
     const minutes = Math.max(0, Math.ceil((journey.departure - Date.now()) / 60000));
@@ -95,16 +98,16 @@ function card(journey: Journey) {
     return `<article class="journey-card ${state === "past" ? "is-past" : ""}"><header><div class="state-row"><span class="badge badge--${state}">${labels[state]}</span>${countdown}</div><span class="duration">${durationText}</span></header><div class="journey-summary"><strong>${displayTime(journey.departure, preferences.date)}</strong><span class="summary-line"><small>${journey.legs.length === 1 ? "免換車" : `轉乘 ${journey.legs.length - 1} 次`}</small><i></i></span><strong>${displayTime(journey.arrival, preferences.date)}</strong></div>${walk?.position === "start" ? walkHtml : ""}<ol class="timeline">${journey.legs.map((leg, index) => {
         const next = journey.legs[index + 1];
         const transfer = next ? Math.round((next.departure - leg.arrival) / 60000) : 0;
-        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : escapeHtml(leg.service)}</span><span class="train-number">${escapeHtml(leg.number)} 次</span><span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `步行至${next.operator === "thsr" ? "高鐵" : ""}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}<span>${transfer} 分鐘${leg.destination !== next.origin ? "（含步行）" : ""}</span></p>` : ""}</li>`;
+        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : escapeHtml(leg.service)}</span><span class="train-number">${leg.operator === "tymc" ? "抵達時間預估" : `${escapeHtml(leg.number)} 次`}</span><span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `步行至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : ""}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}<span>${transfer} 分鐘${leg.destination !== next.origin ? "（含步行）" : ""}</span></p>` : ""}</li>`;
     }).join("")}</ol>${walk?.position === "end" ? walkHtml : ""}</article>`;
 }
 function statusLine() {
     if (!data) return "";
     const context = data.contextCoverage;
-    const required = preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030" ? ["tra", "thsr"] as const : ["tra"] as const;
+    const required = (preferences.other.startsWith("tymc:") || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030")) ? ["tra", "thsr"] as const : ["tra"] as const;
     const contextMissing = required.some(op => context?.[op]?.some(v => !v));
-    const stale = data.staleOperators?.length || dateInTaipei(new Date(data.generatedAt)) < today;
-    return `<div class="data-status"><span class="status-dot"></span><span>${escapeHtml(data.sources.join(" · "))} · 更新 ${clockText(data.generatedAt)}</span></div>${stale ? `<p class="data-warning" role="status">目前使用較舊班表，請以官方資訊為準。${Object.entries(data.operatorUpdatedAt ?? {}).map(([op, value]) => `${op === "tra" ? "台鐵" : "高鐵"}最後成功更新：${clockText(value)}`).join("；")}</p>` : ""}${contextMissing ? '<p class="data-warning">部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}`;
+    const stale = data.staleOperators?.length || (dateInTaipei(new Date(data.generatedAt)) < today || (metroData && dateInTaipei(new Date(metroData.generatedAt)) < today));
+    return `<div class="data-status"><span class="status-dot"></span><span>${escapeHtml(data.sources.join(" · "))} · 更新 ${clockText(data.generatedAt)}${metroData ? ` · 機捷更新 ${clockText(metroData.generatedAt)}` : ""}</span></div>${stale ? `<p class="data-warning" role="status">目前使用較舊班表，請以官方資訊為準。${Object.entries(data.operatorUpdatedAt ?? {}).map(([op, value]) => `${op === "tra" ? "台鐵" : "高鐵"}最後成功更新：${clockText(value)}`).join("；")}</p>` : ""}${contextMissing ? '<p class="data-warning">部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}`;
 }
 function privacyPage() {
     return `<main class="privacy">
@@ -117,7 +120,7 @@ function privacyPage() {
         <h2>使用規範</h2>
         <p>內灣線轉乘攻略為免費提供的個人旅程查詢工具。您可以：</p>
         <ul>
-            <li>查詢內灣線沿線往返全台台鐵及高鐵車站的班次與轉乘組合。</li>
+            <li>查詢內灣線沿線往返全台台鐵、高鐵及機場捷運車站的班次與轉乘組合。</li>
             <li>設定查詢偏好，作為規劃旅程的參考。</li>
             <li>基於非商業用途，將本網站連結分享給他人。</li>
         </ul>
@@ -131,7 +134,7 @@ function privacyPage() {
         <hr>
         <h2>隱私權聲明</h2>
         <h3>查詢偏好與本機儲存</h3>
-        <p>本網站不要求您註冊帳號或提供姓名、電子郵件等身分資料。為了方便下次使用，本網站使用瀏覽器的 localStorage 記住起迄站、方向、查詢日期、出發準備時間、台鐵轉乘與高鐵接駁上限、對號列車及各方向的「內灣新竹直達車」篩選，以及您對網站分析的選擇。</p>
+        <p>本網站不要求您註冊帳號或提供姓名、電子郵件等身分資料。為了方便下次使用，本網站使用瀏覽器的 localStorage 記住起迄站、方向、查詢日期、出發準備時間、台鐵轉乘與高鐵接駁上限、機捷車種、對號列車及各方向的「內灣新竹直達車」篩選，以及您對網站分析的選擇。</p>
         <p>這些查詢偏好儲存在您的瀏覽器，不會跨裝置同步，也不會作為分析事件傳送給 GA。手動出發時間與「顯示已過組合」不會跨次開啟保留；查詢日期過期後會自動切回今天，起迄站與方向維持原設定。本機偏好會保留到您清除網站資料或使用下方清除功能為止。</p>
         <h3>Cookie 與 Google Analytics 分析</h3>
         <p>只有在您選擇允許 Cookie 與 GA 分析後，本網站才會載入已設定的 Google Analytics，統計瀏覽量及開啟設定、查看隱私說明、展開行程等一般互動。分析不包含起迄站、搭乘日期、出發時間、準備時間、轉乘上限或查詢結果。</p>
@@ -174,6 +177,7 @@ function activeRouteFilters() {
 }
 function filterControls() {
     const available = filterAvailability(preferences.neiwan, preferences.other);
+    if (preferences.other.startsWith("tymc:")) return `<div class="metro-filter"><p>經高鐵新竹、桃園站轉乘機捷 A18。</p>${preferences.other !== "tymc:A18" ? `<label>機捷車種<select id="metro-service" aria-label="機捷車種"><option value="all" ${(filters.metroService ?? "all") === "all" ? "selected" : ""}>全部車種</option><option value="express" ${filters.metroService === "express" ? "selected" : ""}>僅直達車</option><option value="local" ${filters.metroService === "local" ? "selected" : ""}>僅普通車</option></select></label><p class="filter-note">依停靠 A18 與所選車站的班次查詢；僅直達車可能沒有符合班次。機捷抵達時間依官方旅行時間預估，不含臨時加班車或誤點，請預留緩衝。</p>` : '<p class="filter-note">A18 與高鐵桃園站間以步行銜接，不需搭乘機捷列車。</p>'}<p class="filter-note"><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷最新班表與臨時調整 ↗</a></p></div>`;
     if (!available.reserved && !available.direct) return "";
     const active = activeRouteFilters();
     return `<div class="journey-filters" aria-label="行程篩選">${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${available.reserved ? '<p class="filter-note">對號列車篩選適用於幹線，內灣線與六家線仍可搭區間車。</p>' : ""}</div>`;
@@ -192,6 +196,7 @@ function bind() {
     on("reserved-filter", "change", event => { filters.reservedOnly = (event.target as HTMLInputElement).checked; persistFilters(); showAll = showPast; void refresh(); });
     on("direct-filter", "change", event => { filters[preferences.reversed ? "directReturn" : "directOutbound"] = (event.target as HTMLInputElement).checked; persistFilters(); showAll = showPast; void refresh(); });
     on("clear-filters", "click", () => {
+        filters.metroService = "all";
         filters.reservedOnly = false;
         filters[preferences.reversed ? "directReturn" : "directOutbound"] = false;
         persistFilters(); void refresh();
@@ -221,6 +226,7 @@ function bind() {
         preferences.thsrMaxMinutes = Number(thsrMax.value);
         persist(); showAll = showPast; void refresh();
     });
+    on("metro-service", "change", event => { filters.metroService = (event.target as HTMLSelectElement).value as MetroService; persistFilters(); void refresh(); });
     on("clear-preferences", "click", () => { try { storage?.removeItem(PREFERENCES_KEY); storage?.removeItem(FILTERS_KEY); } catch {} filters = loadFilters(); preferences = defaults(today); time = "now"; showPast = false; showAll = false; notice = "查詢偏好已清除。"; void refresh(); });
 }
 function openStations(role: "neiwan" | "other") {
@@ -240,7 +246,7 @@ function renderStations() {
     let list: Station[] = modalRole === "neiwan" ? neiwanStations : stations.filter(s => s.operator === modalOperator);
     if (search) list = list.filter(s => s.name.replaceAll("臺", "台").includes(search.replaceAll("臺", "台")));
     else if (modalRole === "other" && modalOperator === "tra") list = modalCounty === "六家線" ? [stationById.get("tra:1194")!, stationById.get("tra:1193")!] : list.filter(s => s.county === modalCounty);
-    dialog.innerHTML = `<div class="dialog-header"><div><p class="eyebrow">${modalRole === "neiwan" ? "內灣線沿線" : "全台鐵路"}</p><h2 id="station-dialog-title">選擇${isOrigin ? "起" : "迄"}站</h2></div><button class="icon-button" id="close-stations" aria-label="關閉選站">×</button></div>${modalRole === "other" ? `<div class="operator-tabs" role="tablist" aria-label="運具"><button role="tab" data-operator="tra" aria-selected="${modalOperator === "tra"}">台鐵</button><button role="tab" data-operator="thsr" aria-selected="${modalOperator === "thsr"}">高鐵</button></div>` : ""}<div class="station-search"><input type="search" id="station-search" aria-label="搜尋車站" placeholder="搜尋車站" value="${escapeHtml(search)}"></div><div class="station-columns ${modalRole === "neiwan" || modalOperator === "thsr" || search ? "single" : ""}">${modalRole === "other" && modalOperator === "tra" && !search ? `<div class="county-list" aria-label="車站分類">${["六家線", ...counties].map(county => `<button data-county="${county}" aria-pressed="${county === modalCounty}">${county}${county === "六家線" ? '<small>六家・竹中</small>' : ""}</button>`).join("")}</div>` : ""}<div class="station-list" aria-label="車站">${list.map(station => `<button class="station-option${isMajorStation(station.id) ? " major-station" : ""}" ${isMajorStation(station.id) ? 'aria-description="主要站（特等站或一等站）"' : ""} data-station="${station.id}" aria-pressed="${preferences[modalRole] === station.id}" ${station.id === other ? "disabled" : ""}><span class="station-name">${escapeHtml(station.name)}</span>${station.id === other ? `<small>與${isOrigin ? "迄" : "起"}站相同</small>` : preferences[modalRole] === station.id ? '<span class="selected-check" aria-hidden="true">✓</span>' : ""}</button>`).join("") || '<p class="no-stations">找不到符合的車站</p>'}</div></div>`;
+    dialog.innerHTML = `<div class="dialog-header"><div><p class="eyebrow">${modalRole === "neiwan" ? "內灣線沿線" : "全台鐵路"}</p><h2 id="station-dialog-title">選擇${isOrigin ? "起" : "迄"}站</h2></div><button class="icon-button" id="close-stations" aria-label="關閉選站">×</button></div>${modalRole === "other" ? `<div class="operator-tabs" role="tablist" aria-label="運具"><button role="tab" data-operator="tra" aria-selected="${modalOperator === "tra"}">台鐵</button><button role="tab" data-operator="thsr" aria-selected="${modalOperator === "thsr"}">高鐵</button><button role="tab" data-operator="tymc" aria-selected="${modalOperator === "tymc"}">機場捷運</button></div>` : ""}<div class="station-search"><input type="search" id="station-search" aria-label="搜尋車站" placeholder="搜尋車站" value="${escapeHtml(search)}"></div><div class="station-columns ${modalRole === "neiwan" || modalOperator !== "tra" || search ? "single" : ""}">${modalRole === "other" && modalOperator === "tra" && !search ? `<div class="county-list" aria-label="車站分類">${["六家線", ...counties].map(county => `<button data-county="${county}" aria-pressed="${county === modalCounty}">${county}${county === "六家線" ? '<small>六家・竹中</small>' : ""}</button>`).join("")}</div>` : ""}<div class="station-list" aria-label="車站">${list.map(station => `<button class="station-option${isMajorStation(station.id) ? " major-station" : ""}" ${isMajorStation(station.id) ? 'aria-description="主要站（特等站或一等站）"' : ""} data-station="${station.id}" aria-pressed="${preferences[modalRole] === station.id}" ${station.id === other ? "disabled" : ""}><span class="station-name">${escapeHtml(station.name)}</span>${station.id === other ? `<small>與${isOrigin ? "迄" : "起"}站相同</small>` : preferences[modalRole] === station.id ? '<span class="selected-check" aria-hidden="true">✓</span>' : ""}</button>`).join("") || '<p class="no-stations">找不到符合的車站</p>'}</div></div>`;
     document.querySelector("#close-stations")!.addEventListener("click", () => dialog.close());
     dialog.querySelectorAll<HTMLButtonElement>("[data-operator]").forEach(button => button.onclick = () => { modalOperator = button.dataset.operator!; search = ""; renderStations(); });
     dialog.querySelectorAll<HTMLButtonElement>("[data-county]").forEach(button => button.onclick = () => { const scroll = dialog.querySelector(".county-list")!.scrollTop; modalCounty = button.dataset.county!; renderStations(); dialog.querySelector(".county-list")!.scrollTop = scroll; });
@@ -256,21 +262,23 @@ async function refresh() {
     const id = ++requestId;
     worker?.terminate();
     worker = undefined;
-    phase = "loading"; data = undefined; journeys = []; render();
-    const loaded = await loadDay(preferences.date);
+    phase = "loading"; data = undefined; metroData = undefined; journeys = []; render();
+    const needsMetro = preferences.other.startsWith("tymc:");
+    const [loaded, metro] = await Promise.all([loadDay(preferences.date), needsMetro ? loadMetro(preferences.date) : Promise.resolve(undefined)]);
     if (id !== requestId) return;
-    const needsThsr = preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030";
-    if (loaded.status !== "ready" || !loaded.data.coverage.tra || (needsThsr && !loaded.data.coverage.thsr)) {
+    const needsThsr = needsMetro || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030");
+    if (loaded.status !== "ready" || !loaded.data.coverage.tra || (needsThsr && !loaded.data.coverage.thsr) || (needsMetro && !metro)) {
         if (loaded.status === "ready") data = loaded.data;
         phase = "missing"; renderAfterLoad(); return;
     }
     data = loaded.data;
+    metroData = metro;
     const [origin, destination] = endpoints();
     worker = new Worker(new URL("./planner.worker.ts", import.meta.url), { type: "module" });
     worker.onmessage = event => { if (event.data.id !== requestId) return; journeys = event.data.journeys ?? []; phase = event.data.error ? "error" : "ready"; worker?.terminate(); worker = undefined;
         renderAfterLoad(); };
     worker.onerror = () => { if (id !== requestId) return; phase = "error"; worker?.terminate(); worker = undefined; renderAfterLoad(); };
-    worker.postMessage({ id, trains: data.trains, origin, destination, date: preferences.date, filters: { traMaxMinutes: preferences.traMaxMinutes, thsrMaxMinutes: preferences.thsrMaxMinutes, ...activeRouteFilters() } });
+    worker.postMessage({ id, metro, metroService: filters.metroService ?? "all", trains: data.trains, origin, destination, date: preferences.date, filters: { traMaxMinutes: preferences.traMaxMinutes, thsrMaxMinutes: preferences.thsrMaxMinutes, ...activeRouteFilters() } });
 }
 window.addEventListener("hashchange", () => { if (location.hash === "#privacy") analytics.track("open_privacy"); render(); window.scrollTo(0, 0); });
 setInterval(() => {
@@ -281,7 +289,7 @@ setInterval(() => {
         void refresh();
     } else if (!document.querySelector("dialog[open]") && location.hash !== "#privacy") {
         const resultsElement = document.getElementById("results");
-        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(); }); }
+        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.metroService = "all"; filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(); }); }
     }
 }, 30000);
 void refresh();

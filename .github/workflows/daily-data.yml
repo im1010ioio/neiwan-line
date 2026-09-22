@@ -31,6 +31,13 @@ jobs:
               env:
                   TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
                   TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
+            - name: Fetch airport metro schedules
+              id: metro
+              continue-on-error: true
+              run: npm run data:metro
+              env:
+                  TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
+                  TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
             - run: npm run build
             - name: Save daily data, including explicit stale status
               run: |
@@ -42,7 +49,7 @@ jobs:
                       git push origin HEAD:main
                   fi
             - name: Report upstream failure
-              if: steps.fetch.outcome == 'failure'
+              if: steps.fetch.outcome == 'failure' || steps.metro.outcome == 'failure'
               run: |
                   echo '部分上游班表取得失敗，已保留成功資料與舊資料標記。請查看更新紀錄。'
                   exit 1

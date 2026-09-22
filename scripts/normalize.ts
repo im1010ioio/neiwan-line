@@ -1,4 +1,4 @@
-import type { Operator, Stop, Train } from "../src/domain/types";
+import type { RailOperator, Stop, Train } from "../src/domain/types";
 
 type Row = Record<string, any>;
 
@@ -13,7 +13,7 @@ export function records(value: unknown, keys: string[]): Row[] {
     throw new Error("班表資料格式不符，拒絕發布空白班表");
 }
 
-function stopsWithDates(rows: Row[], date: string, operator: Operator): Stop[] {
+function stopsWithDates(rows: Row[], date: string, operator: RailOperator): Stop[] {
     const midnight = Date.parse(`${date}T00:00:00+08:00`);
     let previous = midnight;
     let offset = 0;
@@ -38,7 +38,7 @@ function stopsWithDates(rows: Row[], date: string, operator: Operator): Stop[] {
     });
 }
 
-export function normalizeTdx(response: unknown, operator: Operator, date: string): Train[] {
+export function normalizeTdx(response: unknown, operator: RailOperator, date: string): Train[] {
     const declared = (response as Row)?.TrainDate;
     if (declared && declared !== date) throw new Error("班表日期不符");
     return records(response, ["TrainTimetables", "DailyTimetables"]).map(row => {

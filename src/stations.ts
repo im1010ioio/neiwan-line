@@ -1,6 +1,7 @@
 import data from "./stations.json";
+import metroStations from "./metro-stations.json";
 import type { Station } from "./domain/types";
-export const stations: Station[] = data as Station[];
+export const stations: Station[] = [...data, ...metroStations] as Station[];
 export const stationById = new Map(stations.map(station => [station.id, station]));
 export const stationName = (id: string): string => stationById.get(id)?.name ?? id;
 export const neiwanStations = stations.filter(s => s.neiwanOrder !== undefined).sort((a, b) => a.neiwanOrder! - b.neiwanOrder!);

@@ -1,4 +1,5 @@
-export type Operator = "tra" | "thsr";
+export type RailOperator = "tra" | "thsr";
+export type Operator = RailOperator | "tymc";
 export interface Station {
     id: string;
     name: string;
@@ -20,6 +21,7 @@ export interface Train {
     stops: Stop[];
 }
 export interface Leg {
+    estimatedArrival?: boolean;
     reserved?: boolean;
     trip: string;
     number: string;
@@ -38,17 +40,17 @@ export interface Journey {
     legs: Leg[];
 }
 export interface DayData {
-    contextCoverage?: Record<Operator, boolean[]>;
-    staleOperators?: Operator[];
-    operatorUpdatedAt?: Partial<Record<Operator, string>>;
+    contextCoverage?: Record<RailOperator, boolean[]>;
+    staleOperators?: RailOperator[];
+    operatorUpdatedAt?: Partial<Record<RailOperator, string>>;
     schemaVersion: 1;
     date: string;
     generatedAt: string;
-    coverage: Record<Operator, boolean>;
+    coverage: Record<RailOperator, boolean>;
     sources: string[];
     trains: Train[];
 }
 export interface Manifest {
     generatedAt: string;
-    days: { date: string; file: string; coverage: Record<Operator, boolean>; generatedAt: string }[];
+    days: { date: string; file: string; coverage: Record<RailOperator, boolean>; generatedAt: string }[];
 }

@@ -73,3 +73,20 @@ npm run test:e2e
 單元測試涵蓋轉乘門檻、跨日、時間狀態、偏好恢復、官方資料轉換、載入失敗與分析同意；操作測試涵蓋手機和桌面完整流程。操作測試使用明確標註的測試班表，並攔截 Google 請求；這些資料不會打包成正式班表。
 
 設計與需求見 [規格](docs/spec.md) 和 [任務清單](docs/tasks.md)。
+
+## 機場捷運
+
+對向可選 22 個已通車機捷站（A1–A22，含 A14a，不含未通車 A14），去回程經高鐵新竹、桃園及機捷 A18。機捷車種提供全部／直達車／普通車，偏好留在本機，不傳給 GA。A18 本身只含步行，不套用車種篩選。
+
+`npm run data:metro` 每日抓一次 TDX StationTimeTable、StoppingPattern、S2STravelTime，共 3 次請求，原子更新 `public/data/metro.json`；失敗保留最後成功檔案，舊日期顯示提醒。每日 Actions 已串接，連同高鐵通常共 11 次 TDX 請求。
+
+機捷發車時間來自官方站別班表；抵達時間由發車時間加官方 OD 旅行時間預估，介面明確標示，沒有虛構車次編號。僅計算 A18 與選定站間同車可達的班次，依方向、終點與停靠模式判斷，不把未停 A18 的直達車列入；不另計機捷內部換車。桃園高鐵／A18 至少 10 分鐘，且嚴格小於使用者的高鐵接駁上限。
+
+通用班表不等同逐日異動班表，臨時加班／停駛請以桃捷現場與[官方 A18 班表](https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18)為準。本站不推估臨時加班車。
+
+國定假日依[政府行政機關辦公日曆表](https://data.gov.tw/dataset/14718)套用假日服務。`src/calendar.json` 已納入 2026、2027 年；每年須補入下一年度官方日曆，未知日期不猜測為平日。來源 CSV：
+
+- 2026：https://www.dgpa.gov.tw/FileConversion?filename=dgpa%2Ffiles%2F202506%2Fa52331bd-a189-466b-b0f0-cae3062bbf74.csv&name=115.csv&nfix=
+- 2027：https://www.dgpa.gov.tw/FileConversion?filename=dgpa%2Ffiles%2F202607%2Ff538b1ff-ba60-4c63-9477-10db8e6612d1.csv&name=116.csv&nfix=
+
+機捷車站另存 `src/metro-stations.json`，來源 TDX Station/TYMC；新增車站須同步更新。

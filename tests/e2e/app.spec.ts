@@ -269,3 +269,52 @@ test("主要站標示適用台鐵選單與搜尋，保留同站停用且支援�
     await expect(page.getByRole("button", { name: "新竹 與迄站相同", exact: true })).toBeDisabled();
     await expect(page.getByRole("button", { name: "新竹 與迄站相同", exact: true })).toContainText("與迄站相同");
 });
+
+test("機捷全站選單、車種篩選與雙向查詢可保存，缺資料不混用台鐵結果", async ({ page }, testInfo) => {
+    const at = (time: string) => Date.parse(`2026-09-21T${time}:00+08:00`);
+    const train = (id: string, operator: string, stops: [string, string][]) => ({ id, number: id, operator, service: id, stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) });
+    await page.route("**/data/2026-09-21.json", route => route.fulfill({ json: {
+        schemaVersion: 1, date: "2026-09-21", generatedAt: "2026-09-21T04:30:00+08:00", coverage: { tra: true, thsr: true }, sources: ["自動化測試專用資料"], trains: [
+            train("N", "tra", [["tra:1208", "08:10"], ["tra:1193", "08:30"]]),
+            train("L", "tra", [["tra:1193", "08:35"], ["tra:1194", "08:40"]]),
+            train("H", "thsr", [["thsr:1030", "08:50"], ["thsr:1020", "09:00"]]),
+            train("HR", "thsr", [["thsr:1020", "10:30"], ["thsr:1030", "10:40"]]),
+            train("LR", "tra", [["tra:1194", "10:50"], ["tra:1193", "10:55"]]),
+            train("NR", "tra", [["tra:1193", "11:00"], ["tra:1208", "11:30"]]),
+        ],
+    } }));
+    const ServiceDay = { Monday: true, Tuesday: true, Wednesday: true, Thursday: true, Friday: true, Saturday: true, Sunday: true, NationalHolidays: true };
+    await page.route("**/data/metro.json", route => route.fulfill({ json: {
+        generatedAt: "2026-09-21T04:30:00+08:00",
+        timetables: [
+            { StationID: "A18", Direction: 1, DestinationStaionID: "A12", ServiceDay, Timetables: [{ DepartureTime: "09:10", TrainType: 1, StoppingPatternID: "SP1" }, { DepartureTime: "09:12", TrainType: 2, StoppingPatternID: "SP5" }] },
+            { StationID: "A12", Direction: 0, DestinationStaionID: "A18", ServiceDay, Timetables: [{ DepartureTime: "10:00", TrainType: 1, StoppingPatternID: "SP1" }, { DepartureTime: "10:02", TrainType: 2, StoppingPatternID: "SP5" }] },
+        ],
+        patterns: ["SP1", "SP5"].map(StoppingPatternID => ({ StoppingPatternID, Stations: [{ StationID: "A12", Sequence: 1 }, { StationID: "A18", Sequence: 2 }] })),
+        travelTimes: [1, 2].map(TrainType => ({ TrainType, TravelTimes: [{ FromStationID: "A18", ToStationID: "A12", RunTime: 900 }, { FromStationID: "A12", ToStationID: "A18", RunTime: 900 }] })),
+    } }));
+    await page.getByRole("button", { name: "拒絕", exact: true }).click();
+    await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
+    await page.getByRole("tab", { name: "機場捷運", exact: true }).click();
+    await expect(page.locator(".station-option")).toHaveCount(22);
+    await page.getByLabel("搜尋車站", { exact: true }).fill("A12");
+    await page.getByRole("button", { name: "A12 機場第一航廈站", exact: true }).click();
+    await expect(page.locator(".journey-card")).toHaveCount(2);
+    await expect(page.getByLabel("內灣新竹直達車", { exact: true })).toHaveCount(0);
+    await page.screenshot({ path: `/tmp/neiwan-metro-${testInfo.project.name}.png`, fullPage: true });
+    await page.getByLabel("機捷車種", { exact: true }).selectOption("express");
+    await expect(page.locator(".journey-card")).toHaveCount(1);
+    await expect(page.locator(".journey-card")).toContainText("機捷直達車");
+    await expect(page.locator(".journey-card")).toContainText("抵達時間預估");
+    await page.reload();
+    await expect(page.getByLabel("機捷車種", { exact: true })).toHaveValue("express");
+    await page.getByRole("button", { name: "交換起迄站" }).click();
+    await expect(page.locator(".journey-card")).toHaveCount(1);
+    await expect(page.locator(".journey-card")).toContainText("機捷直達車");
+    await page.getByLabel("機捷車種", { exact: true }).selectOption("local");
+    await expect(page.locator(".journey-card")).toContainText("機捷普通車");
+    await page.route("**/data/metro.json", route => route.fulfill({ status: 404, body: "" }));
+    await page.reload();
+    await expect(page.getByRole("heading", { name: "班表尚未更新" })).toBeVisible();
+    await expect(page.locator(".journey-card")).toHaveCount(0);
+});
