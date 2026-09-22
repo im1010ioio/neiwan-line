@@ -180,7 +180,7 @@ function filterControls() {
     const available = filterAvailability(preferences.neiwan, preferences.other);
     if (!available.reserved && !available.direct) return "";
     const active = activeRouteFilters();
-    return `<div class="journey-filters" aria-label="行程篩選">${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${available.reserved ? '<p class="filter-note">對號列車篩選適用於幹線，內灣線與六家線仍可搭區間車。</p>' : ""}</div>`;
+    return `<div class="journey-filters" aria-label="行程篩選">${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${available.reserved ? '<p class="filter-note">對號列車篩選適用於幹線，內灣線與六家線仍需搭區間車。</p>' : ""}</div>`;
 }
 function persistFilters() {
     if (!saveFilters(storage, filters)) notice = "瀏覽器目前無法儲存篩選偏好；本次仍可正常查詢。";

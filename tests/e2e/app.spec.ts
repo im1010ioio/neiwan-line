@@ -77,7 +77,7 @@ test("拒絕分析後重新開啟不載入 GA，允許與撤回可從設定變�
     await page.reload();
     await expect(page.getByRole("complementary", { name: "網站分析選擇" })).toHaveCount(0);
     expect(googleRequests).toEqual([]);
-    await page.getByRole("button", { name: "隱私設定", exact: true }).click();
+    await page.getByRole("button", { name: "設定", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "允許分析", exact: true }).click();
     await expect(page.locator("script[src*='googletagmanager']")).toHaveCount(1);
     await expect(page.getByRole("dialog")).toBeVisible();
@@ -88,7 +88,7 @@ test("拒絕分析後重新開啟不載入 GA，允許與撤回可從設定變�
     await expect(page.getByRole("dialog").getByRole("status")).toHaveText("已拒絕 Cookie 與 GA 分析");
     await expect(page.locator("#settings-deny")).toHaveAttribute("aria-pressed", "true");
     await page.reload();
-    await page.getByRole("button", { name: "隱私設定", exact: true }).click();
+    await page.getByRole("button", { name: "設定", exact: true }).click();
     await expect(page.getByRole("dialog").getByRole("status")).toHaveText("已拒絕 Cookie 與 GA 分析");
 });
 
