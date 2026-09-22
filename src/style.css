@@ -6,7 +6,7 @@
     font-synthesis: none;
     font-weight: 400;
     line-height: 1.5;
-    --primary: #ff385c;
+    --primary: #00aa94;
     --muted: #6a6a6a;
     --line: #ebebeb;
     --soft: #f7f7f7;
@@ -224,7 +224,6 @@ main, main.privacy, footer { width: 100%; max-width: var(--page-width); padding-
     .journey-filters { padding-inline: 8px; }
 }
 
-/* Shared visual language with home-traffic. */
 :root {
     color-scheme: light dark;
     font-family: "LINESeedTW", sans-serif;
@@ -238,10 +237,10 @@ main, main.privacy, footer { width: 100%; max-width: var(--page-width); padding-
     --surface-soft: #f7f7f7;
     --line: #dddddd;
     --line-soft: #ebebeb;
-    --primary: #ff385c;
-    --primary-active: #e00b41;
-    --primary-soft: #fff0f3;
-    --primary-ink: #9f1239;
+    --primary: #00aa94;
+    --primary-active: #00c6ac;
+    --primary-soft: #f0feff;
+    --primary-ink: #00aa94;
     --success: #176b48;
     --success-bg: #e8f6ef;
     --warning: #7a4700;
@@ -251,8 +250,8 @@ main, main.privacy, footer { width: 100%; max-width: var(--page-width); padding-
     --reserved-bg: #fff0cf;
     --danger: #b42318;
     --danger-bg: #fee4e2;
-    --transfer-bg: #fff0f3;
-    --transfer-text: #861337;
+    --transfer-bg: #e3f8ff;
+    --transfer-text: #009cd3;
     --shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
 }
 
@@ -332,10 +331,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
         --surface-soft: #292929;
         --line: #4a4a4a;
         --line-soft: #363636;
-        --primary: #ff385c;
-        --primary-active: #ff385c;
-        --primary-soft: #3b2028;
-        --primary-ink: #ffdbe2;
+        --primary: #00dbbf;
+        --primary-active: #00c6ac;
+        --primary-soft: #203b33;
+        --primary-ink: #dbfff3;
         --success: #b6efd4;
         --success-bg: #203c30;
         --warning: #ffe0a3;
@@ -345,8 +344,8 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
         --reserved-bg: #493713;
         --danger: #ffb4ab;
         --danger-bg: #4c1d1d;
-        --transfer-bg: #4a2430;
-        --transfer-text: #ffe3e9;
+        --transfer-bg: rgb(8, 43, 57);
+        --transfer-text: #cef2ff;
         --shadow: 0 6px 24px rgba(0, 0, 0, 0.32);
     }
 
