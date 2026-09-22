@@ -1,0 +1,1551 @@
+[
+    {
+        "id": "tra:0900",
+        "name": "基隆",
+        "operator": "tra",
+        "county": "基隆市"
+    },
+    {
+        "id": "tra:0910",
+        "name": "三坑",
+        "operator": "tra",
+        "county": "基隆市"
+    },
+    {
+        "id": "tra:0920",
+        "name": "八堵",
+        "operator": "tra",
+        "county": "基隆市"
+    },
+    {
+        "id": "tra:0930",
+        "name": "七堵",
+        "operator": "tra",
+        "county": "基隆市"
+    },
+    {
+        "id": "tra:0940",
+        "name": "百福",
+        "operator": "tra",
+        "county": "基隆市"
+    },
+    {
+        "id": "tra:0950",
+        "name": "五堵",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:0960",
+        "name": "汐止",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:0970",
+        "name": "汐科",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:0980",
+        "name": "南港",
+        "operator": "tra",
+        "county": "臺北市"
+    },
+    {
+        "id": "tra:0990",
+        "name": "松山",
+        "operator": "tra",
+        "county": "臺北市"
+    },
+    {
+        "id": "tra:1000",
+        "name": "臺北",
+        "operator": "tra",
+        "county": "臺北市"
+    },
+    {
+        "id": "tra:1001",
+        "name": "臺北-環島",
+        "operator": "tra",
+        "county": "臺北市"
+    },
+    {
+        "id": "tra:1010",
+        "name": "萬華",
+        "operator": "tra",
+        "county": "臺北市"
+    },
+    {
+        "id": "tra:1020",
+        "name": "板橋",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:1030",
+        "name": "浮洲",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:1040",
+        "name": "樹林",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:1050",
+        "name": "南樹林",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:1060",
+        "name": "山佳",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:1070",
+        "name": "鶯歌",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:1075",
+        "name": "鳳鳴",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:1080",
+        "name": "桃園",
+        "operator": "tra",
+        "county": "桃園市"
+    },
+    {
+        "id": "tra:1090",
+        "name": "內壢",
+        "operator": "tra",
+        "county": "桃園市"
+    },
+    {
+        "id": "tra:1100",
+        "name": "中壢",
+        "operator": "tra",
+        "county": "桃園市"
+    },
+    {
+        "id": "tra:1110",
+        "name": "埔心",
+        "operator": "tra",
+        "county": "桃園市"
+    },
+    {
+        "id": "tra:1120",
+        "name": "楊梅",
+        "operator": "tra",
+        "county": "桃園市"
+    },
+    {
+        "id": "tra:1130",
+        "name": "富岡",
+        "operator": "tra",
+        "county": "桃園市"
+    },
+    {
+        "id": "tra:1140",
+        "name": "新富",
+        "operator": "tra",
+        "county": "桃園市"
+    },
+    {
+        "id": "tra:1150",
+        "name": "北湖",
+        "operator": "tra",
+        "county": "新竹縣"
+    },
+    {
+        "id": "tra:1160",
+        "name": "湖口",
+        "operator": "tra",
+        "county": "新竹縣"
+    },
+    {
+        "id": "tra:1170",
+        "name": "新豐",
+        "operator": "tra",
+        "county": "新竹縣"
+    },
+    {
+        "id": "tra:1180",
+        "name": "竹北",
+        "operator": "tra",
+        "county": "新竹縣"
+    },
+    {
+        "id": "tra:1190",
+        "name": "北新竹",
+        "operator": "tra",
+        "county": "新竹市",
+        "neiwanOrder": 1
+    },
+    {
+        "id": "tra:1191",
+        "name": "千甲",
+        "operator": "tra",
+        "county": "新竹市",
+        "neiwanOrder": 2
+    },
+    {
+        "id": "tra:1192",
+        "name": "新莊",
+        "operator": "tra",
+        "county": "新竹市",
+        "neiwanOrder": 3
+    },
+    {
+        "id": "tra:1193",
+        "name": "竹中",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 4
+    },
+    {
+        "id": "tra:1194",
+        "name": "六家",
+        "operator": "tra",
+        "county": "新竹縣"
+    },
+    {
+        "id": "tra:1201",
+        "name": "上員",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 5
+    },
+    {
+        "id": "tra:1202",
+        "name": "榮華",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 6
+    },
+    {
+        "id": "tra:1203",
+        "name": "竹東",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 7
+    },
+    {
+        "id": "tra:1204",
+        "name": "橫山",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 8
+    },
+    {
+        "id": "tra:1205",
+        "name": "九讚頭",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 9
+    },
+    {
+        "id": "tra:1206",
+        "name": "合興",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 10
+    },
+    {
+        "id": "tra:1207",
+        "name": "富貴",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 11
+    },
+    {
+        "id": "tra:1208",
+        "name": "內灣",
+        "operator": "tra",
+        "county": "新竹縣",
+        "neiwanOrder": 12
+    },
+    {
+        "id": "tra:1210",
+        "name": "新竹",
+        "operator": "tra",
+        "county": "新竹市",
+        "neiwanOrder": 0
+    },
+    {
+        "id": "tra:1220",
+        "name": "三姓橋",
+        "operator": "tra",
+        "county": "新竹市"
+    },
+    {
+        "id": "tra:1230",
+        "name": "香山",
+        "operator": "tra",
+        "county": "新竹市"
+    },
+    {
+        "id": "tra:1240",
+        "name": "崎頂",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:1250",
+        "name": "竹南",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2110",
+        "name": "談文",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2120",
+        "name": "大山",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2130",
+        "name": "後龍",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2140",
+        "name": "龍港",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2150",
+        "name": "白沙屯",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2160",
+        "name": "新埔",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2170",
+        "name": "通霄",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2180",
+        "name": "苑裡",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:2190",
+        "name": "日南",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:2200",
+        "name": "大甲",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:2210",
+        "name": "臺中港",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:2220",
+        "name": "清水",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:2230",
+        "name": "沙鹿",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:2240",
+        "name": "龍井",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:2250",
+        "name": "大肚",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:2260",
+        "name": "追分",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3140",
+        "name": "造橋",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:3150",
+        "name": "豐富",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:3160",
+        "name": "苗栗",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:3170",
+        "name": "南勢",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:3180",
+        "name": "銅鑼",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:3190",
+        "name": "三義",
+        "operator": "tra",
+        "county": "苗栗縣"
+    },
+    {
+        "id": "tra:3210",
+        "name": "泰安",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3220",
+        "name": "后里",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3230",
+        "name": "豐原",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3240",
+        "name": "栗林",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3250",
+        "name": "潭子",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3260",
+        "name": "頭家厝",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3270",
+        "name": "松竹",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3280",
+        "name": "太原",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3290",
+        "name": "精武",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3300",
+        "name": "臺中",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3310",
+        "name": "五權",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3320",
+        "name": "大慶",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3330",
+        "name": "烏日",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3340",
+        "name": "新烏日",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3350",
+        "name": "成功",
+        "operator": "tra",
+        "county": "臺中市"
+    },
+    {
+        "id": "tra:3360",
+        "name": "彰化",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3370",
+        "name": "花壇",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3380",
+        "name": "大村",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3390",
+        "name": "員林",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3400",
+        "name": "永靖",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3410",
+        "name": "社頭",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3420",
+        "name": "田中",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3430",
+        "name": "二水",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3431",
+        "name": "源泉",
+        "operator": "tra",
+        "county": "彰化縣"
+    },
+    {
+        "id": "tra:3432",
+        "name": "濁水",
+        "operator": "tra",
+        "county": "南投縣"
+    },
+    {
+        "id": "tra:3433",
+        "name": "龍泉",
+        "operator": "tra",
+        "county": "南投縣"
+    },
+    {
+        "id": "tra:3434",
+        "name": "集集",
+        "operator": "tra",
+        "county": "南投縣"
+    },
+    {
+        "id": "tra:3435",
+        "name": "水里",
+        "operator": "tra",
+        "county": "南投縣"
+    },
+    {
+        "id": "tra:3436",
+        "name": "車埕",
+        "operator": "tra",
+        "county": "南投縣"
+    },
+    {
+        "id": "tra:3450",
+        "name": "林內",
+        "operator": "tra",
+        "county": "雲林縣"
+    },
+    {
+        "id": "tra:3460",
+        "name": "石榴",
+        "operator": "tra",
+        "county": "雲林縣"
+    },
+    {
+        "id": "tra:3470",
+        "name": "斗六",
+        "operator": "tra",
+        "county": "雲林縣"
+    },
+    {
+        "id": "tra:3480",
+        "name": "斗南",
+        "operator": "tra",
+        "county": "雲林縣"
+    },
+    {
+        "id": "tra:3490",
+        "name": "石龜",
+        "operator": "tra",
+        "county": "雲林縣"
+    },
+    {
+        "id": "tra:4050",
+        "name": "大林",
+        "operator": "tra",
+        "county": "嘉義縣"
+    },
+    {
+        "id": "tra:4060",
+        "name": "民雄",
+        "operator": "tra",
+        "county": "嘉義縣"
+    },
+    {
+        "id": "tra:4070",
+        "name": "嘉北",
+        "operator": "tra",
+        "county": "嘉義市"
+    },
+    {
+        "id": "tra:4080",
+        "name": "嘉義",
+        "operator": "tra",
+        "county": "嘉義市"
+    },
+    {
+        "id": "tra:4090",
+        "name": "水上",
+        "operator": "tra",
+        "county": "嘉義縣"
+    },
+    {
+        "id": "tra:4100",
+        "name": "南靖",
+        "operator": "tra",
+        "county": "嘉義縣"
+    },
+    {
+        "id": "tra:4110",
+        "name": "後壁",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4120",
+        "name": "新營",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4130",
+        "name": "柳營",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4140",
+        "name": "林鳳營",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4150",
+        "name": "隆田",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4160",
+        "name": "拔林",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4170",
+        "name": "善化",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4180",
+        "name": "南科",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4190",
+        "name": "新市",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4200",
+        "name": "永康",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4210",
+        "name": "大橋",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4220",
+        "name": "臺南",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4250",
+        "name": "保安",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4260",
+        "name": "仁德",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4270",
+        "name": "中洲",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4271",
+        "name": "長榮大學",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4272",
+        "name": "沙崙",
+        "operator": "tra",
+        "county": "臺南市"
+    },
+    {
+        "id": "tra:4290",
+        "name": "大湖",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4300",
+        "name": "路竹",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4310",
+        "name": "岡山",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4320",
+        "name": "橋頭",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4330",
+        "name": "楠梓",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4340",
+        "name": "新左營",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4350",
+        "name": "左營",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4360",
+        "name": "內惟",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4370",
+        "name": "美術館",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4380",
+        "name": "鼓山",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4390",
+        "name": "三塊厝",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4400",
+        "name": "高雄",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4410",
+        "name": "民族",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4420",
+        "name": "科工館",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4430",
+        "name": "正義",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4440",
+        "name": "鳳山",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4450",
+        "name": "後庄",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4460",
+        "name": "九曲堂",
+        "operator": "tra",
+        "county": "高雄市"
+    },
+    {
+        "id": "tra:4470",
+        "name": "六塊厝",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5000",
+        "name": "屏東",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5010",
+        "name": "歸來",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5020",
+        "name": "麟洛",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5030",
+        "name": "西勢",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5040",
+        "name": "竹田",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5050",
+        "name": "潮州",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5060",
+        "name": "崁頂",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5070",
+        "name": "南州",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5080",
+        "name": "鎮安",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5090",
+        "name": "林邊",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5100",
+        "name": "佳冬",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5110",
+        "name": "東海",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5120",
+        "name": "枋寮",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5130",
+        "name": "加祿",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5140",
+        "name": "內獅",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5160",
+        "name": "枋山",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5170",
+        "name": "枋野",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5190",
+        "name": "大武",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:5200",
+        "name": "瀧溪",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:5210",
+        "name": "金崙",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:5220",
+        "name": "太麻里",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:5230",
+        "name": "知本",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:5240",
+        "name": "康樂",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:5998",
+        "name": "南方小站",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:5999",
+        "name": "潮州基地",
+        "operator": "tra",
+        "county": "屏東縣"
+    },
+    {
+        "id": "tra:6000",
+        "name": "臺東",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6010",
+        "name": "山里",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6020",
+        "name": "鹿野",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6030",
+        "name": "瑞源",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6040",
+        "name": "瑞和",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6050",
+        "name": "關山",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6060",
+        "name": "海端",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6070",
+        "name": "池上",
+        "operator": "tra",
+        "county": "臺東縣"
+    },
+    {
+        "id": "tra:6080",
+        "name": "富里",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6090",
+        "name": "東竹",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6100",
+        "name": "東里",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6110",
+        "name": "玉里",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6120",
+        "name": "三民",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6130",
+        "name": "瑞穗",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6140",
+        "name": "富源",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6150",
+        "name": "大富",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6160",
+        "name": "光復",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6170",
+        "name": "萬榮",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6180",
+        "name": "鳳林",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6190",
+        "name": "南平",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6200",
+        "name": "林榮新光",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6210",
+        "name": "豐田",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6220",
+        "name": "壽豐",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6230",
+        "name": "平和",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6240",
+        "name": "志學",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:6250",
+        "name": "吉安",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7000",
+        "name": "花蓮",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7010",
+        "name": "北埔",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7020",
+        "name": "景美",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7030",
+        "name": "新城",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7040",
+        "name": "崇德",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7050",
+        "name": "和仁",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7060",
+        "name": "和平",
+        "operator": "tra",
+        "county": "花蓮縣"
+    },
+    {
+        "id": "tra:7070",
+        "name": "漢本",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7080",
+        "name": "武塔",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7090",
+        "name": "南澳",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7100",
+        "name": "東澳",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7110",
+        "name": "永樂",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7120",
+        "name": "蘇澳",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7130",
+        "name": "蘇澳新",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7140",
+        "name": "新馬",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7150",
+        "name": "冬山",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7160",
+        "name": "羅東",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7170",
+        "name": "中里",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7180",
+        "name": "二結",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7190",
+        "name": "宜蘭",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7200",
+        "name": "四城",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7210",
+        "name": "礁溪",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7220",
+        "name": "頂埔",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7230",
+        "name": "頭城",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7240",
+        "name": "外澳",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7250",
+        "name": "龜山",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7260",
+        "name": "大溪",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7270",
+        "name": "大里",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7280",
+        "name": "石城",
+        "operator": "tra",
+        "county": "宜蘭縣"
+    },
+    {
+        "id": "tra:7290",
+        "name": "福隆",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7300",
+        "name": "貢寮",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7310",
+        "name": "雙溪",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7320",
+        "name": "牡丹",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7330",
+        "name": "三貂嶺",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7331",
+        "name": "大華",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7332",
+        "name": "十分",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7333",
+        "name": "望古",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7334",
+        "name": "嶺腳",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7335",
+        "name": "平溪",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7336",
+        "name": "菁桐",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7350",
+        "name": "猴硐",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7360",
+        "name": "瑞芳",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7361",
+        "name": "海科館",
+        "operator": "tra",
+        "county": "基隆市"
+    },
+    {
+        "id": "tra:7362",
+        "name": "八斗子",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7380",
+        "name": "四腳亭",
+        "operator": "tra",
+        "county": "新北市"
+    },
+    {
+        "id": "tra:7390",
+        "name": "暖暖",
+        "operator": "tra",
+        "county": "基隆市"
+    },
+    {
+        "id": "thsr:0990",
+        "name": "南港",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1000",
+        "name": "台北",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1010",
+        "name": "板橋",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1020",
+        "name": "桃園",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1030",
+        "name": "新竹",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1035",
+        "name": "苗栗",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1040",
+        "name": "台中",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1043",
+        "name": "彰化",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1047",
+        "name": "雲林",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1050",
+        "name": "嘉義",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1060",
+        "name": "台南",
+        "operator": "thsr",
+        "county": ""
+    },
+    {
+        "id": "thsr:1070",
+        "name": "左營",
+        "operator": "thsr",
+        "county": ""
+    }
+]
