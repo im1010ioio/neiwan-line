@@ -67,7 +67,7 @@ function heading() {
     return `<header class="site-header"><a class="brand" href="#" aria-label="回到車班查詢"><img src="${import.meta.env.BASE_URL}icon.svg" width="36" height="36" alt=""><span>內灣線<span class="brand-sub">轉乘攻略</span></span></a><nav aria-label="主要導覽"><a href="#" ${location.hash !== "#privacy" ? 'aria-current="page"' : ""}>車班查詢</a><span class="soon-nav">內灣線特色 <small>準備中</small></span><button class="icon-button" id="settings-open" aria-label="開啟設定">⚙</button></nav></header>`;
 }
 function footer() {
-    return `<footer><span>沿著鐵道，安排下一段旅程。</span><div><a href="#privacy">隱私權與使用條款</a><button class="text-button" id="privacy-settings">隱私設定</button><a href="https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/gobytime" target="_blank" rel="noreferrer">台鐵官方查詢 ↗</a><a href="https://www.thsrc.com.tw/" target="_blank" rel="noreferrer">高鐵官方查詢 ↗</a><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷官方查詢 ↗</a></div><p>班表來源：臺鐵官方開放資料／TDX。每日更新，非即時誤點資訊。機捷抵達時間為預估，不含臨時加班或誤點，請預留轉乘時間；實際運行與座位請以官方資訊為準。</p></footer>`;
+    return `<footer><span>沿著鐵道，安排下一段旅程。</span><div><a href="#privacy">隱私權與使用條款</a><button class="text-button" id="privacy-settings">隱私設定</button><a href="https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/gobytime" target="_blank" rel="noreferrer">台鐵官方查詢 ↗</a><a href="https://www.thsrc.com.tw/" target="_blank" rel="noreferrer">高鐵官方查詢 ↗</a><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷官方查詢 ↗</a></div><p>班表來源：臺鐵官方開放資料／TDX。每日更新。行程時間僅供參考，未反映臨時班次調整或誤點，請預留轉乘時間；實際運行與座位請以官方資訊為準。</p></footer>`;
 }
 function consentBanner() {
     if (consent !== "unknown") return "";
