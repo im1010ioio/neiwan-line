@@ -498,3 +498,24 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 .back-to-top:hover { background: var(--surface-soft); }
 .back-to-top:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
 .back-to-top[hidden], body:has(.consent-banner) .back-to-top { display: none; }
+
+
+/* Native date picker keeps the platform's accessible touch/keyboard calendar. */
+.date-heading { display: flex; align-items: center; gap: 8px; }
+.date-weekday { font-size: 12px; color: var(--muted); }
+.query-controls input[type="date"] {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+    min-height: 44px;
+    border: 0;
+    border-radius: 8px;
+    padding: 0 4px 0 0;
+    color: var(--ink);
+    background: var(--surface);
+    font-size: 16px;
+    cursor: pointer;
+    touch-action: manipulation;
+}
+.query-controls input[type="date"]::-webkit-date-and-time-value { text-align: left; }

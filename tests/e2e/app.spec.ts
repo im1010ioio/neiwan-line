@@ -63,8 +63,8 @@ test("今天的狀態、已過組合及指定時間一起運作", async ({ page 
 });
 
 test("未來日期顯示星期與預定班次，重新開啟保留日期但回全天", async ({ page }) => {
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-26");
-    await expect(page.getByLabel("出發日期", { exact: true }).locator("option:checked")).toHaveText("2026/09/26 (六)");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-26");
+    await expect(page.locator("#date-weekday")).toHaveText("(星期六)");
     await expect(page.locator(".badge--scheduled")).toHaveCount(3);
     await expect(page.locator(".countdown")).toHaveCount(0);
     await expect(page.getByLabel("顯示已過組合", { exact: true })).toHaveCount(0);
@@ -115,7 +115,7 @@ test("缺少資料與零組合分開提示，狹窄螢幕沒有橫向溢出", as
     await page.getByLabel("出發時間", { exact: true }).selectOption("23:00");
     await expect(page.getByRole("heading", { name: "此時段沒有符合轉乘條件的行程" })).toBeVisible();
     await page.route("**/data/*.json", route => route.fulfill({ status: 404, body: "" }));
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-22");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-22");
     await expect(page.getByRole("heading", { name: "班表資料尚未齊全" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
@@ -231,7 +231,7 @@ test("設定轉乘上限後立即重算，重新開啟保留，等於上限不�
 });
 
 test("查無結果可清除車種篩選，保留日期時間與站點", async ({ page }) => {
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-23");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-23");
     await page.getByLabel("出發時間", { exact: true }).selectOption("09:00");
     await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
     await page.getByRole("button", { name: "臺北市", exact: true }).click();
@@ -363,7 +363,7 @@ test("班表狀態依搭乘日期判斷，昨日取得的未來班表仍可使�
     await expect(status).toHaveClass(/schedule-status--ready/);
     await expect(status).toContainText("2026/09/21 班表已取得");
     await expect(status).toContainText("2026/09/21 04:30");
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-22");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-22");
     await expect(status).toHaveClass(/schedule-status--ready/);
     await page.clock.setFixedTime(new Date("2026-09-22T08:00:00+08:00"));
     await page.reload();
@@ -384,7 +384,7 @@ test("班表狀態依搭乘日期判斷，昨日取得的未來班表仍可使�
 
 test("所選日期缺少班表時，顯示日期與內灣線手動更新入口", async ({ page }) => {
     await page.route("**/data/*.json", route => route.fulfill({ status: 404, body: "" }));
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-23");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-23");
     const status = page.locator(".schedule-status");
     await expect(status).toHaveClass(/schedule-status--warning/);
     await expect(status).toContainText("2026/09/23 班表尚未取得");
@@ -427,7 +427,7 @@ test("注音組字期間保留搜尋框與結果，選字後更新清單且不�
 test("設定光箱可清除查詢偏好並保留分析選擇", async ({ page }) => {
     await page.getByRole("button", { name: "拒絕", exact: true }).click();
     await page.getByRole("button", { name: "交換起迄站" }).click();
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-24");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-24");
     await page.getByRole("button", { name: "調整轉乘時間", exact: true }).click();
     await page.getByLabel("台鐵轉乘上限（分鐘）").fill("60");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
@@ -456,11 +456,13 @@ test("往下捲動後可用圓形按鈕回到頂端", async ({ page }) => {
 });
 
 
-test("28天日期選單包含跨月最後一天並於重新開啟保留", async ({ page }) => {
+test("日期選擇器限定28天、包含跨月最後一天並於重新開啟保留", async ({ page }) => {
     const dates = page.getByLabel("出發日期", { exact: true });
-    await expect(dates.locator("option")).toHaveCount(28);
-    await dates.selectOption("2026-10-18");
-    await expect(dates.locator("option:checked")).toHaveText("2026/10/18 (日)");
+    await expect(dates).toHaveAttribute("type", "date");
+    await expect(dates).toHaveAttribute("min", "2026-09-21");
+    await expect(dates).toHaveAttribute("max", "2026-10-18");
+    await dates.fill("2026-10-18");
+    await expect(page.locator("#date-weekday")).toHaveText("(星期日)");
     await expect(page.locator(".journey-card")).toHaveCount(3);
     await page.reload();
     await expect(dates).toHaveValue("2026-10-18");
@@ -474,12 +476,12 @@ test("日期切換共用班表，篩選不重新下載，快速切換顯示最�
     await page.getByLabel("內灣新竹直達車", { exact: true }).check();
     await expect(page.locator(".journey-card")).toHaveCount(3);
     expect(requests).toHaveLength(0);
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-22");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-22");
     await expect(page.locator(".badge--scheduled")).toHaveCount(3);
     expect(requests).toHaveLength(2);
     expect(requests.filter(url => url.includes("/slices/"))).toHaveLength(1);
     expect(requests.every(url => !/slices\/(tra|thsr)-/.test(url))).toBe(true);
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-21");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-21");
     await expect(page.locator(".badge--warning")).toHaveCount(1);
     expect(requests).toHaveLength(2);
     await page.route("**/data/2026-09-23.json", async route => {
@@ -487,10 +489,33 @@ test("日期切換共用班表，篩選不重新下載，快速切換顯示最�
         await route.fallback();
     });
     const slowResponse = page.waitForResponse("**/data/2026-09-23.json");
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-23");
-    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-24");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-23");
+    await page.getByLabel("出發日期", { exact: true }).fill("2026-09-24");
     await (await slowResponse).finished();
     await expect(page.locator(".schedule-status")).toContainText("2026/09/24 班表已取得");
     await expect(page.locator(".badge--scheduled")).toHaveCount(3);
     await expect(page.getByLabel("出發日期", { exact: true })).toHaveValue("2026-09-24");
+});
+
+
+test("日期選擇器拒絕範圍外及空白輸入，不查詢或儲存無效日期", async ({ page }) => {
+    await expect(page.locator(".journey-card")).toHaveCount(3);
+    const requests: string[] = [];
+    page.on("request", request => { if (request.url().includes("/data/")) requests.push(request.url()); });
+    const date = page.getByLabel("出發日期", { exact: true });
+    for (const invalid of ["2026-09-20", "2026-10-19", ""]) {
+        await date.fill(invalid);
+        await expect(date).toHaveValue("2026-09-21");
+    }
+    expect(requests).toHaveLength(0);
+    await page.reload();
+    await expect(date).toHaveValue("2026-09-21");
+    await expect(page.locator(".journey-card")).toHaveCount(3);
+    await expect.poll(() => date.evaluate(input => input.getBoundingClientRect().height)).toBeGreaterThanOrEqual(44);
+    for (const width of [320, 390]) {
+        await page.setViewportSize({ width, height: 844 });
+        await page.emulateMedia({ colorScheme: "dark" });
+        await expect(date).toBeVisible();
+        expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    }
 });
