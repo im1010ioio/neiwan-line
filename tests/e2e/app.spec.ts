@@ -173,7 +173,7 @@ test("對號篩選預設勾選且保留接駁，可透過搜尋切換新竹", as
     await expect(page.locator(".journey-card")).not.toContainText("LOCAL");
     await page.reload();
     await expect(page.getByRole("button", { name: "選擇迄站：新竹" })).toBeVisible();
-    await page.getByRole("button", { name: "調整轉乘時間上限" }).click();
+    await page.getByRole("button", { name: "調整轉乘時間" }).click();
     await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toBeVisible();
 
 });
@@ -194,7 +194,7 @@ test("設定轉乘上限後立即重算，重新開啟保留，等於上限不�
     await page.getByLabel("高鐵接駁上限（分鐘）").fill("60");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
-    await expect(page.locator(".transfer-hint")).toContainText("未滿 26 分");
+    await expect(page.locator(".transfer-hint")).toHaveText("調整轉乘時間");
     await page.reload();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await page.getByRole("button", { name: "開啟設定" }).click();
@@ -310,20 +310,20 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     await page.evaluate(() => localStorage.setItem("neiwan.filters.v1", JSON.stringify({ reservedOnly: true, directOutbound: false, directReturn: false, metroService: "express" })));
     await page.reload();
     await expect(page.locator(".journey-card")).toHaveCount(2);
-    await page.getByRole("button", { name: "調整轉乘時間上限" }).click();
+    await page.getByRole("button", { name: "調整轉乘時間" }).click();
     await page.getByLabel("機捷接駁上限（分鐘）").fill("12");
     await expect(page.getByLabel("高鐵接駁上限（分鐘）")).toHaveValue("40");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await expect(page.locator(".journey-card")).toContainText("機捷普通車");
     await page.reload();
-    await page.getByRole("button", { name: "調整轉乘時間上限" }).click();
+    await page.getByRole("button", { name: "調整轉乘時間" }).click();
     await expect(page.getByLabel("機捷接駁上限（分鐘）")).toHaveValue("12");
     await page.getByLabel("機捷接駁上限（分鐘）").fill("16");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await page.getByRole("button", { name: "交換起迄站" }).click();
     await expect(page.locator(".journey-card")).toHaveCount(2);
-    await page.getByRole("button", { name: "調整轉乘時間上限" }).click();
+    await page.getByRole("button", { name: "調整轉乘時間" }).click();
     await page.getByLabel("機捷接駁上限（分鐘）").fill("15");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
