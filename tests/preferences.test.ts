@@ -36,10 +36,10 @@ it("舊偏好沿用預設上限，自訂上限可保存，無效欄位個別還�
     savePreferences(store, { ...original, traMaxMinutes: 30, thsrMaxMinutes: 60 });
     expect(loadPreferences(store, today).value).toMatchObject({ traMaxMinutes: 30, thsrMaxMinutes: 60 });
     store.setItem("neiwan.preferences.v1", JSON.stringify({ ...original, traMaxMinutes: 5, thsrMaxMinutes: 60 }));
-    expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { traMaxMinutes: 20, thsrMaxMinutes: 60 } });
+    expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { traMaxMinutes: 30, thsrMaxMinutes: 60 } });
     const { traMaxMinutes, thsrMaxMinutes, ...legacy } = original;
     store.setItem("neiwan.preferences.v1", JSON.stringify(legacy));
-    expect(loadPreferences(store, today)).toMatchObject({ reset: false, value: { traMaxMinutes: 20, thsrMaxMinutes: 40 } });
+    expect(loadPreferences(store, today)).toMatchObject({ reset: false, value: { traMaxMinutes: 30, thsrMaxMinutes: 40 } });
 });
 
 it("新使用者預設勾選對號列車，自行取消的選擇則保留", async () => {

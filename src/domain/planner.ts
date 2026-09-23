@@ -1,4 +1,6 @@
 import type { Journey, Leg, Train } from "./types";
+import stationData from "../stations.json";
+const reservedTransferExceptionStations = new Set(stationData.filter(station => /基隆|宜蘭|花蓮|臺東|台東|屏東/.test(station.county)).map(station => station.id));
 import { passedRailStations, approachesDestination, sameMainlineTransfer } from "./rail-path";
 import { addDays } from "./query";
 
@@ -29,7 +31,7 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                 accessWalk: { origin: atStart ? "thsr:1030" : "tra:1194", destination: atStart ? "tra:1194" : "thsr:1030", departure, arrival, position: atStart ? "start" as const : "end" as const } };
         }).filter(j => j.departure >= Date.parse(`${date}T00:00:00+08:00`));
     }
-    const traMax = filters.traMaxMinutes ?? 20;
+    const traMax = filters.traMaxMinutes ?? 30;
     const thsrMax = filters.thsrMaxMinutes ?? 40;
     const start = Date.parse(`${date}T00:00:00+08:00`);
     const end = Date.parse(`${addDays(date, 1)}T00:00:00+08:00`);
@@ -42,6 +44,9 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
         .filter(c => c.from.departure >= start && c.from.departure < end + 86400000)
         .sort((a, b) => a.from.departure - b.from.departure || a.i - b.i);
     const trainsById = new Map(trains.map(train => [train.id, train]));
+    const outboundTra = branchStations.has(origin) && destination.startsWith("tra:") && !branchStations.has(destination);
+    const headsSouth = outboundTra && passedRailStations("tra:1190", destination).includes("tra:1210");
+    const regionalTransferException = reservedTransferExceptionStations.has(origin) || reservedTransferExceptionStations.has(destination);
     const inboundTra = origin.startsWith("tra:") && !branchStations.has(origin) && branchStations.has(destination);
     const approachesFromSouth = inboundTra && passedRailStations(origin, "tra:1190").includes("tra:1210");
     const branchTrainIds = new Set(trains.filter(train => train.stops.some(stop => branchStations.has(stop.station) && !["tra:1210", "tra:1190"].includes(stop.station))).map(train => train.id));
@@ -70,6 +75,30 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                 if (filters.directOnly && (label.legs.length >= 2 || from.station !== "tra:1210" || last.destination !== "tra:1210")) continue;
                 const previousTrain = trainsById.get(last.trip)!;
                 if (previousTrain.operator === "tra" && train.operator === "tra"
+                    && previousTrain.reserved === true && train.reserved === true) {
+                    // Toward Neiwan, check the incoming service; away from it, the onward service.
+                    // Even on exception routes, keep the original train when it reaches
+                    // the same next-train destination no later, with no added change.
+                    const onwardDestination = train.stops.find(stop => stop.station === destination && stop.arrival >= from.departure);
+                    const originalDestination = previousTrain.stops.find(stop => stop.station === destination && stop.arrival >= last.arrival);
+                    if (onwardDestination && originalDestination && originalDestination.arrival <= onwardDestination.arrival) continue;
+                    const serviceAtHsinchu = inboundTra ? previousTrain : train;
+                    if (!regionalTransferException && serviceAtHsinchu.stops.some(stop => stop.station === "tra:1210")) continue;
+                }
+                if (!crossing && train.operator === "tra" && previousTrain.operator === "tra"
+                    && branchStations.has(from.station) && !["tra:1193", "tra:1190", "tra:1210"].includes(from.station)) continue;
+                if (outboundTra && branchTrain(previousTrain)) {
+                    const arrivalIndex = previousTrain.stops.findIndex(stop => stop.station === last.destination && stop.arrival === last.arrival);
+                    const directToHsinchu = label.legs.length === 1 && previousTrain.stops.slice(arrivalIndex).some(stop => stop.station === "tra:1210");
+                    if (directToHsinchu && from.station !== "tra:1210") continue;
+                    if (branchTrain(train)) {
+                        if (from.station !== "tra:1193") continue;
+                    } else if (!filters.directOnly) {
+                        const hub = directToHsinchu || headsSouth || train.reserved === true ? "tra:1210" : train.reserved === false ? "tra:1190" : undefined;
+                        if (hub ? from.station !== hub : !["tra:1210", "tra:1190"].includes(from.station)) continue;
+                    }
+                }
+                if (previousTrain.operator === "tra" && train.operator === "tra"
                     && previousTrain.reserved === false && train.reserved === false && !crossing
                     && !branchTrain(previousTrain) && !branchTrain(train)) {
                     const arrivalIndex = previousTrain.stops.findIndex(stop => stop.station === last.destination && stop.arrival === last.arrival);
@@ -83,7 +112,8 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                         const canStayToHub = previousTrain.stops.slice(arrivalIndex + 1).some(stop => stop.station === hub);
                         const passedHub = previousTrain.stops.slice(0, arrivalIndex + 1).some(stop => stop.station === hub && stop.departure >= last.departure);
                         // Stay on the mainline train to its interchange; do not replace it en route.
-                        if (from.station !== hub && (canStayToHub || passedHub)) continue;
+                        if (from.station !== hub && (canStayToHub || passedHub)
+                            && !(regionalTransferException && !passedHub && previousTrain.reserved === true && train.reserved === true)) continue;
                         if (branchTrain(train) && from.station !== hub) continue;
                         // Once at the hub, board a branch service rather than another mainline train.
                         if (from.station === hub && !branchTrain(train)) continue;

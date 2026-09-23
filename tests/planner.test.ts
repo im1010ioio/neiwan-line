@@ -5,12 +5,12 @@ const at = (time: string) => Date.parse(`2026-09-21T${time}:00+08:00`);
 export function train(id: string, stops: [string, string][], operator: "tra" | "thsr" = "tra"): Train {
     return { id, number: id, operator, service: "測試班表", stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) };
 }
-it("同車續搭不算換車，五分鐘可換車、二十分鐘不可", () => {
+it("同車續搭不算換車，五分鐘可換車、三十分鐘不可", () => {
     const trains = [
         train("through", [["tra:1208", "08:00"], ["tra:1193", "08:20"], ["tra:1210", "08:40"]]),
         train("branch", [["tra:1208", "09:00"], ["tra:1193", "09:20"]]),
         train("ok", [["tra:1193", "09:25"], ["tra:1210", "09:40"]]),
-        train("late", [["tra:1193", "09:40"], ["tra:1210", "09:55"]]),
+        train("late", [["tra:1193", "09:50"], ["tra:1210", "09:55"]]),
     ];
     const result = planJourneys(trains, "tra:1208", "tra:1210", "2026-09-21");
     expect(result.map(j => j.legs.map(l => l.number))).toEqual([["through"], ["branch", "ok"]]);
@@ -74,9 +74,7 @@ it("竹中換車後接上同一班台鐵或高鐵時仍保留不同接駁組合"
             train("shuttle", [["tra:1193", "08:25"], [hub, "08:40"]]),
             train("onward", [[highSpeed ? "thsr:1030" : hub, "08:55"], [final, "09:30"]], highSpeed ? "thsr" : "tra"),
         ];
-        expect(planJourneys(trains, "tra:1208", final, "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([
-            ["through", "onward"], ["through", "shuttle", "onward"],
-        ]);
+        expect(planJourneys(trains, "tra:1208", final, "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual(highSpeed ? [["through", "onward"], ["through", "shuttle", "onward"]] : [["through", "onward"]]);
     }
 });
 it("對號篩選保留內灣線區間接駁，只限制幹線，並在比較行程前套用", () => {
@@ -113,7 +111,7 @@ it("原車終止北新竹或轉往北上方向時，仍保留北新竹換車", (
     ];
     expect(planJourneys(terminating, "tra:1193", "tra:1210", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["ending", "south"]]);
     const northbound = [
-        train("shuttle", [["tra:1193", "08:00"], ["tra:1190", "08:20"], ["tra:1210", "08:30"]]),
+        train("shuttle", [["tra:1193", "08:00"], ["tra:1190", "08:20"]]),
         train("north", [["tra:1190", "08:25"], ["tra:1000", "09:30"]]),
     ];
     expect(planJourneys(northbound, "tra:1193", "tra:1000", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["shuttle", "north"]]);
@@ -182,7 +180,7 @@ it("未來日期直達篩選須在新竹接幹線，去回程皆排除竹中、�
         }
         expect(planJourneys(outbound, "tra:1208", "tra:1000", "2026-09-28", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["branch", "mainline"]]);
         expect(planJourneys(inbound, "tra:1000", "tra:1208", "2026-09-28", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["mainline-back", "branch-back"]]);
-        expect(planJourneys(outbound, "tra:1208", "tra:1000", "2026-09-28").some(j => j.legs.some(l => l.number === "shortcut"))).toBe(true);
+        expect(planJourneys(outbound, "tra:1208", "tra:1000", "2026-09-28").some(j => j.legs.some(l => l.number === "shortcut"))).toBe(false);
         expect(planJourneys(inbound, "tra:1000", "tra:1208", "2026-09-28").some(j => j.legs.some(l => l.number === "shortcut-back"))).toBe(hub !== "tra:1191");
         expect(planJourneys(outbound, "tra:1208", hub, "2026-09-28", { directOnly: true })).toHaveLength(1);
     }
@@ -214,7 +212,7 @@ it("內灣新竹直達模式最多一次轉乘，僅能在新竹換車，去回�
         train("extra-back", [["tra:1020", "08:00"], ["tra:1180", "09:00"]]),
         train("local-back", [["tra:1180", "09:05"], ["tra:1190", "09:10"], ["tra:1210", "09:15"]]),
         train("mainline-back", [["tra:1020", "07:50"], ["tra:1210", "09:15"]]),
-        train("branch-back", [["tra:1210", "09:20"], ["tra:1190", "09:25"], ["tra:1208", "10:10"]]),
+        train("branch-back", [["tra:1210", "09:20"], ["tra:1190", "09:30"], ["tra:1208", "10:10"]]),
     ];
     expect(planJourneys(out, "tra:1208", "tra:1020", "2026-09-21", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["branch", "mainline"]]);
     expect(planJourneys(back, "tra:1020", "tra:1208", "2026-09-21", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["mainline-back", "branch-back"]]);
@@ -249,10 +247,10 @@ it("非對號列車不能越過北新竹到新竹，再換幹線車折返北新�
     const trains = [
         { ...train("south", [["tra:1000", "08:00"], ["tra:1190", "09:00"], ["tra:1210", "09:05"]]), reserved: false },
         train("turn-back", [["tra:1210", "09:10"], ["tra:1190", "09:15"]]),
-        train("branch", [["tra:1190", "09:20"], ["tra:1208", "10:10"]]),
+        train("branch", [["tra:1190", "09:30"], ["tra:1208", "10:10"]]),
     ];
     expect(planJourneys(trains, "tra:1000", "tra:1208", "2026-09-21")).toEqual([]);
-    trains[2].stops[0].arrival = trains[2].stops[0].departure = at("09:19");
+    trains[2].stops[0].arrival = trains[2].stops[0].departure = at("09:29");
     expect(planJourneys(trains, "tra:1000", "tra:1208", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["south", "branch"]]);
 });
 
@@ -293,4 +291,50 @@ it("不同幹線的區間車互轉仍保留，例如東部幹線接西部幹線"
         { ...train("branch", [["tra:1190", "10:40"], ["tra:1208", "11:30"]]), reserved: false },
     ];
     expect(planJourneys(trains, "tra:7360", "tra:1208", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["east", "west", "branch"]]);
+});
+
+
+it("預設可在新竹等待22分鐘直接接對號列車，不提前在竹中換車或對號轉對號", () => {
+    const trains = [
+        { ...train("1831", [["tra:1202", "17:16"], ["tra:1193", "17:25"], ["tra:1210", "17:43"]]), reserved: false },
+        { ...train("shuttle", [["tra:1193", "17:31"], ["tra:1210", "17:46"]]), reserved: false },
+        { ...train("179", [["tra:1210", "17:53"], ["tra:1250", "18:07"]]), reserved: true },
+        { ...train("139", [["tra:1210", "18:05"], ["tra:1250", "18:21"], ["tra:4400", "21:31"]]), reserved: true },
+    ];
+    for (const reservedOnly of [false, true]) {
+        const result = planJourneys(trains, "tra:1202", "tra:4400", "2026-09-21", { reservedOnly });
+        expect(result.map(j => j.legs.map(l => l.number))).toEqual([["1831", "139"]]);
+        expect(result[0].legs[0].destination).toBe("tra:1210");
+        expect(planJourneys(trains, "tra:1202", "tra:4400", "2026-09-21", { reservedOnly, traMaxMinutes: 20 })).toEqual([]);
+    }
+});
+
+
+it("未停新竹或指定縣市可保留必要對號轉乘，去回程皆適用", () => {
+    for (const destination of ["tra:0980", "tra:7000", "tra:0900", "tra:7190", "tra:5000"]) {
+        const regional = destination !== "tra:0980";
+        const interchange = destination === "tra:5000" ? "tra:4400" : "tra:1000";
+        const outbound = [
+            { ...train("branch", [["tra:1202", "08:00"], ["tra:1210", "08:50"]]), reserved: false },
+            { ...train("first", [["tra:1210", "09:00"], [interchange, "10:00"]]), reserved: true },
+            { ...train("onward", [...(regional ? [["tra:1210", "09:30"]] as [string, string][] : []), [interchange, "10:15"], [destination, "11:00"]]), reserved: true },
+        ];
+        const inbound = outbound.map(t => ({ ...t, stops: [...t.stops].reverse().map(stop => ({ ...stop, arrival: at("23:00") - (stop.departure - at("00:00")), departure: at("23:00") - (stop.arrival - at("00:00")) })) }));
+        for (const reservedOnly of [false, true]) {
+            expect(planJourneys(outbound, "tra:1202", destination, "2026-09-21", { reservedOnly }).map(j => j.legs.map(l => l.number))).toEqual([["branch", "first", "onward"]]);
+            // The return through service misses the branch waiting window; the exception keeps the necessary connection.
+            const back = planJourneys(inbound, destination, "tra:1202", "2026-09-21", { reservedOnly });
+            expect(back.map(j => j.legs.map(l => l.number))).toEqual([["onward", "first", "branch"]]);
+        }
+    }
+});
+
+
+it("例外路線原對號車能更早到目的地時，不改搭另一班對號車", () => {
+    const trains = [
+        { ...train("branch", [["tra:1202", "08:00"], ["tra:1210", "08:40"]]), reserved: false },
+        { ...train("through", [["tra:1210", "09:05"], ["tra:1000", "10:00"], ["tra:0900", "10:40"]]), reserved: true },
+        { ...train("extra", [["tra:1000", "10:10"], ["tra:0900", "10:45"]]), reserved: true },
+    ];
+    expect(planJourneys(trains, "tra:1202", "tra:0900", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["branch", "through"]]);
 });

@@ -492,3 +492,9 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 .train-type { display: inline; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; color: var(--muted); }
 
 .no-standing { display: inline-block; color: var(--primary); font-size: 12px; font-weight: 600; white-space: nowrap; }
+
+.back-to-top { position: fixed; right: max(16px, env(safe-area-inset-right)); bottom: calc(20px + env(safe-area-inset-bottom)); z-index: 5; display: grid; place-items: center; width: 48px; height: 48px; padding: 0; border: 1px solid var(--line); border-radius: 50%; color: var(--primary); background: var(--surface); box-shadow: var(--shadow); cursor: pointer; }
+.back-to-top svg { width: 22px; height: 22px; }
+.back-to-top:hover { background: var(--surface-soft); }
+.back-to-top:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.back-to-top[hidden], body:has(.consent-banner) .back-to-top { display: none; }

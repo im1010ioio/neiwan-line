@@ -13,7 +13,7 @@ export interface Preferences {
 }
 export type StorageLike = Pick<Storage, "getItem" | "setItem" | "removeItem">;
 export function defaults(date: string): Preferences {
-    return { neiwan: "tra:1208", other: "tra:1210", reversed: false, date, preparation: 25, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 };
+    return { neiwan: "tra:1208", other: "tra:1210", reversed: false, date, preparation: 25, traMaxMinutes: 30, thsrMaxMinutes: 40, metroMaxMinutes: 40 };
 }
 export function loadPreferences(storage: StorageLike | undefined, today: string): { value: Preferences; reset: boolean } {
     const value = defaults(today);

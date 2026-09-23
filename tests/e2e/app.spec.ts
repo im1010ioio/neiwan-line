@@ -115,6 +115,7 @@ test("直達與竹中轉乘一起顯示，行程卡標示竹中換車間隔", as
     await expect(page.locator(".journey-card")).toHaveCount(2);
     await expect(page.locator(".journey-card").first()).toContainText("竹中站內換車");
     await expect(page.locator(".transfer")).toContainText("5 分鐘");
+    await expect(page.locator(".transfer")).not.toContainText("需出站購票再進站");
     await expect(page.locator(".journey-card").last()).toContainText("免換車");
     const summary = page.locator(".journey-summary").first();
     const departureBox = (await summary.locator(":scope > strong").first().boundingBox())!;
@@ -158,6 +159,7 @@ test("對號篩選預設勾選且保留接駁，可透過搜尋切換新竹", as
     await expect(express.locator(".train-tag")).toHaveText("對號列車");
     await expect(express.locator(".train-number")).toHaveText("EXPRESS 次 自強(3000)(EMU3000 型電車) 無售站票");
     await expect(express.locator(".train-type")).toHaveCSS("display", "inline");
+    await expect(page.locator(".transfer")).toContainText("新竹站內換車（需出站購票再進站）");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.locator(".journey-card")).toContainText("BRANCH");
     await page.getByLabel("主要幹線僅搭對號列車", { exact: true }).uncheck();
@@ -184,13 +186,13 @@ test("設定轉乘上限後立即重算，重新開啟保留，等於上限不�
         const train = (id: string, stops: [string, string][]) => ({ id, number: id, operator: "tra", service: "測試車次", stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) });
         await route.fulfill({ json: { schemaVersion: 1, date: "2026-09-21", generatedAt: "2026-09-21T04:30:00+08:00", coverage: { tra: true, thsr: false }, sources: ["自動化測試專用資料"], trains: [
             train("BRANCH", [["tra:1208", "08:10"], ["tra:1193", "08:40"]]),
-            train("SHUTTLE", [["tra:1193", "09:05"], ["tra:1210", "09:20"]]),
+            train("SHUTTLE", [["tra:1193", "09:10"], ["tra:1210", "09:25"]]),
         ] } });
     });
     await page.reload();
     await expect(page.getByRole("heading", { name: "此時段沒有符合轉乘條件的行程" })).toBeVisible();
     await page.getByRole("button", { name: "開啟設定" }).click();
-    await page.getByLabel("台鐵轉乘上限（分鐘）").fill("26");
+    await page.getByLabel("台鐵轉乘上限（分鐘）").fill("31");
     await page.getByLabel("高鐵接駁上限（分鐘）").fill("60");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
@@ -198,12 +200,12 @@ test("設定轉乘上限後立即重算，重新開啟保留，等於上限不�
     await page.reload();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await page.getByRole("button", { name: "開啟設定" }).click();
-    await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toHaveValue("26");
+    await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toHaveValue("31");
     await expect(page.getByLabel("高鐵接駁上限（分鐘）")).toHaveValue("60");
     await page.getByLabel("台鐵轉乘上限（分鐘）").fill("5");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
-    await page.getByLabel("台鐵轉乘上限（分鐘）").fill("25");
+    await page.getByLabel("台鐵轉乘上限（分鐘）").fill("30");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.getByRole("heading", { name: "此時段沒有符合轉乘條件的行程" })).toBeVisible();
 });
@@ -397,4 +399,36 @@ test("注音組字期間保留搜尋框與結果，選字後更新清單且不�
     await input.fill("板橋");
     await page.getByRole("button", { name: "板橋", exact: true }).click();
     await expect(page.getByRole("button", { name: "選擇迄站：板橋" })).toBeVisible();
+});
+
+
+test("設定光箱可清除查詢偏好並保留分析選擇", async ({ page }) => {
+    await page.getByRole("button", { name: "拒絕", exact: true }).click();
+    await page.getByRole("button", { name: "交換起迄站" }).click();
+    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-24");
+    await page.getByRole("button", { name: "調整轉乘時間", exact: true }).click();
+    await page.getByLabel("台鐵轉乘上限（分鐘）").fill("60");
+    await page.getByRole("button", { name: "儲存設定", exact: true }).click();
+    await page.getByRole("button", { name: "調整轉乘時間", exact: true }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "清除查詢偏好", exact: true }).click();
+    await expect(page.getByText("查詢偏好已清除。", { exact: true })).toBeVisible();
+    await expect(page.getByRole("button", { name: "選擇起站：內灣" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "選擇迄站：新竹" })).toBeVisible();
+    await expect(page.getByLabel("出發日期", { exact: true })).toHaveValue("2026-09-21");
+    await page.reload();
+    await page.getByRole("button", { name: "調整轉乘時間", exact: true }).click();
+    await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toHaveValue("30");
+    await expect(page.locator("#analytics-consent-status")).toHaveText("已拒絕 Cookie 與 GA 分析");
+});
+
+
+test("往下捲動後可用圓形按鈕回到頂端", async ({ page }) => {
+    await page.getByRole("button", { name: "拒絕", exact: true }).click();
+    const button = page.getByRole("button", { name: "回到頂端", exact: true });
+    await expect(button).toBeHidden();
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+    await expect(button).toBeVisible();
+    await button.click();
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
+    await expect(button).toBeHidden();
 });
