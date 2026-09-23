@@ -42,6 +42,10 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
         .filter(c => c.from.departure >= start && c.from.departure < end + 86400000)
         .sort((a, b) => a.from.departure - b.from.departure || a.i - b.i);
     const trainsById = new Map(trains.map(train => [train.id, train]));
+    const inboundTra = origin.startsWith("tra:") && !branchStations.has(origin) && branchStations.has(destination);
+    const approachesFromSouth = inboundTra && passedRailStations(origin, "tra:1190").includes("tra:1210");
+    const branchTrainIds = new Set(trains.filter(train => train.stops.some(stop => branchStations.has(stop.station) && !["tra:1210", "tra:1190"].includes(stop.station))).map(train => train.id));
+    const branchTrain = (train: Train) => branchTrainIds.has(train.id);
     const arrivals = new Map<string, Label[]>();
     const aboard = new Map<string, Map<string, Label>>();
     const results = new Map<string, Journey>();
@@ -64,6 +68,23 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
             if (last.trip !== train.id && wait >= (crossing ? 10 : 5) && wait < (crossing ? thsrMax : traMax)) {
                 // Direct mode permits at most one transfer, exclusively at Hsinchu in either direction.
                 if (filters.directOnly && (label.legs.length >= 2 || from.station !== "tra:1210" || last.destination !== "tra:1210")) continue;
+                if (inboundTra && !filters.directOnly) {
+                    const previousTrain = trainsById.get(last.trip)!;
+                    if (!branchTrain(previousTrain)) {
+                        const hub = approachesFromSouth || previousTrain.reserved === true ? "tra:1210" : "tra:1190";
+                        const arrivalIndex = previousTrain.stops.findIndex(stop => stop.station === last.destination && stop.arrival === last.arrival);
+                        const canStayToHub = previousTrain.stops.slice(arrivalIndex + 1).some(stop => stop.station === hub);
+                        const passedHub = previousTrain.stops.slice(0, arrivalIndex + 1).some(stop => stop.station === hub && stop.departure >= last.departure);
+                        // Stay on the mainline train to its interchange; do not replace it en route.
+                        if (from.station !== hub && (canStayToHub || passedHub)) continue;
+                        if (branchTrain(train) && from.station !== hub) continue;
+                        // Once at the hub, board a branch service rather than another mainline train.
+                        if (from.station === hub && !branchTrain(train)) continue;
+                    } else if (from.station !== "tra:1193") {
+                        // Keep necessary Zhuzhong changes; other branch stops are not extra interchanges.
+                        continue;
+                    }
+                }
                 if (train.operator === "thsr" && (!crossing || !destination.startsWith("thsr:"))) continue;
                 if (last.operator === "thsr" && (!crossing || !origin.startsWith("thsr:"))) continue;
                 // Stay aboard to Hsinchu instead of changing trains at North Hsinchu.
