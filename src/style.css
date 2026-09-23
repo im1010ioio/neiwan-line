@@ -126,7 +126,7 @@ dialog::backdrop { background: #0008; }
 .operator-tabs button { background: transparent; border: 0; border-bottom: 2px solid transparent; padding: 16px 4px; color: var(--muted); min-width: 60px; }
 .operator-tabs button[aria-selected="true"] { color: #222; border-bottom-color: #222; font-weight: 600; }
 .station-search { padding: 16px 24px; }
-.station-search input { width: 100%; border: 1px solid #ddd; border-radius: 14px; min-height: 46px; padding: 10px 14px; font-size: 14px; background: var(--soft); }
+.station-search input { width: 100%; border: 1px solid #ddd; border-radius: 14px; min-height: 46px; padding: 10px 14px; font-size: 16px; background: var(--soft); }
 .station-columns { display: grid; grid-template-columns: 42% 58%; height: min(430px, calc(100dvh - 310px)); min-height: 180px; border-top: 1px solid var(--line); }
 .station-columns.single { grid-template-columns: 1fr; }
 .county-list, .station-list { overflow-y: auto; overscroll-behavior: contain; padding: 8px; }
