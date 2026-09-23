@@ -43,6 +43,7 @@ export interface Journey {
     legs: Leg[];
 }
 export interface DayData {
+    sliceMetadata?: Record<string, { updatedAt: string; stale?: boolean }>;
     contextCoverage?: Record<RailOperator, boolean[]>;
     staleOperators?: RailOperator[];
     operatorUpdatedAt?: Partial<Record<RailOperator, string>>;

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile, rename, readdir, unlink } from "node:fs/pro
 import { addDays, dateInTaipei } from "../src/domain/query";
 import { normalizeOds, normalizeTdx, records } from "./normalize";
 import { createTdxClient } from "./tdx-client";
+import { assembleDay, fillSlices, restoreSlices } from "./timetable-cache";
 import type { DayData, Manifest, RailOperator, Train } from "../src/domain/types";
 
 const directory = "public/data";
@@ -11,7 +12,7 @@ const client = process.env.TDX_CLIENT_ID && process.env.TDX_CLIENT_SECRET
     ? createTdxClient({ clientId: process.env.TDX_CLIENT_ID, clientSecret: process.env.TDX_CLIENT_SECRET }) : null;
 const source = process.env.TRA_SOURCE || "official";
 const dates = Array.from({ length: 8 }, (_, i) => addDays(today, i));
-const slices = new Map<string, { trains: Train[]; updatedAt: string }>();
+const force = process.env.FORCE_REFRESH === "true";
 let requests = 0;
 let failed = false;
 await mkdir(directory, { recursive: true });
@@ -36,18 +37,15 @@ async function tdxDay(operator: RailOperator, date: string): Promise<Train[]> {
     return trains;
 }
 
-// Retain yesterday's actual trips for boarding after midnight; never shift today's schedule backward.
+// Reuse complete date slices committed by prior runs, including cross-day context.
+const priorDays: DayData[] = [];
 for (const file of await readdir(directory)) {
     if (!/^\d{4}-\d{2}-\d{2}\.json$/.test(file)) continue;
     try {
-        const old: DayData = JSON.parse(await readFile(`${directory}/${file}`, "utf8"));
-        for (const operator of ["tra", "thsr"] as const) {
-            if (!old.coverage[operator]) continue;
-            const trains = old.trains.filter(t => t.operator === operator && t.id.startsWith(`${operator}:${addDays(today, -1)}:`));
-            if (trains.length) slices.set(`${operator}:${addDays(today, -1)}`, { trains, updatedAt: old.generatedAt });
-        }
+        priorDays.push(JSON.parse(await readFile(`${directory}/${file}`, "utf8")));
     } catch { /* Invalid prior files are not used. */ }
 }
+const cached = restoreSlices(priorDays);
 let officialLinks = new Map<string, string>();
 if (source === "official") {
     try {
@@ -58,47 +56,33 @@ if (source === "official") {
         if (!officialLinks.size) throw new Error("無法辨識台鐵官方日期清單");
     } catch (error) { console.error(String(error)); failed = true; }
 }
-for (const date of dates) {
-    for (const operator of ["tra", "thsr"] as const) {
-        try {
-            let trains: Train[];
-            if (operator === "tra" && source === "official") {
-                const url = officialLinks.get(date);
-                if (!url) throw new Error("台鐵尚未提供此日期");
-                trains = normalizeOds(await (await get(url)).json(), date);
-                if (!trains.length) throw new Error("台鐵班表為空");
-            } else {
-                trains = await tdxDay(operator, date);
-            }
-            slices.set(`${operator}:${date}`, { trains, updatedAt: generatedAt });
-            console.log(`${date} ${operator}: ${trains.length} 個真實車次`);
-        } catch (error) {
-            console.error(`${date} ${operator}: ${String(error)}`);
-            if (client || operator === "tra") failed = true;
+const slices = await fillSlices({
+    cached, dates, updatedAt: generatedAt, force,
+    // TRA's free official feed can still refresh daily without using TDX quota.
+    refreshOperators: source === "official" ? ["tra"] : [],
+    fetchDay: async (operator, date) => {
+        let trains: Train[];
+        if (operator === "tra" && source === "official") {
+            const url = officialLinks.get(date);
+            if (!url) throw new Error("台鐵尚未提供此日期");
+            trains = normalizeOds(await (await get(url)).json(), date);
+        } else {
+            trains = await tdxDay(operator, date);
         }
-    }
-}
+        console.log(`${date} ${operator}: ${trains.length} 個真實車次`);
+        return trains;
+    },
+    onFailure: (operator, date, error) => {
+        console.error(`${date} ${operator}: ${String(error)}`);
+        if (client || operator === "tra") failed = true;
+    },
+});
 const manifest: Manifest = { generatedAt, days: [] };
 for (const date of dates.slice(0, 7)) {
-    const coverage = { tra: slices.has(`tra:${date}`), thsr: slices.has(`thsr:${date}`) };
-    const data: DayData = {
-        schemaVersion: 1, date, generatedAt, coverage,
-        sources: [source === "official" ? "臺鐵官方開放資料" : "TDX 台鐵", ...(coverage.thsr ? ["TDX 高鐵"] : [])],
-        trains: [-1, 0, 1].flatMap(offset => ["tra", "thsr"].flatMap(op => slices.get(`${op}:${addDays(date, offset)}`)?.trains ?? [])),
-        contextCoverage: Object.fromEntries(["tra", "thsr"].map(op => [op, [-1, 0, 1].map(offset => slices.has(`${op}:${addDays(date, offset)}`))])) as Record<RailOperator, boolean[]>,
-    };
-    // On an upstream failure preserve the previous complete file and its original update time.
-    try {
-        const old: DayData = JSON.parse(await readFile(`${directory}/${date}.json`, "utf8"));
-        for (const op of ["tra", "thsr"] as const) {
-            if (!coverage[op] && old.coverage[op]) {
-                data.trains.push(...old.trains.filter(t => t.operator === op));
-                data.coverage[op] = true;
-                data.staleOperators = [...(data.staleOperators ?? []), op];
-                data.operatorUpdatedAt = { ...data.operatorUpdatedAt, [op]: old.operatorUpdatedAt?.[op] ?? old.generatedAt };
-            }
-        }
-    } catch { /* No last successful file. */ }
+    const data = assembleDay(date, slices, generatedAt, [
+        source === "official" ? "臺鐵官方開放資料" : "TDX 台鐵",
+        ...(slices.has(`thsr:${date}`) ? ["TDX 高鐵"] : []),
+    ]);
     await writeFile(`${directory}/${date}.tmp`, JSON.stringify(data));
     await rename(`${directory}/${date}.tmp`, `${directory}/${date}.json`);
     manifest.days.push({ date, file: `${date}.json`, generatedAt: data.generatedAt, coverage: data.coverage });

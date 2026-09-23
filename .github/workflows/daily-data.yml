@@ -3,6 +3,11 @@ on:
     schedule:
         - cron: '30 20 * * *'
     workflow_dispatch:
+        inputs:
+            force_refresh:
+                description: '強制重新取得所有日期班表（增加 TDX 用量）'
+                type: boolean
+                default: false
 permissions:
     contents: write
     pages: write
@@ -29,6 +34,7 @@ jobs:
               continue-on-error: true
               run: npm run data:generate
               env:
+                  FORCE_REFRESH: ${{ inputs.force_refresh || false }}
                   TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
                   TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
             - name: Fetch airport metro schedules

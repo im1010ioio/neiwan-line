@@ -67,7 +67,7 @@ function heading() {
     return `<header class="site-header"><a class="brand" href="#" aria-label="回到車班查詢"><img src="${import.meta.env.BASE_URL}icon.svg" width="42" height="42" alt=""><span>內灣線<span class="brand-sub">轉乘攻略</span></span></a><nav aria-label="主要導覽"><a href="#" ${location.hash !== "#privacy" ? 'aria-current="page"' : ""}>車班查詢</a><span class="soon-nav">內灣線特色 <small>準備中</small></span><button class="icon-button" id="settings-open" aria-label="開啟設定">⚙</button></nav></header>`;
 }
 function footer() {
-    return `<footer><div><button class="text-button" id="privacy-settings">設定</button><a href="#privacy">隱私權與使用條款</a><a href="https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/gobytime" target="_blank" rel="noreferrer">台鐵官方查詢 ↗</a><a href="https://www.thsrc.com.tw/" target="_blank" rel="noreferrer">高鐵官方查詢 ↗</a><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷官方查詢 ↗</a></div><p>資料來源：交通部 TDX 運輸資料流通服務。每日更新。行程時間僅供參考，未反映臨時班次調整或誤點，請預留轉乘時間；實際運行與座位請以官方資訊為準。</p></footer>`;
+    return `<footer><div><button class="text-button" id="privacy-settings">設定</button><a href="#privacy">隱私權與使用條款</a><a href="https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/gobytime" target="_blank" rel="noreferrer">台鐵官方查詢 ↗</a><a href="https://www.thsrc.com.tw/" target="_blank" rel="noreferrer">高鐵官方查詢 ↗</a><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷官方查詢 ↗</a></div><p>資料來源：臺鐵官方開放資料、交通部 TDX。提供含今天 7 天的班表，每日補齊可查詢日期。行程時間僅供參考，未反映臨時班次調整或誤點，請預留轉乘時間；實際運行與座位請以官方資訊為準。</p></footer>`;
 }
 function consentBanner() {
     if (consent !== "unknown") return "";
@@ -79,7 +79,7 @@ function endpointButton(role: "neiwan" | "other", position: "起" | "迄") {
 }
 function results() {
     if (phase === "loading") return `<div class="empty-state" role="status"><span class="spinner"></span><h2>正在整理可搭行程</h2><p>依班表尋找符合轉乘時間的組合。</p></div>`;
-    if (phase === "missing") return `<div class="empty-state" role="status"><span class="empty-icon">◷</span><h2>班表尚未更新</h2><p>所選日期的${preferences.other.startsWith("tymc:") ? "台鐵、高鐵或機捷" : preferences.other.startsWith("thsr:") ? "台鐵或高鐵" : "台鐵"}資料尚未完整取得。請稍後再試，或查看官方班表。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
+    if (phase === "missing") return `<div class="empty-state" role="status"><span class="empty-icon">◷</span><h2>班表資料尚未齊全</h2><p>所選日期的${preferences.other.startsWith("tymc:") ? "台鐵、高鐵或機捷" : preferences.other.startsWith("thsr:") ? "台鐵或高鐵" : "台鐵"}資料尚未完整取得或暫時無法讀取。請稍後再試，或查看官方班表。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     if (phase === "error") return `<div class="empty-state" role="alert"><h2>暫時無法整理行程</h2><p>請重新讀取班表後再試。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     const visible = filterJourneys(journeys, { date: preferences.date, time, showPast }, new Date());
     if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘須未滿 ${preferences.traMaxMinutes} 分鐘，高鐵接駁須未滿 ${preferences.thsrMaxMinutes} 分鐘。${preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" ? `機捷接駁須未滿 ${preferences.metroMaxMinutes} 分鐘。` : ""}可在設定中調整。</p>${Object.values(activeRouteFilters()).some(Boolean) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
@@ -88,7 +88,7 @@ function results() {
 function card(journey: Journey) {
     const stale = data?.staleOperators?.some(op => op === "tra" || ((preferences.other.startsWith("thsr:") || preferences.other.startsWith("tymc:")) && op === "thsr"));
     const state = stale ? "scheduled" : journeyState(journey, preferences.date, preferences.preparation, new Date());
-    const labels = { past: "已過", warning: "即將到來", upcoming: "即將到來", scheduled: stale ? "快取班表" : "預定班次" };
+    const labels = { past: "已過", warning: "即將到來", upcoming: "即將到來", scheduled: stale ? "沿用先前班表" : "預定班次" };
     const minutes = Math.max(0, Math.ceil((journey.departure - Date.now()) / 60000));
     const countdown = (state === "warning" || state === "upcoming") ? `<span class="countdown">${minutes < 60 ? `${minutes} 分鐘後出發` : `${Math.floor(minutes / 60)} 小時 ${minutes % 60} 分後出發`}</span>` : "";
     const duration = Math.round((journey.arrival - journey.departure) / 60000);
@@ -105,31 +105,30 @@ function card(journey: Journey) {
 }
 function statusLine() {
     const selectedDate = preferences.date.replaceAll("-", "/");
-    const updateLink = '<a href="https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml" target="_blank" rel="noreferrer">手動更新</a>';
+    const updateLink = '<a href="https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml" target="_blank" rel="noreferrer" title="需具備 GitHub 專案操作權限">班表更新管理 ↗</a>';
     const fullTime = (value: string) => {
         const date = new Date(value);
         return Number.isFinite(date.getTime()) ? `${dateInTaipei(date).replaceAll("-", "/")} ${date.toLocaleTimeString("zh-TW", { timeZone: "Asia/Taipei", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}` : "時間不明";
     };
     if (!data) {
         if (phase === "loading") return `<section class="schedule-status" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>正在讀取 ${selectedDate} 班表</strong></div></section>`;
-        return `<section class="schedule-status schedule-status--warning" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${selectedDate} 班表尚未取得</strong><p>可能尚未更新或暫時無法讀取，請稍後再試。</p></div>${updateLink}</section>`;
+        return `<section class="schedule-status schedule-status--warning" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${selectedDate} 班表尚未取得</strong><p>所選日期的資料尚未取得或暫時無法讀取，請稍後再試。</p></div>${updateLink}</section>`;
     }
     const context = data.contextCoverage;
     const required = (preferences.other.startsWith("tymc:") || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030")) ? ["tra", "thsr"] as const : ["tra"] as const;
     const contextMissing = required.some(op => context?.[op]?.some(v => !v));
-    const timestamps = required.map(op => data!.operatorUpdatedAt?.[op] ?? data!.generatedAt);
-    if (metroData) timestamps.push(metroData.generatedAt);
-    const oldest = timestamps.reduce((a, b) => Date.parse(a) < Date.parse(b) ? a : b);
+    const acquired = required.filter(op => data!.coverage[op]).map(op => `${op === "tra" ? "台鐵" : "高鐵"}：${fullTime(data!.operatorUpdatedAt?.[op] ?? data!.generatedAt)}`);
+    if (metroData) acquired.push(`機捷：${fullTime(metroData.generatedAt)}`);
     const stale = required.some(op => data!.staleOperators?.includes(op));
     const warning = stale || contextMissing || phase === "missing" || phase === "error";
-    const title = phase === "missing" ? `${selectedDate} 班表尚未完整取得` : phase === "error" ? `${selectedDate} 行程暫時無法計算` : stale ? `${selectedDate} 班表尚待更新` : contextMissing ? `${selectedDate} 部分銜接資料尚未完整` : `${selectedDate} 班表已取得`;
-    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong><p>最後更新：${escapeHtml(fullTime(oldest))}。${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "每日更新班表。"}</p>${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div>${warning ? updateLink : ""}</section>`;
+    const title = phase === "missing" ? `${selectedDate} 班表尚未完整取得` : phase === "error" ? `${selectedDate} 行程暫時無法計算` : stale ? `${selectedDate} 班表更新未成功` : contextMissing ? `${selectedDate} 部分銜接資料尚未完整` : `${selectedDate} 班表已取得`;
+    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong>${acquired.length ? `<p>班表取得時間｜${escapeHtml(acquired.join("；"))}</p>` : ""}<p>${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "依已取得的班表查詢，臨時異動請以官方資訊為準。"}</p>${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div>${warning ? updateLink : ""}</section>`;
 }
 function privacyPage() {
     return `<main class="privacy">
         <a class="back" href="#">← 回到車班查詢</a>
         <h1>隱私權與使用條款</h1>
-        <p class="muted">最後更新：2026/09/22</p>
+        <p class="muted">條款更新日期：2026/09/23</p>
         <p>歡迎使用內灣線轉乘攻略！</p>
         <p>存取及使用本網站，即表示您同意遵守以下使用條款。本條款說明使用內灣線轉乘攻略網站（<a href="https://im1010ioio.github.io/neiwan-line/">im1010ioio.github.io/neiwan-line</a>）時應遵守的規範。若您不同意本使用條款，請勿使用本網站。Cookie 與 Google Analytics（GA）分析另由您選擇是否允許，使用網站不代表同意分析。</p>
         <hr>
@@ -171,7 +170,7 @@ function privacyPage() {
         <hr>
         <h2>免責聲明</h2>
         <p>本網站依據臺鐵官方開放資料及 TDX 提供的班表，搭配您選擇的條件計算轉乘組合，結果僅供旅程規劃參考。本網站並非台鐵、高鐵或桃園捷運官方網站，也不提供訂票或座位保證。</p>
-        <p>班表原則上每日更新。所有運具的行程時間僅供參考，不提供即時誤點資訊，也不保證即時反映臨時加班、停駛或其他班次調整。我們會盡力維持資料與計算結果的準確性，但不保證所有資訊均為最新、完整或完全沒有錯誤，也不保證網站持續可用。</p>
+        <p>本網站原則上每日補齊含今天 7 天的可查詢班表。台鐵與機捷資料每日嘗試更新；高鐵已取得的日期會沿用，僅補齊新增或缺漏日期，必要時由管理者重新取得。畫面標示的班表取得時間，代表本站取得該份資料的時間，不代表營運單位最後修改班表的時間。所有運具的行程時間僅供參考，不提供即時誤點資訊，也不保證即時反映臨時加班、停駛或其他班次調整。我們會盡力維持資料與計算結果的準確性，但不保證所有資訊均為最新、完整或完全沒有錯誤，也不保證網站持續可用。</p>
         <p>台鐵與高鐵時間依官方班表顯示；機捷發車時間依官方站別班表，抵達時間依官方站間旅行時間推估，並在行程中標示。接駁上限用於篩選行程，不代表實際轉乘所需時間。</p>
         <p>轉乘組合不代表保證接得上下一班車。實際發車、停駛、臨時調整、月台、步行時間及座位狀況，請以台鐵、高鐵、桃園捷運及現場公告為準，並自行預留足夠的轉乘時間。</p>
         <p>請自行評估使用本網站資訊所產生的風險。在法律允許的範圍內，內灣線轉乘攻略不對因資料錯誤、延遲、服務中斷或未能完成轉乘所造成的損失負責；依法不得排除或限制的責任，不受本條款影響。</p>

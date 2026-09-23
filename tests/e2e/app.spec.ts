@@ -97,7 +97,7 @@ test("缺少資料與零組合分開提示，狹窄螢幕沒有橫向溢出", as
     await expect(page.getByRole("heading", { name: "此時段沒有符合轉乘條件的行程" })).toBeVisible();
     await page.route("**/data/*.json", route => route.fulfill({ status: 404, body: "" }));
     await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-22");
-    await expect(page.getByRole("heading", { name: "班表尚未更新" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "班表資料尚未齊全" })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -330,7 +330,7 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     await expect(page.locator(".journey-card")).toContainText("機捷直達車");
     await page.route("**/data/metro.json", route => route.fulfill({ status: 404, body: "" }));
     await page.reload();
-    await expect(page.getByRole("heading", { name: "班表尚未更新" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "班表資料尚未齊全" })).toBeVisible();
     await expect(page.locator(".journey-card")).toHaveCount(0);
 });
 
@@ -345,8 +345,8 @@ test("班表狀態依搭乘日期判斷，昨日取得的未來班表仍可使�
     await page.reload();
     await expect(status).toHaveClass(/schedule-status--ready/);
     await expect(status).toContainText("2026/09/22 班表已取得");
-    await expect(status).toContainText("最後更新：2026/09/21 04:30");
-    await expect(status.getByRole("link", { name: "手動更新" })).toHaveCount(0);
+    await expect(status).toContainText("班表取得時間｜台鐵：2026/09/21 04:30");
+    await expect(status.getByRole("link", { name: "班表更新管理 ↗" })).toHaveCount(0);
     const position = await page.evaluate(() => ({
         statusTop: document.querySelector(".schedule-status")!.getBoundingClientRect().top,
         statusBottom: document.querySelector(".schedule-status")!.getBoundingClientRect().bottom,
@@ -364,7 +364,7 @@ test("所選日期缺少班表時，顯示日期與內灣線手動更新入口",
     const status = page.locator(".schedule-status");
     await expect(status).toHaveClass(/schedule-status--warning/);
     await expect(status).toContainText("2026/09/23 班表尚未取得");
-    await expect(status.getByRole("link", { name: "手動更新" })).toHaveAttribute("href", "https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml");
+    await expect(status.getByRole("link", { name: "班表更新管理 ↗" })).toHaveAttribute("href", "https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml");
 });
 
 test("注音組字期間保留搜尋框與結果，選字後更新清單且不中斷游標", async ({ page }) => {
