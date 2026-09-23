@@ -62,6 +62,8 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
             const wait = (from.departure - last.arrival) / 60000;
             const crossing = last.destination !== from.station;
             if (last.trip !== train.id && wait >= (crossing ? 10 : 5) && wait < (crossing ? thsrMax : traMax)) {
+                // Direct mode permits at most one transfer, exclusively at Hsinchu in either direction.
+                if (filters.directOnly && (label.legs.length >= 2 || from.station !== "tra:1210" || last.destination !== "tra:1210")) continue;
                 if (train.operator === "thsr" && (!crossing || !destination.startsWith("thsr:"))) continue;
                 if (last.operator === "thsr" && (!crossing || !origin.startsWith("thsr:"))) continue;
                 // Stay aboard to Hsinchu instead of changing trains at North Hsinchu.
@@ -78,7 +80,9 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
         for (const label of candidates) {
             // Branch access via Hsinchu/North Hsinchu is allowed; mainline backtracking is not.
             if (passed.some(station => label.mainlineVisited.has(station))) continue;
-            if (label.visited.has(to.station)) continue;
+            // Hsinchu transfers legitimately pass North Hsinchu again in both directions.
+            const hsinchuAccess = from.station === "tra:1210" && to.station === "tra:1190";
+            if (label.visited.has(to.station) && !hsinchuAccess) continue;
             const last = label.legs.at(-1);
             const continuing = last?.trip === train.id;
             const leg: Leg = continuing ? { ...last!, destination: to.station, arrival: to.arrival } : {

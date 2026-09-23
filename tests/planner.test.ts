@@ -162,3 +162,62 @@ it("不列出經南迴與東部繞一圈到台北，正常北上經板橋到台�
     trains.push(train("north", [["tra:1210", "09:06"], ["tra:1020", "09:55"], ["tra:1010", "10:00"], ["tra:1000", "10:05"]]));
     expect(planJourneys(trains, "tra:1208", "tra:1000", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["branch", "north"]]);
 });
+
+
+it("未來日期直達篩選須在新竹接幹線，去回程皆排除竹中、千甲與北新竹換車", () => {
+    for (const hub of ["tra:1193", "tra:1191", "tra:1190"]) {
+        const outbound = [
+            train("branch", [["tra:1208", "08:00"], [hub, "08:30"], ["tra:1210", "08:50"]]),
+            train("shortcut", [[hub, "08:35"], ["tra:1000", "09:20"]]),
+            train("mainline", [["tra:1210", "08:55"], ["tra:1000", "09:40"]]),
+        ];
+        const inbound = [
+            train("mainline-back", [["tra:1000", "10:00"], ["tra:1210", "10:50"]]),
+            train("shortcut-back", [["tra:1000", "10:05"], [hub, "11:00"]]),
+            train("branch-back", [["tra:1210", "10:55"], [hub, "11:05"], ["tra:1208", "11:40"]]),
+        ];
+        for (const t of [...outbound, ...inbound]) for (const stop of t.stops) {
+            stop.arrival += 7 * 86400000;
+            stop.departure += 7 * 86400000;
+        }
+        expect(planJourneys(outbound, "tra:1208", "tra:1000", "2026-09-28", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["branch", "mainline"]]);
+        expect(planJourneys(inbound, "tra:1000", "tra:1208", "2026-09-28", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["mainline-back", "branch-back"]]);
+        expect(planJourneys(outbound, "tra:1208", "tra:1000", "2026-09-28").some(j => j.legs.some(l => l.number === "shortcut"))).toBe(true);
+        expect(planJourneys(inbound, "tra:1000", "tra:1208", "2026-09-28").some(j => j.legs.some(l => l.number === "shortcut-back"))).toBe(true);
+        expect(planJourneys(outbound, "tra:1208", hub, "2026-09-28", { directOnly: true })).toHaveLength(1);
+    }
+});
+
+
+it("新竹轉車可再次經過北新竹，直達篩選保留去回程的區間車銜接", () => {
+    const outward = [
+        train("neiwan", [["tra:1208", "08:00"], ["tra:1190", "08:50"], ["tra:1210", "08:55"]]),
+        train("local", [["tra:1210", "09:00"], ["tra:1190", "09:05"], ["tra:1020", "10:20"]]),
+    ];
+    const returning = [
+        train("local-back", [["tra:1020", "08:00"], ["tra:1190", "09:10"], ["tra:1210", "09:15"]]),
+        train("neiwan-back", [["tra:1210", "09:20"], ["tra:1190", "09:25"], ["tra:1208", "10:15"]]),
+    ];
+    expect(planJourneys(outward, "tra:1208", "tra:1020", "2026-09-21", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["neiwan", "local"]]);
+    expect(planJourneys(returning, "tra:1020", "tra:1208", "2026-09-21", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["local-back", "neiwan-back"]]);
+});
+
+
+it("內灣新竹直達模式最多一次轉乘，僅能在新竹換車，去回程均排除幹線再次換車", () => {
+    const out = [
+        train("branch", [["tra:1208", "08:00"], ["tra:1190", "08:50"], ["tra:1210", "08:55"]]),
+        train("local", [["tra:1210", "09:00"], ["tra:1190", "09:05"], ["tra:1180", "09:10"]]),
+        train("extra", [["tra:1180", "09:15"], ["tra:1020", "10:00"]]),
+        train("mainline", [["tra:1210", "09:05"], ["tra:1020", "10:20"]]),
+    ];
+    const back = [
+        train("extra-back", [["tra:1020", "08:00"], ["tra:1180", "09:00"]]),
+        train("local-back", [["tra:1180", "09:05"], ["tra:1190", "09:10"], ["tra:1210", "09:15"]]),
+        train("mainline-back", [["tra:1020", "07:50"], ["tra:1210", "09:15"]]),
+        train("branch-back", [["tra:1210", "09:20"], ["tra:1190", "09:25"], ["tra:1208", "10:10"]]),
+    ];
+    expect(planJourneys(out, "tra:1208", "tra:1020", "2026-09-21", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["branch", "mainline"]]);
+    expect(planJourneys(back, "tra:1020", "tra:1208", "2026-09-21", { directOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["mainline-back", "branch-back"]]);
+    expect(planJourneys(out, "tra:1208", "tra:1020", "2026-09-21").some(j => j.legs.length === 3)).toBe(true);
+    expect(planJourneys(back, "tra:1020", "tra:1208", "2026-09-21").some(j => j.legs.length === 3)).toBe(true);
+});
