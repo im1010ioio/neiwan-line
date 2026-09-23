@@ -1,5 +1,5 @@
 import type { Journey, Leg, Train } from "./types";
-import { passedRailStations, approachesDestination } from "./rail-path";
+import { passedRailStations, approachesDestination, sameMainlineTransfer } from "./rail-path";
 import { addDays } from "./query";
 
 export interface PlannerFilters { traMaxMinutes?: number; thsrMaxMinutes?: number; metroMaxMinutes?: number; reservedOnly?: boolean; directOnly?: boolean; }
@@ -68,8 +68,15 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
             if (last.trip !== train.id && wait >= (crossing ? 10 : 5) && wait < (crossing ? thsrMax : traMax)) {
                 // Direct mode permits at most one transfer, exclusively at Hsinchu in either direction.
                 if (filters.directOnly && (label.legs.length >= 2 || from.station !== "tra:1210" || last.destination !== "tra:1210")) continue;
+                const previousTrain = trainsById.get(last.trip)!;
+                if (previousTrain.operator === "tra" && train.operator === "tra"
+                    && previousTrain.reserved === false && train.reserved === false && !crossing
+                    && !branchTrain(previousTrain) && !branchTrain(train)) {
+                    const arrivalIndex = previousTrain.stops.findIndex(stop => stop.station === last.destination && stop.arrival === last.arrival);
+                    const previousStation = previousTrain.stops[arrivalIndex - 1]?.station;
+                    if (previousStation && sameMainlineTransfer(previousStation, from.station, to.station)) continue;
+                }
                 if (inboundTra && !filters.directOnly) {
-                    const previousTrain = trainsById.get(last.trip)!;
                     if (!branchTrain(previousTrain)) {
                         const hub = approachesFromSouth || previousTrain.reserved === true ? "tra:1210" : "tra:1190";
                         const arrivalIndex = previousTrain.stops.findIndex(stop => stop.station === last.destination && stop.arrival === last.arrival);

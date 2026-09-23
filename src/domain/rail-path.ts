@@ -1,5 +1,7 @@
 import topology from "../rail-lines.json";
 
+const edgeLines = new Map<string, Set<string>>();
+const mainlines = new Set(["WL", "WL-C", "EL", "SL"]);
 const graph = new Map<string, Map<string, number>>();
 for (const line of topology.lines) {
     for (let i = 1; i < line.stations.length; i++) {
@@ -8,6 +10,9 @@ for (const line of topology.lines) {
         const distance = Math.abs(Number(bd) - Number(ad));
         if (!Number.isFinite(distance) || distance < 0) continue;
         for (const [x, y] of [[from, to], [to, from]]) {
+            const edge = `${x}>${y}`;
+            if (!edgeLines.has(edge)) edgeLines.set(edge, new Set());
+            edgeLines.get(edge)!.add(line.line);
             if (!graph.has(x)) graph.set(x, new Map());
             graph.get(x)!.set(y, Math.min(graph.get(x)!.get(y) ?? Infinity, distance));
         }
@@ -63,4 +68,14 @@ export function approachesDestination(from: string, to: string, destination: str
     const distances = distanceMaps.get(destination)!;
     const before = distances.get(from), after = distances.get(to);
     return before === undefined || after === undefined || after <= before;
+}
+
+
+/** Identify the actual tracks immediately before and after a proposed interchange. */
+export function sameMainlineTransfer(previousStation: string, interchange: string, nextStation: string): boolean {
+    const incoming = [previousStation, ...passedRailStations(previousStation, interchange)];
+    const outgoing = passedRailStations(interchange, nextStation);
+    const before = edgeLines.get(`${incoming.at(-2)}>${interchange}`);
+    const after = edgeLines.get(`${interchange}>${outgoing[0]}`);
+    return [...(before ?? [])].some(line => mainlines.has(line) && after?.has(line));
 }
