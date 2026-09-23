@@ -1,3 +1,5 @@
+import { QUERY_DAYS } from "./schedule-window";
+
 export function dateInTaipei(now: Date = new Date()): string {
     return new Intl.DateTimeFormat("sv-SE", { timeZone: "Asia/Taipei" }).format(now);
 }
@@ -7,7 +9,7 @@ export function addDays(date: string, count: number): string {
 }
 
 export function dateOptions(now: Date): [string, string][] {
-    return Array.from({ length: 7 }, (_, i) => {
+    return Array.from({ length: QUERY_DAYS }, (_, i) => {
         const date = addDays(dateInTaipei(now), i);
         return [date, `${date.replaceAll("-", "/")} (${"日一二三四五六"[new Date(`${date}T12:00:00+08:00`).getUTCDay()]})`];
     });

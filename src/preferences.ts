@@ -1,3 +1,4 @@
+import { QUERY_DAYS } from "./domain/schedule-window";
 import { stationById } from "./stations";
 import { addDays } from "./domain/query";
 export const PREFERENCES_KEY = "neiwan.preferences.v1";
@@ -37,7 +38,7 @@ export function loadPreferences(storage: StorageLike | undefined, today: string)
             else reset = true;
         }
         if (stored.metroMaxMinutes === undefined) value.metroMaxMinutes = value.thsrMaxMinutes;
-        if (typeof stored.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(stored.date) && stored.date >= today && stored.date <= addDays(today, 6)) value.date = stored.date;
+        if (typeof stored.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(stored.date) && stored.date >= today && stored.date <= addDays(today, QUERY_DAYS - 1)) value.date = stored.date;
         if (value.neiwan === value.other) {
             value.neiwan = "tra:1208";
             value.other = "tra:1210";

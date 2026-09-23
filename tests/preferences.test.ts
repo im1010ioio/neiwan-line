@@ -73,3 +73,13 @@ it("機捷上限獨立保存，舊設定沿用原高鐵上限，無效值回預�
         expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { metroMaxMinutes: 40 } });
     }
 });
+
+
+it("保留第28天查詢日期，第29天超出範圍則回到今天", () => {
+    const store = memory();
+    const original = loadPreferences(undefined, today).value;
+    savePreferences(store, { ...original, date: "2026-10-18", reversed: true });
+    expect(loadPreferences(store, today).value).toMatchObject({ date: "2026-10-18", reversed: true });
+    savePreferences(store, { ...original, date: "2026-10-19", reversed: true });
+    expect(loadPreferences(store, today).value).toMatchObject({ date: today, reversed: true });
+});

@@ -432,3 +432,14 @@ test("往下捲動後可用圓形按鈕回到頂端", async ({ page }) => {
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
     await expect(button).toBeHidden();
 });
+
+
+test("28天日期選單包含跨月最後一天並於重新開啟保留", async ({ page }) => {
+    const dates = page.getByLabel("出發日期", { exact: true });
+    await expect(dates.locator("option")).toHaveCount(28);
+    await dates.selectOption("2026-10-18");
+    await expect(dates.locator("option:checked")).toHaveText("2026/10/18 (日)");
+    await expect(page.locator(".journey-card")).toHaveCount(3);
+    await page.reload();
+    await expect(dates).toHaveValue("2026-10-18");
+});

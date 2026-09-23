@@ -1,3 +1,4 @@
+import { QUERY_DAYS, FETCH_DAYS } from "../src/domain/schedule-window";
 import { mkdir, readFile, writeFile, rename, readdir, unlink } from "node:fs/promises";
 import { addDays, dateInTaipei } from "../src/domain/query";
 import { normalizeOds, normalizeTdx, records } from "./normalize";
@@ -11,7 +12,7 @@ const generatedAt = new Date().toISOString();
 const client = process.env.TDX_CLIENT_ID && process.env.TDX_CLIENT_SECRET
     ? createTdxClient({ clientId: process.env.TDX_CLIENT_ID, clientSecret: process.env.TDX_CLIENT_SECRET }) : null;
 const source = process.env.TRA_SOURCE || "official";
-const dates = Array.from({ length: 8 }, (_, i) => addDays(today, i));
+const dates = Array.from({ length: FETCH_DAYS }, (_, i) => addDays(today, i));
 const force = process.env.FORCE_REFRESH === "true";
 let requests = 0;
 let failed = false;
@@ -56,11 +57,26 @@ if (source === "official") {
         if (!officialLinks.size) throw new Error("無法辨識台鐵官方日期清單");
     } catch (error) { console.error(String(error)); failed = true; }
 }
+// Published availability may be shorter than the configured query window.
+// Check once before filling missing days, rather than requesting unpublished dates.
+let thsrDates: Set<string> | undefined;
+if (client && dates.some(date => force || !cached.has(`thsr:${date}`) || cached.get(`thsr:${date}`)?.stale)) {
+    try {
+        requests++;
+        const availability = await client.getJson("/v2/Rail/THSR/DailyTimetable/TrainDates?$format=JSON") as { TrainDates?: string[] };
+        if (!Array.isArray(availability.TrainDates)) throw new Error("高鐵供應日期格式不符");
+        thsrDates = new Set(availability.TrainDates);
+    } catch (error) {
+        console.error(String(error));
+        failed = true;
+    }
+}
 const slices = await fillSlices({
     cached, dates, updatedAt: generatedAt, force,
     // TRA's free official feed can still refresh daily without using TDX quota.
     refreshOperators: source === "official" ? ["tra"] : [],
     fetchDay: async (operator, date) => {
+        if (operator === "thsr" && thsrDates && !thsrDates.has(date)) throw new Error("高鐵尚未提供此日期班表，待後續補齊");
         let trains: Train[];
         if (operator === "tra" && source === "official") {
             const url = officialLinks.get(date);
@@ -74,11 +90,12 @@ const slices = await fillSlices({
     },
     onFailure: (operator, date, error) => {
         console.error(`${date} ${operator}: ${String(error)}`);
+        if (operator === "thsr" && thsrDates && !thsrDates.has(date)) return;
         if (client || operator === "tra") failed = true;
     },
 });
 const manifest: Manifest = { generatedAt, days: [] };
-for (const date of dates.slice(0, 7)) {
+for (const date of dates.slice(0, QUERY_DAYS)) {
     const data = assembleDay(date, slices, generatedAt, [
         source === "official" ? "臺鐵官方開放資料" : "TDX 台鐵",
         ...(slices.has(`thsr:${date}`) ? ["TDX 高鐵"] : []),

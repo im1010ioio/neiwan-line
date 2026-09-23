@@ -11,7 +11,7 @@ export interface TimetableSlice {
 export type TimetableSlices = Map<string, TimetableSlice>;
 
 // Each file contains its own date and adjacent dates. Retain the source fetch time,
-// including the eighth day that exists only as the last file's next-day context.
+// including the extra day that exists only as the last file's next-day context.
 export function restoreSlices(days: DayData[]): TimetableSlices {
     const slices: TimetableSlices = new Map();
     const priorities = new Map<string, number>();

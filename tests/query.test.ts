@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { dateInTaipei, dateOptions, filterJourneys, journeyState } from "../src/domain/query";
 
 describe("日期與使用者可見的時間篩選", () => {
-    it("以台灣時間建立包含今天的七天選單並顯示星期", () => {
+    it("以台灣時間建立包含今天的28 天選單並顯示星期", () => {
         const now = new Date("2026-09-20T16:25:00Z");
         expect(dateInTaipei(now)).toBe("2026-09-21");
-        expect(dateOptions(now)).toEqual([
+        expect(dateOptions(now)).toHaveLength(28);
+        expect(dateOptions(now).at(-1)).toEqual(["2026-10-18", "2026/10/18 (日)"]);
+        expect(dateOptions(now).slice(0, 7)).toEqual([
             ["2026-09-21", "2026/09/21 (一)"], ["2026-09-22", "2026/09/22 (二)"],
             ["2026-09-23", "2026/09/23 (三)"], ["2026-09-24", "2026/09/24 (四)"],
             ["2026-09-25", "2026/09/25 (五)"], ["2026-09-26", "2026/09/26 (六)"],

@@ -6,7 +6,7 @@ import { assembleDay, fillSlices, restoreSlices, type TimetableSlices } from "..
 const start = "2026-09-23";
 const firstUpdate = "2026-09-23T04:30:00+08:00";
 const secondUpdate = "2026-09-24T04:30:00+08:00";
-const dates = (today: string) => Array.from({ length: 8 }, (_, i) => addDays(today, i));
+const dates = (today: string) => Array.from({ length: 29 }, (_, i) => addDays(today, i));
 function train(operator: RailOperator, date: string): Train {
     const time = Date.parse(`${date}T08:00:00+08:00`);
     return {
@@ -15,7 +15,7 @@ function train(operator: RailOperator, date: string): Train {
     };
 }
 function snapshot(slices: TimetableSlices, today = start, updatedAt = firstUpdate): DayData[] {
-    return dates(today).slice(0, 7).map(date => assembleDay(date, slices, updatedAt, ["自動化測試資料"]));
+    return dates(today).slice(0, 28).map(date => assembleDay(date, slices, updatedAt, ["自動化測試資料"]));
 }
 async function run(cached = new Map(), today = start, force = false, fail?: string) {
     const calls: string[] = [];
@@ -34,14 +34,14 @@ async function run(cached = new Map(), today = start, force = false, fail?: stri
     return { slices, calls, failures, tdxCalls: calls.filter(key => key.startsWith("thsr:")) };
 }
 
-it("首次抓八天；隔天沿用已存日期，只用一次高鐵請求補跨日銜接；同日重跑零次", async () => {
+it("首次抓29天；隔天沿用已存日期，只用一次高鐵請求補跨日銜接；同日重跑零次", async () => {
     const first = await run();
-    expect(first.tdxCalls).toHaveLength(8);
+    expect(first.tdxCalls).toHaveLength(29);
     const saved = restoreSlices(snapshot(first.slices));
-    expect(saved.has("thsr:2026-09-30")).toBe(true);
+    expect(saved.has("thsr:2026-10-21")).toBe(true);
     const second = await run(saved, "2026-09-24");
-    expect(second.tdxCalls).toEqual(["thsr:2026-10-01"]);
-    expect(second.calls.filter(key => key.startsWith("tra:"))).toHaveLength(8);
+    expect(second.tdxCalls).toEqual(["thsr:2026-10-22"]);
+    expect(second.calls.filter(key => key.startsWith("tra:"))).toHaveLength(29);
     const day = snapshot(second.slices, "2026-09-24", secondUpdate)[0];
     expect(day.operatorUpdatedAt?.thsr).toBe(firstUpdate);
     expect(day.operatorUpdatedAt?.tra).toBe(secondUpdate);
@@ -54,7 +54,7 @@ it("首次抓八天；隔天沿用已存日期，只用一次高鐵請求補跨�
 it("漏跑數日只補缺少的日期；單一日期缺漏不重抓其他班表", async () => {
     const initial = await run();
     const saved = restoreSlices(snapshot(initial.slices));
-    expect((await run(saved, "2026-09-26")).tdxCalls).toEqual(["thsr:2026-10-01", "thsr:2026-10-02", "thsr:2026-10-03"]);
+    expect((await run(saved, "2026-09-26")).tdxCalls).toEqual(["thsr:2026-10-22", "thsr:2026-10-23", "thsr:2026-10-24"]);
     saved.delete("thsr:2026-09-25");
     expect((await run(saved)).tdxCalls).toEqual(["thsr:2026-09-25"]);
 });
@@ -64,7 +64,7 @@ it("強制更新可取得異動班表；失敗保留原班表、原時間，之�
     const saved = restoreSlices(snapshot(initial.slices));
     const failedKey = "thsr:2026-09-25";
     const forced = await run(saved, start, true, failedKey);
-    expect(forced.tdxCalls).toHaveLength(8);
+    expect(forced.tdxCalls).toHaveLength(29);
     expect(forced.failures).toEqual([failedKey]);
     expect(forced.slices.get(failedKey)).toEqual({ ...saved.get(failedKey), stale: true });
     const failedFiles = snapshot(forced.slices);
@@ -87,6 +87,6 @@ it("相容原有班表並忽略損壞資料，不能拿無效車次當快取", a
     const days = snapshot(initial.slices).map(({ sliceMetadata, operatorUpdatedAt, ...day }) => day);
     const corrupted = { ...days[0], trains: [{ ...days[0].trains[0], stops: [] }] };
     const cached = restoreSlices([...days, corrupted, null as unknown as DayData]);
-    expect(cached.get("thsr:2026-09-30")?.updatedAt).toBe(firstUpdate);
-    expect((await run(cached, "2026-09-24")).tdxCalls).toEqual(["thsr:2026-10-01"]);
+    expect(cached.get("thsr:2026-10-21")?.updatedAt).toBe(firstUpdate);
+    expect((await run(cached, "2026-09-24")).tdxCalls).toEqual(["thsr:2026-10-22"]);
 });
