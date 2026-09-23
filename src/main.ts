@@ -99,8 +99,9 @@ function card(journey: Journey) {
         const next = journey.legs[index + 1];
         const reservedTra = leg.operator === "tra" && leg.reserved === true;
         const trainType = (leg.trainType ?? leg.service).replace(/^普悠瑪\(普悠瑪\)$/, "普悠瑪").replace(/^太魯閣\(太魯閣\)$/, "太魯閣");
+        const noStanding = leg.operator === "tra" && /EMU\s*3000|自強[（(]3000[）)]|普悠瑪|太魯閣/i.test(trainType);
         const transfer = next ? Math.round((next.departure - leg.arrival) / 60000) : 0;
-        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span><span class="train-number">${leg.operator === "tymc" ? "抵達時間預估" : `${escapeHtml(leg.number)} 次${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}`}</span><span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : ""}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}<span>間隔 ${transfer} 分鐘</span></p>` : ""}</li>`;
+        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span>${leg.operator === "tymc" ? "" : `<span class="train-number">${escapeHtml(leg.number)} 次${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}${noStanding ? ' <span class="no-standing">無售站票</span>' : ""}</span>`}<span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : ""}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}<span>間隔 ${transfer} 分鐘</span></p>` : ""}</li>`;
     }).join("")}</ol>${walk?.position === "end" ? walkHtml : ""}</article>`;
 }
 function statusLine() {
@@ -171,7 +172,7 @@ function privacyPage() {
         <h2>免責聲明</h2>
         <p>本網站依據臺鐵官方開放資料及 TDX 提供的班表，搭配您選擇的條件計算轉乘組合，結果僅供旅程規劃參考。本網站並非台鐵、高鐵或桃園捷運官方網站，也不提供訂票或座位保證。</p>
         <p>本網站原則上每日補齊含今天 7 天的可查詢班表。台鐵與機捷資料每日嘗試更新；高鐵已取得的日期會沿用，僅補齊新增或缺漏日期，必要時由管理者重新取得。畫面標示的班表取得時間，代表本站取得該份資料的時間，不代表營運單位最後修改班表的時間。所有運具的行程時間僅供參考，不提供即時誤點資訊，也不保證即時反映臨時加班、停駛或其他班次調整。我們會盡力維持資料與計算結果的準確性，但不保證所有資訊均為最新、完整或完全沒有錯誤，也不保證網站持續可用。</p>
-        <p>台鐵與高鐵時間依官方班表顯示；機捷發車時間依官方站別班表，抵達時間依官方站間旅行時間推估，並在行程中標示。接駁上限用於篩選行程，不代表實際轉乘所需時間。</p>
+        <p>台鐵與高鐵時間依官方班表顯示；機捷發車時間依官方站別班表，抵達時間依官方站間旅行時間推估。接駁上限用於篩選行程，不代表實際轉乘所需時間。</p>
         <p>轉乘組合不代表保證接得上下一班車。實際發車、停駛、臨時調整、月台、步行時間及座位狀況，請以台鐵、高鐵、桃園捷運及現場公告為準，並自行預留足夠的轉乘時間。</p>
         <p>請自行評估使用本網站資訊所產生的風險。在法律允許的範圍內，內灣線轉乘攻略不對因資料錯誤、延遲、服務中斷或未能完成轉乘所造成的損失負責；依法不得排除或限制的責任，不受本條款影響。</p>
         <hr>

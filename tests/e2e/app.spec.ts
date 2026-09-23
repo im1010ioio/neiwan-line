@@ -156,7 +156,7 @@ test("對號篩選預設勾選且保留接駁，可透過搜尋切換新竹", as
     await expect(page.locator(".journey-card")).toContainText("EXPRESS");
     const express = page.locator(".leg-line").filter({ hasText: "EXPRESS" });
     await expect(express.locator(".train-tag")).toHaveText("對號列車");
-    await expect(express.locator(".train-number")).toHaveText("EXPRESS 次 自強(3000)(EMU3000 型電車)");
+    await expect(express.locator(".train-number")).toHaveText("EXPRESS 次 自強(3000)(EMU3000 型電車) 無售站票");
     await expect(express.locator(".train-type")).toHaveCSS("display", "inline");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.locator(".journey-card")).toContainText("BRANCH");

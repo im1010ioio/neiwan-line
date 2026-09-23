@@ -490,3 +490,5 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 .train-tag, .leg-time { flex-shrink: 0; }
 .train-number { min-width: 0; }
 .train-type { display: inline; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; color: var(--muted); }
+
+.no-standing { display: inline-block; color: var(--primary); font-size: 12px; font-weight: 600; white-space: nowrap; }
