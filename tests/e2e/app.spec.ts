@@ -361,3 +361,35 @@ test("所選日期缺少班表時，顯示日期與內灣線手動更新入口",
     await expect(status).toContainText("2026/09/23 班表尚未取得");
     await expect(status.getByRole("link", { name: "手動更新" })).toHaveAttribute("href", "https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml");
 });
+
+test("注音組字期間保留搜尋框與結果，選字後更新清單且不中斷游標", async ({ page }) => {
+    await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
+    const input = page.getByRole("searchbox", { name: "搜尋車站" });
+    await input.focus();
+    const before = await page.locator(".station-option").allTextContents();
+    const sameDuringComposition = await input.evaluate(element => {
+        const input = element as HTMLInputElement;
+        input.dispatchEvent(new CompositionEvent("compositionstart", { bubbles: true }));
+        input.value = "ㄅㄢ";
+        input.dispatchEvent(new InputEvent("input", { bubbles: true, data: "ㄅㄢ", isComposing: true }));
+        return input.isConnected && document.activeElement === input;
+    });
+    expect(sameDuringComposition).toBe(true);
+    expect(await page.locator(".station-option").allTextContents()).toEqual(before);
+    const committed = await input.evaluate(element => {
+        const input = element as HTMLInputElement;
+        input.value = "板橋";
+        input.setSelectionRange(1, 1);
+        input.dispatchEvent(new CompositionEvent("compositionend", { bubbles: true, data: "板橋" }));
+        input.dispatchEvent(new InputEvent("input", { bubbles: true, data: "板橋", isComposing: false }));
+        return { connected: input.isConnected, focused: document.activeElement === input, caret: input.selectionStart };
+    });
+    expect(committed).toEqual({ connected: true, focused: true, caret: 1 });
+    await expect(page.locator(".station-option")).toHaveCount(1);
+    await expect(page.getByRole("button", { name: "板橋", exact: true })).toBeVisible();
+    await input.fill("");
+    await expect(page.getByRole("button", { name: "新竹市", exact: true })).toBeVisible();
+    await input.fill("板橋");
+    await page.getByRole("button", { name: "板橋", exact: true }).click();
+    await expect(page.getByRole("button", { name: "選擇迄站：板橋" })).toBeVisible();
+});

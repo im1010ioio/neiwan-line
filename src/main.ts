@@ -253,19 +253,33 @@ function openStations(role: "neiwan" | "other") {
     document.querySelector<HTMLDialogElement>("#station-dialog")!.showModal();
     document.querySelector<HTMLElement>(".station-option[aria-pressed='true']")?.scrollIntoView({ block: "nearest" });
 }
-function renderStations() {
+function renderStations(updateListOnly = false) {
     const dialog = document.querySelector<HTMLDialogElement>("#station-dialog")!;
     const isOrigin = (modalRole === "neiwan") !== preferences.reversed;
     const other = preferences[modalRole === "neiwan" ? "other" : "neiwan"];
     let list: Station[] = modalRole === "neiwan" ? neiwanStations : stations.filter(s => s.operator === modalOperator);
     if (search) list = list.filter(s => s.name.replaceAll("臺", "台").includes(search.replaceAll("臺", "台")));
     else if (modalRole === "other" && modalOperator === "tra") list = modalCounty === "六家線" ? [stationById.get("tra:1194")!, stationById.get("tra:1193")!] : list.filter(s => s.county === modalCounty);
-    dialog.innerHTML = `<div class="dialog-header"><div><p class="eyebrow">${modalRole === "neiwan" ? "內灣線沿線" : "全台鐵路"}</p><h2 id="station-dialog-title">選擇${isOrigin ? "起" : "迄"}站</h2></div><button class="icon-button" id="close-stations" aria-label="關閉選站">×</button></div>${modalRole === "other" ? `<div class="operator-tabs" role="tablist" aria-label="運具"><button role="tab" data-operator="tra" aria-selected="${modalOperator === "tra"}">台鐵</button><button role="tab" data-operator="thsr" aria-selected="${modalOperator === "thsr"}">高鐵</button><button role="tab" data-operator="tymc" aria-selected="${modalOperator === "tymc"}">機場捷運</button></div>` : ""}<div class="station-search"><input type="search" id="station-search" aria-label="搜尋車站" placeholder="搜尋車站" value="${escapeHtml(search)}"></div><div class="station-columns ${modalRole === "neiwan" || modalOperator !== "tra" || search ? "single" : ""}">${modalRole === "other" && modalOperator === "tra" && !search ? `<div class="county-list" aria-label="車站分類">${["六家線", ...counties].map(county => `<button data-county="${county}" aria-pressed="${county === modalCounty}">${county}${county === "六家線" ? '<small>六家・竹中</small>' : ""}</button>`).join("")}</div>` : ""}<div class="station-list" aria-label="車站">${list.map(station => `<button class="station-option${isMajorStation(station.id) ? " major-station" : ""}" ${isMajorStation(station.id) ? 'aria-description="主要站（特等站或一等站）"' : ""} data-station="${station.id}" aria-pressed="${preferences[modalRole] === station.id}" ${station.id === other ? "disabled" : ""}><span class="station-name">${escapeHtml(station.name)}</span>${station.id === other ? `<small>與${isOrigin ? "迄" : "起"}站相同</small>` : preferences[modalRole] === station.id ? '<span class="selected-check" aria-hidden="true">✓</span>' : ""}</button>`).join("") || '<p class="no-stations">找不到符合的車站</p>'}</div></div>`;
-    document.querySelector("#close-stations")!.addEventListener("click", () => dialog.close());
-    dialog.querySelectorAll<HTMLButtonElement>("[data-operator]").forEach(button => button.onclick = () => { modalOperator = button.dataset.operator!; search = ""; renderStations(); });
-    dialog.querySelectorAll<HTMLButtonElement>("[data-county]").forEach(button => button.onclick = () => { const scroll = dialog.querySelector(".county-list")!.scrollTop; modalCounty = button.dataset.county!; renderStations(); dialog.querySelector(".county-list")!.scrollTop = scroll; });
+    if (!updateListOnly) {
+        dialog.innerHTML = `<div class="dialog-header"><div><p class="eyebrow">${modalRole === "neiwan" ? "內灣線沿線" : "全台鐵路"}</p><h2 id="station-dialog-title">選擇${isOrigin ? "起" : "迄"}站</h2></div><button class="icon-button" id="close-stations" aria-label="關閉選站">×</button></div>${modalRole === "other" ? `<div class="operator-tabs" role="tablist" aria-label="運具"><button role="tab" data-operator="tra" aria-selected="${modalOperator === "tra"}">台鐵</button><button role="tab" data-operator="thsr" aria-selected="${modalOperator === "thsr"}">高鐵</button><button role="tab" data-operator="tymc" aria-selected="${modalOperator === "tymc"}">機場捷運</button></div>` : ""}<div class="station-search"><input type="search" id="station-search" aria-label="搜尋車站" placeholder="搜尋車站" value="${escapeHtml(search)}"></div><div id="station-options"></div>`;
+        dialog.querySelector("#close-stations")!.addEventListener("click", () => dialog.close());
+        dialog.querySelectorAll<HTMLButtonElement>("[data-operator]").forEach(button => button.onclick = () => { modalOperator = button.dataset.operator!; search = ""; renderStations(); });
+        const input = dialog.querySelector<HTMLInputElement>("#station-search")!;
+        let composing = false;
+        const updateSearch = () => {
+            if (search === input.value) return;
+            search = input.value;
+            renderStations(true);
+        };
+        input.addEventListener("compositionstart", () => { composing = true; });
+        input.addEventListener("compositionend", () => { composing = false; updateSearch(); });
+        input.addEventListener("input", event => {
+            if (!composing && !(event as InputEvent).isComposing) updateSearch();
+        });
+    }
+    dialog.querySelector("#station-options")!.innerHTML = `<div class="station-columns ${modalRole === "neiwan" || modalOperator !== "tra" || search ? "single" : ""}">${modalRole === "other" && modalOperator === "tra" && !search ? `<div class="county-list" aria-label="車站分類">${["六家線", ...counties].map(county => `<button data-county="${county}" aria-pressed="${county === modalCounty}">${county}${county === "六家線" ? '<small>六家・竹中</small>' : ""}</button>`).join("")}</div>` : ""}<div class="station-list" aria-label="車站">${list.map(station => `<button class="station-option${isMajorStation(station.id) ? " major-station" : ""}" ${isMajorStation(station.id) ? 'aria-description="主要站（特等站或一等站）"' : ""} data-station="${station.id}" aria-pressed="${preferences[modalRole] === station.id}" ${station.id === other ? "disabled" : ""}><span class="station-name">${escapeHtml(station.name)}</span>${station.id === other ? `<small>與${isOrigin ? "迄" : "起"}站相同</small>` : preferences[modalRole] === station.id ? '<span class="selected-check" aria-hidden="true">✓</span>' : ""}</button>`).join("") || '<p class="no-stations">找不到符合的車站</p>'}</div></div>`;
+    dialog.querySelectorAll<HTMLButtonElement>("[data-county]").forEach(button => button.onclick = () => { const scroll = dialog.querySelector(".county-list")!.scrollTop; modalCounty = button.dataset.county!; renderStations(true); dialog.querySelector(".county-list")!.scrollTop = scroll; });
     dialog.querySelectorAll<HTMLButtonElement>("[data-station]").forEach(button => button.onclick = () => { preferences[modalRole] = button.dataset.station!; persist(); dialog.close(); showAll = showPast; void refresh(); });
-    document.querySelector<HTMLInputElement>("#station-search")!.oninput = event => { search = (event.target as HTMLInputElement).value; renderStations(); const input = document.querySelector<HTMLInputElement>("#station-search")!; input.focus(); };
 }
 function renderAfterLoad() {
     const openDialog = document.querySelector<HTMLDialogElement>("dialog[open]");
