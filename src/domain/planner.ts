@@ -114,7 +114,7 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
             const last = label.legs.at(-1);
             const continuing = last?.trip === train.id;
             const leg: Leg = continuing ? { ...last!, destination: to.station, arrival: to.arrival } : {
-                trip: train.id, number: train.number, operator: train.operator, service: train.service, reserved: train.reserved,
+                trip: train.id, number: train.number, operator: train.operator, service: train.service, reserved: train.reserved, trainType: train.trainType,
                 origin: from.station, destination: to.station, departure: from.departure, arrival: to.arrival,
             };
             const legs = continuing ? [...label.legs.slice(0, -1), leg] : [...label.legs, leg];

@@ -483,3 +483,9 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 .schedule-status--ready { color: var(--success); background: var(--success-bg); border-color: color-mix(in srgb, var(--success) 25%, var(--surface)); }
 .schedule-status--warning { color: var(--route-tag-ink); background: var(--route-tag-bg); border-color: color-mix(in srgb, var(--warning-line) 45%, var(--surface)); }
 .schedule-status > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+
+/* Keep train number and rolling-stock details in the same text flow. */
+.leg-line { align-items: flex-start; }
+.train-tag, .leg-time { flex-shrink: 0; }
+.train-number { min-width: 0; }
+.train-type { display: inline; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; color: var(--muted); }

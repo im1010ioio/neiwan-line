@@ -36,3 +36,33 @@ it("保留官方對號車種，區間與未知車種不誤判為對號列車", a
     const result = normalizeOds({ TrainInfos: ["110G", "1110", "1131", "1132", "1150", "UNKNOWN"].map((CarClass, i) => ({ Train: `TEST-${i}`, CarClass, TimeInfos })) }, "2026-09-21");
     expect(result.map(t => t.reserved)).toEqual([true, true, false, false, false, false]);
 });
+
+
+it("依官方代碼保留完整車種名稱，未知代碼不臆測車型", async () => {
+    const { normalizeOds } = await import("../scripts/normalize");
+    const TimeInfos = [
+        { Station: "1210", Order: "1", ARRTime: "08:00:00", DEPTime: "08:00:00" },
+        { Station: "1000", Order: "2", ARRTime: "09:00:00", DEPTime: "09:00:00" },
+    ];
+    const codes = ["110A", "110G", "1101", "1107", "UNKNOWN"];
+    const trains = normalizeOds({ TrainInfos: codes.map(CarClass => ({ Train: `TEST-${CarClass}`, CarClass, TimeInfos })) }, "2026-09-21");
+    expect(trains.map(train => train.trainTypeId)).toEqual(codes);
+    expect(trains.map(train => train.trainType)).toEqual([
+        "自強(推拉式自強號且有自行車車廂)",
+        "自強(3000)(EMU3000 型電車)",
+        "太魯閣(太魯閣)",
+        "普悠瑪(普悠瑪)",
+        undefined,
+    ]);
+});
+
+it("TDX 班表保留當次提供的車種名稱", () => {
+    const trains = normalizeTdx({ TrainTimetables: [{
+        TrainInfo: { TrainNo: "TEST-TYPE", TrainTypeID: "110G", TrainTypeName: { Zh_tw: "自強(3000)(EMU3000 型電車)" } },
+        StopTimes: [
+            { StationID: "1210", StopSequence: 1, ArrivalTime: "08:00", DepartureTime: "08:00" },
+            { StationID: "1000", StopSequence: 2, ArrivalTime: "09:00", DepartureTime: "09:00" },
+        ],
+    }] }, "tra", "2026-09-21");
+    expect(trains[0]).toMatchObject({ reserved: true, trainTypeId: "110G", trainType: "自強(3000)(EMU3000 型電車)" });
+});

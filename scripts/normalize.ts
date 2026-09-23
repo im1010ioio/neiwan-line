@@ -1,5 +1,8 @@
 import type { RailOperator, Stop, Train } from "../src/domain/types";
 
+import trainTypes from "../src/tra-train-types.json";
+const typeNames: Record<string, string> = trainTypes.types;
+
 type Row = Record<string, any>;
 
 export function records(value: unknown, keys: string[]): Row[] {
@@ -48,6 +51,10 @@ export function normalizeTdx(response: unknown, operator: RailOperator, date: st
         return {
             id: `${operator}:${date}:${info.TrainNo}`,
             number: String(info.TrainNo), operator,
+            ...(operator === "tra" ? {
+                trainTypeId: info.TrainTypeID ? String(info.TrainTypeID) : undefined,
+                trainType: info.TrainTypeName?.Zh_tw ?? typeNames[String(info.TrainTypeID)],
+            } : {}),
             reserved: operator === "thsr" || /自強|莒光|復興|普悠瑪|太魯閣/.test(info.TrainTypeName?.Zh_tw ?? ""),
             service: info.TrainTypeName?.Zh_tw ?? (operator === "thsr" ? "高鐵" : "台鐵"),
             stops: stopsWithDates([...row.StopTimes].sort((a, b) => a.StopSequence - b.StopSequence), date, operator),
@@ -60,6 +67,8 @@ export function normalizeOds(response: unknown, date: string): Train[] {
         if (!row.Train || !Array.isArray(row.TimeInfos) || row.TimeInfos.length < 2) throw new Error("台鐵車次格式不完整");
         return {
             id: `tra:${date}:${row.Train}`, number: String(row.Train), operator: "tra",
+            trainTypeId: String(row.CarClass),
+            trainType: typeNames[String(row.CarClass)],
             reserved: /^(110[0-9A-Z]|111[0-9A-Z]|1120)$/.test(String(row.CarClass)),
             service: String(row.CarClass).startsWith("110") ? "自強號" : String(row.CarClass).startsWith("111") ? "莒光號" : row.CarClass === "1120" ? "復興號" : row.CarClass === "1131" ? "區間車" : row.CarClass === "1132" ? "區間快" : "台鐵",
             stops: stopsWithDates([...row.TimeInfos].sort((a, b) => Number(a.Order) - Number(b.Order)), date, "tra"),

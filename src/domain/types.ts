@@ -13,6 +13,8 @@ export interface Stop {
     departure: number;
 }
 export interface Train {
+    trainType?: string;
+    trainTypeId?: string;
     reserved?: boolean;
     id: string;
     number: string;
@@ -21,6 +23,7 @@ export interface Train {
     stops: Stop[];
 }
 export interface Leg {
+    trainType?: string;
     estimatedArrival?: boolean;
     reserved?: boolean;
     trip: string;

@@ -43,6 +43,8 @@ npm run data:generate
 
 車站來自[臺鐵官方車站基本資料](https://ods.railway.gov.tw/tra-ods-web/ods/download/dataResource/0518b833e8964d53bfea3f7691aea0ee)，可用 `npm run data:stations` 更新。高鐵十二站依北到南固定列出，改站時需人工維護。
 
+台鐵對號列車以「對號列車」標籤顯示，車次後接官方完整車種；普悠瑪與太魯閣省略重複名稱。車種代碼對照保存在 `src/tra-train-types.json`（來源：TDX TrainType），每日轉換班表時直接使用，不增加查詢額度。若官方新增代碼，需更新對照；缺少詳細資料時僅顯示班表原有名稱。
+
 ## 每日更新與發布
 
 GitHub 專案為 `im1010ioio/neiwan-line`。使用 GitHub Actions 建置與發布至 https://im1010ioio.github.io/neiwan-line/ 。

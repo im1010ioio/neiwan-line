@@ -140,7 +140,7 @@ test("直達與竹中轉乘一起顯示，行程卡標示竹中換車間隔", as
 test("對號篩選預設勾選且保留接駁，可透過搜尋切換新竹", async ({ page }) => {
     await page.route("**/data/*.json", async route => {
         const at = (time: string) => Date.parse(`2026-09-21T${time}:00+08:00`);
-        const train = (id: string, reserved: boolean, stops: [string, string][]) => ({ id, number: id, operator: "tra", reserved, service: reserved ? "自強號" : "區間車", stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) });
+        const train = (id: string, reserved: boolean, stops: [string, string][]) => ({ id, number: id, operator: "tra", reserved, trainType: reserved ? "自強(3000)(EMU3000 型電車)" : undefined, service: reserved ? "自強號" : "區間車", stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) });
         await route.fulfill({ json: { schemaVersion: 1, date: "2026-09-21", generatedAt: "2026-09-21T04:30:00+08:00", coverage: { tra: true, thsr: false }, sources: ["自動化測試專用資料"], trains: [
             train("BRANCH", false, [["tra:1208", "08:10"], ["tra:1210", "09:00"]]),
             train("LOCAL", false, [["tra:1210", "09:05"], ["tra:1000", "10:00"]]),
@@ -154,6 +154,11 @@ test("對號篩選預設勾選且保留接駁，可透過搜尋切換新竹", as
     await page.getByRole("button", { name: "臺北", exact: true }).click();
     await expect(page.getByLabel("主要幹線僅搭對號列車", { exact: true })).toBeChecked();
     await expect(page.locator(".journey-card")).toContainText("EXPRESS");
+    const express = page.locator(".leg-line").filter({ hasText: "EXPRESS" });
+    await expect(express.locator(".train-tag")).toHaveText("對號列車");
+    await expect(express.locator(".train-number")).toHaveText("EXPRESS 次 自強(3000)(EMU3000 型電車)");
+    await expect(express.locator(".train-type")).toHaveCSS("display", "inline");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expect(page.locator(".journey-card")).toContainText("BRANCH");
     await page.getByLabel("主要幹線僅搭對號列車", { exact: true }).uncheck();
     await expect(page.locator(".journey-card")).toContainText("LOCAL");
