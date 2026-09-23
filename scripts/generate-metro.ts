@@ -1,4 +1,5 @@
 import { mkdir, writeFile, rename } from "node:fs/promises";
+import { projectMetro } from "./project-metro";
 import { createTdxClient } from "./tdx-client";
 import { metroLegs, type MetroSnapshot } from "../src/domain/metro";
 import { dateInTaipei } from "../src/domain/query";
@@ -7,7 +8,7 @@ const client = createTdxClient({ clientId: process.env.TDX_CLIENT_ID, clientSecr
 const timetables = await client.getJson("/v2/Rail/Metro/StationTimeTable/TYMC?$format=JSON") as MetroSnapshot["timetables"];
 const patterns = await client.getJson("/v2/Rail/Metro/StoppingPattern/TYMC?$format=JSON") as { StoppingPatterns: MetroSnapshot["patterns"] };
 const travelTimes = await client.getJson("/v2/Rail/Metro/S2STravelTime/TYMC?$format=JSON") as MetroSnapshot["travelTimes"];
-const snapshot: MetroSnapshot = { generatedAt: new Date().toISOString(), timetables, patterns: patterns.StoppingPatterns, travelTimes };
+const snapshot = projectMetro({ generatedAt: new Date().toISOString(), timetables, patterns: patterns.StoppingPatterns, travelTimes });
 if (!metroLegs(snapshot, "tymc:A18", "tymc:A12", dateInTaipei(), "local").length) throw Error("機捷班表驗證失敗，保留上次成功資料");
 await mkdir("public/data", { recursive: true });
 await writeFile("public/data/metro.tmp", JSON.stringify(snapshot));

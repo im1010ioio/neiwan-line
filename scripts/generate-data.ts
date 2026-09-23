@@ -1,10 +1,11 @@
 import { QUERY_DAYS, FETCH_DAYS } from "../src/domain/schedule-window";
-import { mkdir, readFile, writeFile, rename, readdir, unlink } from "node:fs/promises";
+import { mkdir } from "node:fs/promises";
 import { addDays, dateInTaipei } from "../src/domain/query";
 import { normalizeOds, normalizeTdx, records } from "./normalize";
 import { createTdxClient } from "./tdx-client";
-import { assembleDay, fillSlices, restoreSlices } from "./timetable-cache";
-import type { DayData, Manifest, RailOperator, Train } from "../src/domain/types";
+import { fillSlices } from "./timetable-cache";
+import { publishTimetables, readCachedSlices } from "./publish-timetables";
+import type { RailOperator, Train } from "../src/domain/types";
 
 const directory = "public/data";
 const today = process.env.DATA_DATE || dateInTaipei();
@@ -38,15 +39,8 @@ async function tdxDay(operator: RailOperator, date: string): Promise<Train[]> {
     return trains;
 }
 
-// Reuse complete date slices committed by prior runs, including cross-day context.
-const priorDays: DayData[] = [];
-for (const file of await readdir(directory)) {
-    if (!/^\d{4}-\d{2}-\d{2}\.json$/.test(file)) continue;
-    try {
-        priorDays.push(JSON.parse(await readFile(`${directory}/${file}`, "utf8")));
-    } catch { /* Invalid prior files are not used. */ }
-}
-const cached = restoreSlices(priorDays);
+// Reuse complete operator/date slices, including the final cross-day context.
+const cached = await readCachedSlices(directory);
 let officialLinks = new Map<string, string>();
 if (source === "official") {
     try {
@@ -94,20 +88,8 @@ const slices = await fillSlices({
         if (client || operator === "tra") failed = true;
     },
 });
-const manifest: Manifest = { generatedAt, days: [] };
-for (const date of dates.slice(0, QUERY_DAYS)) {
-    const data = assembleDay(date, slices, generatedAt, [
-        source === "official" ? "臺鐵官方開放資料" : "TDX 台鐵",
-        ...(slices.has(`thsr:${date}`) ? ["TDX 高鐵"] : []),
-    ]);
-    await writeFile(`${directory}/${date}.tmp`, JSON.stringify(data));
-    await rename(`${directory}/${date}.tmp`, `${directory}/${date}.json`);
-    manifest.days.push({ date, file: `${date}.json`, generatedAt: data.generatedAt, coverage: data.coverage });
-}
-await writeFile(`${directory}/manifest.tmp`, JSON.stringify(manifest, null, 4));
-await rename(`${directory}/manifest.tmp`, `${directory}/manifest.json`);
-for (const file of await readdir(directory)) {
-    if (/^\d{4}-\d{2}-\d{2}\.json$/.test(file) && file.slice(0, 10) < addDays(today, -1)) await unlink(`${directory}/${file}`);
-}
+await publishTimetables(directory, slices, dates.slice(0, QUERY_DAYS), generatedAt, [
+    source === "official" ? "臺鐵官方開放資料" : "TDX 台鐵", "TDX 高鐵",
+]);
 console.log(`TDX 資料請求合計 ${requests} 次；查詢者共用上述靜態班表。`);
 if (failed) process.exitCode = 1;

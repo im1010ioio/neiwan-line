@@ -73,3 +73,14 @@ it("午夜班次屬前一營運日，且不得越過該班終點", () => {
     night.timetables[0].DestinationStaionID = "A13";
     expect(metroLegs(night, "tymc:A18", "tymc:A12", date, "local")).toEqual([]);
 });
+
+
+it("機捷精簡資料保留所有經 A18 的雙向班次與抵達時間", async () => {
+    const { projectMetro } = await import("../scripts/project-metro");
+    const compact = projectMetro(snapshot);
+    for (const station of ["A1", "A12", "A13", "A18", "A22"]) {
+        for (const [origin, destination] of [["tymc:A18", `tymc:${station}`], [`tymc:${station}`, "tymc:A18"]]) {
+            expect(metroLegs(compact, origin, destination, date, "all")).toEqual(metroLegs(snapshot, origin, destination, date, "all"));
+        }
+    }
+});

@@ -1,15 +1,34 @@
 import { test, expect } from "@playwright/test";
+import { createHash } from "node:crypto";
+import { addDays } from "../../src/domain/query";
+import { packTimetable, type DayIndex } from "../../src/domain/timetable-format";
+import type { RailOperator, Train } from "../../src/domain/types";
 
 test.beforeEach(async ({ page }) => {
     await page.route("https://font.emtech.cc/**", route => route.fulfill({ contentType: "text/css", body: "" }));
     await page.clock.setFixedTime(new Date("2026-09-21T08:00:00+08:00"));
+    const payloads = new Map<string, string>();
+    await page.route("**/data/slices/*.json", route => {
+        const body = payloads.get(route.request().url().split("/data/")[1]);
+        return route.fulfill({ status: body ? 200 : 404, contentType: "application/json", body: body ?? "" });
+    });
     await page.route("**/data/*.json", async route => {
         const date = /([0-9]{4}-[0-9]{2}-[0-9]{2})\.json/.exec(route.request().url())?.[1] ?? "2026-09-21";
-        const times = ["07:00", "08:10", "08:25", "09:00"];
-        await route.fulfill({ json: { schemaVersion: 1, date, generatedAt: "2026-09-21T04:30:00+08:00", coverage: { tra: true, thsr: true }, sources: ["自動化測試專用資料"], trains: times.map((time, i) => {
-            const departure = Date.parse(`${date}T${time}:00+08:00`);
-            return { id: `test-${i}`, number: `TEST-${i}`, operator: "tra", service: "測試車次", stops: [{ station: "tra:1208", arrival: departure, departure }, { station: "tra:1210", arrival: departure + 3600000, departure: departure + 3600000 }] };
-        }) } });
+        const files = Object.fromEntries(["local", "tra", "thsr"].map(group => [group, [-1, 0, 1].map(offset => {
+            const serviceDate = addDays(date, offset);
+            const operator: RailOperator = group === "thsr" ? "thsr" : "tra";
+            const trains: Train[] = operator === "thsr" ? [] : ["07:00", "08:10", "08:25", "09:00"].map((time, i) => {
+                const departure = Date.parse(`${serviceDate}T${time}:00+08:00`);
+                return { id: `tra:${serviceDate}:TEST-${i}`, number: `TEST-${i}`, operator, service: "測試車次",
+                    stops: [{ station: "tra:1208", arrival: departure, departure }, { station: "tra:1210", arrival: departure + 3600000, departure: departure + 3600000 }] };
+            });
+            const body = JSON.stringify(packTimetable(serviceDate, operator, trains));
+            const hash = createHash("sha256").update(body).digest("hex").slice(0, 16);
+            const file = `slices/${group}-${serviceDate}-${hash}.json`;
+            payloads.set(file, body);
+            return file;
+        })])) as DayIndex["files"];
+        await route.fulfill({ json: { schemaVersion: 2, date, generatedAt: "2026-09-21T04:30:00+08:00", coverage: { tra: true, thsr: true }, sources: ["自動化測試專用資料"], files } });
     });
     await page.route("**/www.googletagmanager.com/**", route => route.fulfill({ contentType: "application/javascript", body: "/* Test boundary: do not contact Google. */" }));
     await page.goto("/");
@@ -149,6 +168,7 @@ test("對號篩選預設勾選且保留接駁，可透過搜尋切換新竹", as
         ] } });
     });
     await page.reload();
+    await page.reload();
     await page.getByRole("button", { name: "拒絕", exact: true }).click();
     await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
     await page.getByRole("button", { name: "臺北市", exact: true }).click();
@@ -255,6 +275,7 @@ for (const other of ["tra:1194", "thsr:1000"]) {
 }
 
 test("主要站標示適用台鐵選單與搜尋，保留同站停用且支援深色模式", async ({ page }, testInfo) => {
+    await page.reload();
     await page.getByRole("button", { name: "拒絕", exact: true }).click();
     await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
     await page.getByRole("button", { name: "臺北市", exact: true }).click();
@@ -300,6 +321,7 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
         patterns: ["SP1", "SP5"].map(StoppingPatternID => ({ StoppingPatternID, Stations: [{ StationID: "A12", Sequence: 1 }, { StationID: "A18", Sequence: 2 }] })),
         travelTimes: [1, 2].map(TrainType => ({ TrainType, TravelTimes: [{ FromStationID: "A18", ToStationID: "A12", RunTime: 900 }, { FromStationID: "A12", ToStationID: "A18", RunTime: 900 }] })),
     } }));
+    await page.reload();
     await page.getByRole("button", { name: "拒絕", exact: true }).click();
     await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
     await page.getByRole("tab", { name: "機場捷運", exact: true }).click();
@@ -442,4 +464,33 @@ test("28天日期選單包含跨月最後一天並於重新開啟保留", async 
     await expect(page.locator(".journey-card")).toHaveCount(3);
     await page.reload();
     await expect(dates).toHaveValue("2026-10-18");
+});
+
+
+test("日期切換共用班表，篩選不重新下載，快速切換顯示最後選定日期", async ({ page }) => {
+    await expect(page.locator(".journey-card")).toHaveCount(3);
+    const requests: string[] = [];
+    page.on("request", request => { if (request.url().includes("/data/")) requests.push(request.url()); });
+    await page.getByLabel("內灣新竹直達車", { exact: true }).check();
+    await expect(page.locator(".journey-card")).toHaveCount(3);
+    expect(requests).toHaveLength(0);
+    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-22");
+    await expect(page.locator(".badge--scheduled")).toHaveCount(3);
+    expect(requests).toHaveLength(2);
+    expect(requests.filter(url => url.includes("/slices/"))).toHaveLength(1);
+    expect(requests.every(url => !/slices\/(tra|thsr)-/.test(url))).toBe(true);
+    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-21");
+    await expect(page.locator(".badge--warning")).toHaveCount(1);
+    expect(requests).toHaveLength(2);
+    await page.route("**/data/2026-09-23.json", async route => {
+        await new Promise(resolve => setTimeout(resolve, 250));
+        await route.fallback();
+    });
+    const slowResponse = page.waitForResponse("**/data/2026-09-23.json");
+    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-23");
+    await page.getByLabel("出發日期", { exact: true }).selectOption("2026-09-24");
+    await (await slowResponse).finished();
+    await expect(page.locator(".schedule-status")).toContainText("2026/09/24 班表已取得");
+    await expect(page.locator(".badge--scheduled")).toHaveCount(3);
+    await expect(page.getByLabel("出發日期", { exact: true })).toHaveValue("2026-09-24");
 });

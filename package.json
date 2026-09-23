@@ -12,7 +12,8 @@
         "typecheck": "tsc --noEmit",
         "data:generate": "node --env-file-if-exists=.env --import tsx scripts/generate-data.ts",
         "data:stations": "node --env-file-if-exists=.env --import tsx scripts/update-stations.ts",
-        "data:metro": "node --env-file-if-exists=.env --import tsx scripts/generate-metro.ts"
+        "data:metro": "node --env-file-if-exists=.env --import tsx scripts/generate-metro.ts",
+        "data:compact": "node --import tsx scripts/compact-data.ts"
     },
     "devDependencies": {
         "@playwright/test": "^1.54.1",

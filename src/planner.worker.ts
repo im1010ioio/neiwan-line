@@ -1,9 +1,28 @@
 import { planAirportJourneys } from "./domain/airport-planner";
-import type { MetroSnapshot } from "./domain/metro";
 import { planJourneys, type PlannerFilters } from "./domain/planner";
-import type { Train } from "./domain/types";
-self.onmessage = (event: MessageEvent<{ id: number; trains: Train[]; origin: string; destination: string; date: string; filters?: PlannerFilters; metro?: MetroSnapshot }>) => {
-    const { id, trains, origin, destination, date, filters, metro } = event.data;
-    try { self.postMessage({ id, journeys: metro ? planAirportJourneys(trains, origin, destination, date, filters ?? {}, metro) : planJourneys(trains, origin, destination, date, filters) }); }
-    catch { self.postMessage({ id, error: true }); }
+import { timetableGroups } from "./domain/timetable-format";
+import { createDayLoader } from "./data-loader";
+import { loadMetro } from "./metro-loader";
+
+const loadDay = createDayLoader();
+let latestId = 0;
+self.onmessage = async (event: MessageEvent<{ id: number; origin: string; destination: string; date: string; force?: boolean; filters?: PlannerFilters }>) => {
+    const { id, origin, destination, date, filters, force = false } = event.data;
+    latestId = id;
+    try {
+        const groups = timetableGroups(origin, destination);
+        const needsMetro = origin.startsWith("tymc:") || destination.startsWith("tymc:");
+        const [loaded, metro] = await Promise.all([loadDay(date, groups, force), needsMetro ? loadMetro(date, force) : undefined]);
+        if (id !== latestId) return;
+        if (loaded.status !== "ready") { self.postMessage({ id, status: "missing" }); return; }
+        // Only metadata and visible journey information cross the worker boundary.
+        const { trains, ...data } = loaded.data;
+        const metroSummary = metro ? { generatedAt: metro.generatedAt } : undefined;
+        if (!data.coverage.tra || (groups.includes("thsr") && !data.coverage.thsr) || (needsMetro && !metro)) {
+            self.postMessage({ id, status: "missing", data, metro: metroSummary }); return;
+        }
+        const journeys = metro ? planAirportJourneys(trains, origin, destination, date, filters ?? {}, metro)
+            : planJourneys(trains, origin, destination, date, filters);
+        self.postMessage({ id, status: "ready", data, metro: metroSummary, journeys });
+    } catch { if (id === latestId) self.postMessage({ id, status: "error" }); }
 };

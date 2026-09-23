@@ -6,10 +6,9 @@ import { stations, neiwanStations, counties, stationById, stationName } from "./
 import { dateInTaipei, dateOptions, displayTime, filterJourneys, journeyState } from "./domain/query";
 import { defaults, loadPreferences, savePreferences, PREFERENCES_KEY } from "./preferences";
 import type { StorageLike } from "./preferences";
-import type { DayData, Journey, Leg, Station } from "./domain/types";
-import { loadMetro } from "./metro-loader";
+import type { Journey, Leg, Station } from "./domain/types";
 import type { MetroSnapshot } from "./domain/metro";
-import { loadDay } from "./data-loader";
+import type { DaySummary } from "./domain/timetable-format";
 import { CONSENT_KEY, createAnalytics } from "./analytics";
 import type { Consent } from "./analytics";
 
@@ -31,8 +30,8 @@ try {
 } catch { /* Ask again when storage is unavailable. */ }
 const analytics = createAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID, window);
 analytics.setConsent(consent);
-let data: DayData | undefined;
-let metroData: MetroSnapshot | undefined;
+let data: DaySummary | undefined;
+let metroData: Pick<MetroSnapshot, "generatedAt"> | undefined;
 let journeys: Journey[] = [];
 let phase: "loading" | "ready" | "missing" | "error" = "loading";
 let requestId = 0;
@@ -227,7 +226,7 @@ function bind() {
     on("time", "change", event => { time = (event.target as HTMLSelectElement).value; showAll = showPast; render(); });
     on("past", "change", event => { showPast = (event.target as HTMLInputElement).checked; showAll = showPast; render(); });
     on("show-all", "click", () => { showAll = !showAll; if (showAll) analytics.track("view_all"); render(); });
-    on("retry", "click", () => { void refresh(); });
+    on("retry", "click", () => { void refresh(true); });
     for (const id of ["allow", "privacy-allow", "settings-allow"]) on(id, "click", () => setConsent("granted"));
     for (const id of ["deny", "privacy-deny", "settings-deny"]) on(id, "click", () => setConsent("denied"));
     for (const id of ["settings-open", "privacy-settings"]) on(id, "click", openSettings);
@@ -292,27 +291,26 @@ function renderAfterLoad() {
     if (openDialog) openDialog.addEventListener("close", () => render(), { once: true });
     else render();
 }
-async function refresh() {
+function refresh(force = false) {
     const id = ++requestId;
-    worker?.terminate();
-    worker = undefined;
     phase = "loading"; data = undefined; metroData = undefined; journeys = []; render();
-    const needsMetro = preferences.other.startsWith("tymc:");
-    const [loaded, metro] = await Promise.all([loadDay(preferences.date), needsMetro ? loadMetro(preferences.date) : Promise.resolve(undefined)]);
-    if (id !== requestId) return;
-    const needsThsr = needsMetro || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030");
-    if (loaded.status !== "ready" || !loaded.data.coverage.tra || (needsThsr && !loaded.data.coverage.thsr) || (needsMetro && !metro)) {
-        if (loaded.status === "ready") data = loaded.data;
-        phase = "missing"; renderAfterLoad(); return;
+    if (!worker) {
+        worker = new Worker(new URL("./planner.worker.ts", import.meta.url), { type: "module" });
+        worker.onmessage = event => {
+            if (event.data.id !== requestId) return;
+            journeys = event.data.journeys ?? [];
+            data = event.data.data;
+            metroData = event.data.metro;
+            phase = event.data.status;
+            renderAfterLoad();
+        };
+        worker.onerror = () => {
+            phase = "error"; worker?.terminate(); worker = undefined; renderAfterLoad();
+        };
     }
-    data = loaded.data;
-    metroData = metro;
     const [origin, destination] = endpoints();
-    worker = new Worker(new URL("./planner.worker.ts", import.meta.url), { type: "module" });
-    worker.onmessage = event => { if (event.data.id !== requestId) return; journeys = event.data.journeys ?? []; phase = event.data.error ? "error" : "ready"; worker?.terminate(); worker = undefined;
-        renderAfterLoad(); };
-    worker.onerror = () => { if (id !== requestId) return; phase = "error"; worker?.terminate(); worker = undefined; renderAfterLoad(); };
-    worker.postMessage({ id, metro, trains: data.trains, origin, destination, date: preferences.date, filters: { traMaxMinutes: preferences.traMaxMinutes, thsrMaxMinutes: preferences.thsrMaxMinutes, metroMaxMinutes: preferences.metroMaxMinutes, ...activeRouteFilters() } });
+    worker.postMessage({ id, force, origin, destination, date: preferences.date,
+        filters: { traMaxMinutes: preferences.traMaxMinutes, thsrMaxMinutes: preferences.thsrMaxMinutes, metroMaxMinutes: preferences.metroMaxMinutes, ...activeRouteFilters() } });
 }
 const backToTop = document.createElement("button");
 backToTop.type = "button";
@@ -334,7 +332,7 @@ setInterval(() => {
         void refresh();
     } else if (!document.querySelector("dialog[open]") && location.hash !== "#privacy") {
         const resultsElement = document.getElementById("results");
-        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(); }); }
+        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(true); }); }
     }
 }, 30000);
 void refresh();
