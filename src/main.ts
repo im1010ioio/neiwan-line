@@ -142,7 +142,7 @@ function privacyPage() {
     return `<main class="privacy">
         <a class="back" href="#">← 回到車班查詢</a>
         <h1>隱私權與使用條款</h1>
-        <p class="muted">條款更新日期：2026/09/23</p>
+        <p class="muted">條款更新日期：2026/09/24</p>
         <p>歡迎使用內灣線轉乘攻略！</p>
         <p>存取及使用本網站，即表示您同意遵守以下使用條款。本條款說明使用內灣線轉乘攻略網站（<a href="https://neiwan-line.im1010ioio.dev/">neiwan-line.im1010ioio.dev</a>）時應遵守的規範。若您不同意本使用條款，請勿使用本網站。Cookie 與 Google Analytics（GA）分析另由您選擇是否允許，使用網站不代表同意分析。</p>
         <hr>
@@ -160,6 +160,8 @@ function privacyPage() {
             <li>將本網站用於任何非法或未經授權的活動。</li>
         </ul>
         <p>班表、字體及其他第三方資料的權利與使用方式，依各資料提供者的授權條款辦理。</p>
+        <h3>分享預覽圖（OG Image）素材授權</h3>
+        <p>分享預覽圖使用的攝影素材為「<a href="https://www.flickr.com/photos/yoshihuang/5023388464" title="@內灣" target="_blank" rel="noopener noreferrer">@內灣</a>」（<a href="https://www.flickr.com/photos/yoshihuang/" target="_blank" rel="noopener noreferrer">由 Yoshi Huang 製作</a>），採用 <a href="https://creativecommons.org/licenses/by-nc-sa/2.0/deed.zh-hant" target="_blank" rel="noopener noreferrer">CC BY-NC-SA 2.0</a> 授權。本網站將照片與網站標誌、文字及介面示意合成為分享預覽圖。</p>
         <hr>
         <h2>隱私權聲明</h2>
         <h3>查詢偏好與本機儲存</h3>
