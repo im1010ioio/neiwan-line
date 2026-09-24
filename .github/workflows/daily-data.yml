@@ -19,6 +19,8 @@ jobs:
     update:
         runs-on: ubuntu-latest
         timeout-minutes: 25
+        outputs:
+            saved: ${{ steps.save.outputs.saved }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -46,6 +48,7 @@ jobs:
                   TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
             - run: npm run build
             - name: Save daily data, including explicit stale status
+              id: save
               run: |
                   git config user.name 'github-actions[bot]'
                   git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
@@ -54,6 +57,7 @@ jobs:
                       git commit -m 'Update daily railway timetables'
                       git push origin HEAD:main
                   fi
+                  echo "saved=true" >> "$GITHUB_OUTPUT"
             - name: Report upstream failure
               if: steps.fetch.outcome == 'failure' || steps.metro.outcome == 'failure'
               run: |
@@ -61,6 +65,6 @@ jobs:
                   exit 1
     publish:
         needs: update
-        if: always() && needs.update.result == 'success'
+        if: always() && needs.update.outputs.saved == 'true'
         uses: ./.github/workflows/pages.yml
         secrets: inherit

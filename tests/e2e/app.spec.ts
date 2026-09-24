@@ -331,6 +331,7 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     await expect(page.locator(".journey-card")).toHaveCount(2);
     await expect(page.getByLabel("內灣新竹直達車", { exact: true })).toHaveCount(0);
     await expect(page.getByLabel("機捷車種", { exact: true })).toHaveCount(0);
+    await expect(page.locator(".metro-health")).toContainText("來源未提供適用期間");
     await page.evaluate(() => localStorage.setItem("neiwan.filters.v1", JSON.stringify({ reservedOnly: true, directOutbound: false, directReturn: false, metroService: "express" })));
     await page.reload();
     await expect(page.locator(".journey-card")).toHaveCount(2);

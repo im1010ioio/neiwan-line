@@ -5,6 +5,8 @@ import type { Journey, Leg } from "./types";
 export type MetroService = "all" | "express" | "local";
 export interface MetroSnapshot {
     generatedAt: string;
+    updateFailedAt?: string;
+    validity?: { from: string; through: string };
     timetables: {
         StationID: string;
         Direction: number;

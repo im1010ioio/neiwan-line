@@ -7,6 +7,8 @@ export function projectMetro(snapshot: MetroSnapshot): MetroSnapshot {
     const usable = new Set(patterns.map(pattern => pattern.StoppingPatternID));
     return {
         generatedAt: snapshot.generatedAt,
+        updateFailedAt: snapshot.updateFailedAt,
+        validity: snapshot.validity,
         timetables: snapshot.timetables.map(({ StationID, Direction, DestinationStaionID, ServiceDay, Timetables }) => ({
             StationID, Direction, DestinationStaionID, ServiceDay,
             Timetables: Timetables.filter(time => usable.has(time.StoppingPatternID)).map(({ DepartureTime, TrainType, StoppingPatternID }) => ({ DepartureTime, TrainType, StoppingPatternID })),

@@ -2,6 +2,7 @@ import { planAirportJourneys } from "./domain/airport-planner";
 import { planJourneys, type PlannerFilters } from "./domain/planner";
 import { timetableGroups } from "./domain/timetable-format";
 import { createDayLoader } from "./data-loader";
+import { metroHealth } from "./domain/metro-health";
 import { loadMetro } from "./metro-loader";
 
 const loadDay = createDayLoader();
@@ -17,8 +18,9 @@ self.onmessage = async (event: MessageEvent<{ id: number; origin: string; destin
         if (loaded.status !== "ready") { self.postMessage({ id, status: "missing" }); return; }
         // Only metadata and visible journey information cross the worker boundary.
         const { trains, ...data } = loaded.data;
-        const metroSummary = metro ? { generatedAt: metro.generatedAt } : undefined;
-        if (!data.coverage.tra || (groups.includes("thsr") && !data.coverage.thsr) || (needsMetro && !metro)) {
+        const health = needsMetro ? metroHealth(metro, date) : undefined;
+        const metroSummary = health ? { ...health, generatedAt: metro?.generatedAt } : undefined;
+        if (!data.coverage.tra || (groups.includes("thsr") && !data.coverage.thsr) || (needsMetro && !health?.usable)) {
             self.postMessage({ id, status: "missing", data, metro: metroSummary }); return;
         }
         const journeys = metro ? planAirportJourneys(trains, origin, destination, date, filters ?? {}, metro)

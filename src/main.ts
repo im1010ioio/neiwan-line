@@ -7,7 +7,6 @@ import { dateInTaipei, dateOptions, addDays, displayTime, filterJourneys, journe
 import { defaults, loadPreferences, savePreferences, PREFERENCES_KEY } from "./preferences";
 import type { StorageLike } from "./preferences";
 import type { Journey, Leg, Station } from "./domain/types";
-import type { MetroSnapshot } from "./domain/metro";
 import type { DaySummary } from "./domain/timetable-format";
 import { CONSENT_KEY, createAnalytics } from "./analytics";
 import type { Consent } from "./analytics";
@@ -31,7 +30,7 @@ try {
 const analytics = createAnalytics(import.meta.env.VITE_GA_MEASUREMENT_ID, window);
 analytics.setConsent(consent);
 let data: DaySummary | undefined;
-let metroData: Pick<MetroSnapshot, "generatedAt"> | undefined;
+let metroData: { generatedAt?: string; warning: boolean; text: string } | undefined;
 let journeys: Journey[] = [];
 let phase: "loading" | "ready" | "missing" | "error" = "loading";
 let requestId = 0;
@@ -122,11 +121,11 @@ function statusLine() {
     const required = (preferences.other.startsWith("tymc:") || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030")) ? ["tra", "thsr"] as const : ["tra"] as const;
     const contextMissing = required.some(op => context?.[op]?.some(v => !v));
     const acquired = required.filter(op => data!.coverage[op]).map(op => `${op === "tra" ? "台鐵" : "高鐵"}：${fullTime(data!.operatorUpdatedAt?.[op] ?? data!.generatedAt)}`);
-    if (metroData) acquired.push(`機捷：${fullTime(metroData.generatedAt)}`);
+    if (metroData?.generatedAt) acquired.push(`機捷：${fullTime(metroData.generatedAt)}`);
     const stale = required.some(op => data!.staleOperators?.includes(op));
-    const warning = stale || contextMissing || phase === "missing" || phase === "error";
+    const warning = metroData?.warning || stale || contextMissing || phase === "missing" || phase === "error";
     const title = phase === "missing" ? `${selectedDate} 班表尚未完整取得` : phase === "error" ? `${selectedDate} 行程暫時無法計算` : stale ? `${selectedDate} 班表更新未成功` : contextMissing ? `${selectedDate} 部分銜接資料尚未完整` : `${selectedDate} 班表已取得`;
-    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong>${acquired.length ? `<p>班表取得時間｜${escapeHtml(acquired.join("；"))}</p>` : ""}<p>${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "依已取得的班表查詢，臨時異動請以官方資訊為準。"}</p>${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div>${warning ? updateLink : ""}</section>`;
+    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong>${acquired.length ? `<p>班表取得時間｜${escapeHtml(acquired.join("；"))}</p>` : ""}<p>${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "依已取得的班表查詢，臨時異動請以官方資訊為準。"}</p>${metroData ? `<p class="metro-health">${escapeHtml(metroData.text)}</p>` : ""}${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div>${warning ? updateLink : ""}</section>`;
 }
 function privacyPage() {
     return `<main class="privacy">
