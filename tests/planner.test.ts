@@ -5,7 +5,7 @@ const at = (time: string) => Date.parse(`2026-09-21T${time}:00+08:00`);
 export function train(id: string, stops: [string, string][], operator: "tra" | "thsr" = "tra"): Train {
     return { id, number: id, operator, service: "測試班表", stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) };
 }
-it("同車續搭不算換車，五分鐘可換車、三十分鐘不可", () => {
+it("同車續搭不算換車，五分鐘與三十分鐘皆可換車", () => {
     const trains = [
         train("through", [["tra:1208", "08:00"], ["tra:1193", "08:20"], ["tra:1210", "08:40"]]),
         train("branch", [["tra:1208", "09:00"], ["tra:1193", "09:20"]]),
@@ -13,9 +13,9 @@ it("同車續搭不算換車，五分鐘可換車、三十分鐘不可", () => {
         train("late", [["tra:1193", "09:50"], ["tra:1210", "09:55"]]),
     ];
     const result = planJourneys(trains, "tra:1208", "tra:1210", "2026-09-21");
-    expect(result.map(j => j.legs.map(l => l.number))).toEqual([["through"], ["branch", "ok"]]);
+    expect(result.map(j => j.legs.map(l => l.number))).toEqual([["through"], ["branch", "ok"], ["branch", "late"]]);
 });
-it("六家高鐵接駁十分钟可搭、四十分鐘不可，且台鐵目的地不混入高鐵", () => {
+it("六家高鐵接駁十分鐘可搭、較慢組合不重複列出，且台鐵目的地不混入高鐵", () => {
     const trains = [
         train("branch", [["tra:1208", "08:00"], ["tra:1193", "08:20"]]),
         train("shuttle", [["tra:1193", "08:25"], ["tra:1194", "08:30"]]),
@@ -85,13 +85,13 @@ it("對號篩選保留內灣線區間接駁，只限制幹線，並在比較行�
     const returning = [{ ...train("reserved-back", [["tra:1000", "08:00"], ["tra:1210", "09:00"]]), reserved: true }, train("local-back", [["tra:1000", "08:05"], ["tra:1210", "09:00"]]), train("branch-back", [["tra:1210", "09:05"], ["tra:1208", "10:00"]])];
     expect(planJourneys(returning, "tra:1000", "tra:1208", "2026-09-21", { reservedOnly: true }).map(j => j.legs.map(l => l.number))).toEqual([["reserved-back", "branch-back"]]);
 });
-it("自訂台鐵與高鐵上限採嚴格小於，超過原本 40 分鐘的接駁也能保留", () => {
+it("自訂台鐵與高鐵間隔包含上限，超過原本 40 分鐘的接駁也能保留", () => {
     const tra = [train("a", [["tra:1208", "08:00"], ["tra:1193", "08:20"]]), train("b", [["tra:1193", "09:10"], ["tra:1210", "09:30"]])];
-    expect(planJourneys(tra, "tra:1208", "tra:1210", "2026-09-21", { traMaxMinutes: 50 })).toHaveLength(0);
-    expect(planJourneys(tra, "tra:1208", "tra:1210", "2026-09-21", { traMaxMinutes: 51 })).toHaveLength(1);
+    expect(planJourneys(tra, "tra:1208", "tra:1210", "2026-09-21", { traMaxMinutes: 49 })).toHaveLength(0);
+    expect(planJourneys(tra, "tra:1208", "tra:1210", "2026-09-21", { traMaxMinutes: 50 })).toHaveLength(1);
     const high = [train("a", [["tra:1208", "08:00"], ["tra:1194", "08:20"]]), train("h", [["thsr:1030", "09:10"], ["thsr:1000", "09:40"]], "thsr")];
-    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { thsrMaxMinutes: 50 })).toHaveLength(0);
-    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { thsrMaxMinutes: 51 })).toHaveLength(1);
+    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { thsrMaxMinutes: 49 })).toHaveLength(0);
+    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { thsrMaxMinutes: 50 })).toHaveLength(1);
 });
 
 it("往新竹時原車可續搭，不在北新竹改搭另一班車，仍保留必要竹中轉乘", () => {
@@ -247,7 +247,7 @@ it("非對號列車不能越過北新竹到新竹，再換幹線車折返北新�
     const trains = [
         { ...train("south", [["tra:1000", "08:00"], ["tra:1190", "09:00"], ["tra:1210", "09:05"]]), reserved: false },
         train("turn-back", [["tra:1210", "09:10"], ["tra:1190", "09:15"]]),
-        train("branch", [["tra:1190", "09:30"], ["tra:1208", "10:10"]]),
+        train("branch", [["tra:1190", "09:31"], ["tra:1208", "10:10"]]),
     ];
     expect(planJourneys(trains, "tra:1000", "tra:1208", "2026-09-21")).toEqual([]);
     trains[2].stops[0].arrival = trains[2].stops[0].departure = at("09:29");
@@ -337,4 +337,21 @@ it("例外路線原對號車能更早到目的地時，不改搭另一班對號�
         { ...train("extra", [["tra:1000", "10:10"], ["tra:0900", "10:45"]]), reserved: true },
     ];
     expect(planJourneys(trains, "tra:1202", "tra:0900", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["branch", "through"]]);
+});
+
+
+it("台鐵與高鐵雙向套用自訂下限，上下限相等時保留剛好符合的組合", () => {
+    for (const reversed of [false, true]) {
+        const origin = reversed ? "tra:1210" : "tra:1208";
+        const destination = reversed ? "tra:1208" : "tra:1210";
+        const trains = [train("one", [[origin, "08:00"], ["tra:1193", "08:20"]]), train("two", [["tra:1193", "08:23"], [destination, "08:45"]])];
+        expect(planJourneys(trains, origin, destination, "2026-09-21")).toHaveLength(0);
+        expect(planJourneys(trains, origin, destination, "2026-09-21", { traMinMinutes: 3, traMaxMinutes: 3 })).toHaveLength(1);
+        expect(planJourneys(trains, origin, destination, "2026-09-21", { traMinMinutes: 4 })).toHaveLength(0);
+        const high = reversed ? [train("H", [["thsr:1000", "08:00"], ["thsr:1030", "08:20"]], "thsr"), train("N", [["tra:1194", "08:35"], ["tra:1208", "09:00"]])]
+            : [train("N", [["tra:1208", "08:00"], ["tra:1194", "08:20"]]), train("H", [["thsr:1030", "08:35"], ["thsr:1000", "09:00"]], "thsr")];
+        const from = reversed ? "thsr:1000" : "tra:1208", to = reversed ? "tra:1208" : "thsr:1000";
+        expect(planJourneys(high, from, to, "2026-09-21", { thsrMinMinutes: 15, thsrMaxMinutes: 15 })).toHaveLength(1);
+        expect(planJourneys(high, from, to, "2026-09-21", { thsrMinMinutes: 16 })).toHaveLength(0);
+    }
 });

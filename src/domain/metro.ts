@@ -62,13 +62,13 @@ export function metroLegs(snapshot: MetroSnapshot, origin: string, destination: 
     return [...result.values()].sort((a, b) => a.departure - b.departure);
 }
 
-export function connectMetro(rail: Journey[], metro: Leg[], reversed: boolean, date: string, maxMinutes: number): Journey[] {
+export function connectMetro(rail: Journey[], metro: Leg[], reversed: boolean, date: string, maxMinutes: number, minMinutes = 10): Journey[] {
     const start = Date.parse(`${date}T00:00:00+08:00`), end = start + 86400000;
     const journeys: Journey[] = [];
     for (const trip of rail) {
         for (const leg of metro) {
             const gap = (reversed ? trip.departure - leg.arrival : leg.departure - trip.arrival) / 60000;
-            if (gap < 10 || gap >= maxMinutes) continue;
+            if (gap < minMinutes || gap > maxMinutes) continue;
             const departure = reversed ? leg.departure : trip.departure;
             if (departure < start || departure >= end) continue;
             journeys.push({ id: `${trip.id}|${leg.trip}`, departure, arrival: reversed ? trip.arrival : leg.arrival, legs: reversed ? [leg, ...trip.legs] : [...trip.legs, leg] });

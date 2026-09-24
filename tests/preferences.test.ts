@@ -7,14 +7,14 @@ const memory = () => {
 };
 it("重新開啟保留站點方向與準備時間，過期日期回今天", () => {
     const store = memory();
-    savePreferences(store, { neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: "2026-09-20", preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
-    expect(loadPreferences(store, today).value).toEqual({ neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
+    savePreferences(store, { neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: "2026-09-20", preparation: 15, traMinMinutes: 5, thsrMinMinutes: 10, metroMinMinutes: 10, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
+    expect(loadPreferences(store, today).value).toEqual({ neiwan: "tra:1203", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMinMinutes: 5, thsrMinMinutes: 10, metroMinMinutes: 10, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
 });
 it("損壞欄位不清除其他有效偏好，兩端同站則回預設", () => {
     const store = memory();
-    savePreferences(store, { neiwan: "bad", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
+    savePreferences(store, { neiwan: "bad", other: "thsr:1000", reversed: true, date: today, preparation: 15, traMinMinutes: 5, thsrMinMinutes: 10, metroMinMinutes: 10, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
     expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { neiwan: "tra:1208", other: "thsr:1000", preparation: 15, reversed: true } });
-    savePreferences(store, { neiwan: "tra:1193", other: "tra:1193", reversed: true, date: today, preparation: 15, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
+    savePreferences(store, { neiwan: "tra:1193", other: "tra:1193", reversed: true, date: today, preparation: 15, traMinMinutes: 5, thsrMinMinutes: 10, metroMinMinutes: 10, traMaxMinutes: 20, thsrMaxMinutes: 40, metroMaxMinutes: 40 });
     expect(loadPreferences(store, today).value).toMatchObject({ neiwan: "tra:1208", other: "tra:1210", reversed: false });
 });
 it("儲存空間被封鎖時仍可查詢，不拋出錯誤", () => {
@@ -35,7 +35,7 @@ it("舊偏好沿用預設上限，自訂上限可保存，無效欄位個別還�
     const original = loadPreferences(store, today).value;
     savePreferences(store, { ...original, traMaxMinutes: 30, thsrMaxMinutes: 60 });
     expect(loadPreferences(store, today).value).toMatchObject({ traMaxMinutes: 30, thsrMaxMinutes: 60 });
-    store.setItem("neiwan.preferences.v1", JSON.stringify({ ...original, traMaxMinutes: 5, thsrMaxMinutes: 60 }));
+    store.setItem("neiwan.preferences.v1", JSON.stringify({ ...original, traMaxMinutes: 4, thsrMaxMinutes: 60 }));
     expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { traMaxMinutes: 30, thsrMaxMinutes: 60 } });
     const { traMaxMinutes, thsrMaxMinutes, ...legacy } = original;
     store.setItem("neiwan.preferences.v1", JSON.stringify(legacy));
@@ -68,7 +68,7 @@ it("機捷上限獨立保存，舊設定沿用原高鐵上限，無效值回預�
     const { metroMaxMinutes, ...legacy } = original;
     store.setItem("neiwan.preferences.v1", JSON.stringify({ ...legacy, thsrMaxMinutes: 60 }));
     expect(loadPreferences(store, today)).toMatchObject({ reset: false, value: { thsrMaxMinutes: 60, metroMaxMinutes: 60 } });
-    for (const invalid of [10, 181, 12.5, "40"]) {
+    for (const invalid of [9, 181, 12.5, "40"]) {
         store.setItem("neiwan.preferences.v1", JSON.stringify({ ...original, metroMaxMinutes: invalid }));
         expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { metroMaxMinutes: 40 } });
     }
@@ -82,4 +82,21 @@ it("保留第28天查詢日期，第29天超出範圍則回到今天", () => {
     expect(loadPreferences(store, today).value).toMatchObject({ date: "2026-10-18", reversed: true });
     savePreferences(store, { ...original, date: "2026-10-19", reversed: true });
     expect(loadPreferences(store, today).value).toMatchObject({ date: today, reversed: true });
+});
+
+
+it("三種轉乘下限保存在本機，舊偏好補預設，矛盾範圍只還原該運具", () => {
+    const store = memory();
+    const original = loadPreferences(store, today).value;
+    const { traMinMinutes, thsrMinMinutes, metroMinMinutes, ...legacy } = original;
+    store.setItem("neiwan.preferences.v1", JSON.stringify({ ...legacy, traMaxMinutes: 50 }));
+    expect(loadPreferences(store, today)).toMatchObject({ reset: false, value: { traMinMinutes: 5, thsrMinMinutes: 10, metroMinMinutes: 10, traMaxMinutes: 50 } });
+    savePreferences(store, { ...original, traMinMinutes: 3, thsrMinMinutes: 15, metroMinMinutes: 20, metroMaxMinutes: 20 });
+    expect(loadPreferences(store, today).value).toMatchObject({ traMinMinutes: 3, thsrMinMinutes: 15, metroMinMinutes: 20, metroMaxMinutes: 20 });
+    store.setItem("neiwan.preferences.v1", JSON.stringify({ ...original, traMinMinutes: 31, thsrMinMinutes: 15 }));
+    expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { traMinMinutes: 5, traMaxMinutes: 30, thsrMinMinutes: 15 } });
+    for (const invalid of [0, -1, 181, 2.5, "10", null]) {
+        store.setItem("neiwan.preferences.v1", JSON.stringify({ ...original, metroMinMinutes: invalid }));
+        expect(loadPreferences(store, today)).toMatchObject({ reset: true, value: { metroMinMinutes: 10 } });
+    }
 });

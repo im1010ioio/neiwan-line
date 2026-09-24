@@ -195,18 +195,18 @@ test("對號篩選預設勾選且保留接駁，可透過搜尋切換新竹", as
     await expect(page.locator(".journey-card")).not.toContainText("LOCAL");
     await page.reload();
     await expect(page.getByRole("button", { name: "選擇迄站：新竹" })).toBeVisible();
-    await page.getByRole("button", { name: "調整轉乘時間" }).click();
+    await page.getByRole("button", { name: "調整轉乘間隔時間" }).click();
     await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toBeVisible();
 
 });
 
-test("設定轉乘上限後立即重算，重新開啟保留，等於上限不列入", async ({ page }) => {
+test("設定轉乘上限後立即重算，重新開啟保留，等於上限也列入", async ({ page }) => {
     await page.route("**/data/*.json", async route => {
         const at = (time: string) => Date.parse(`2026-09-21T${time}:00+08:00`);
         const train = (id: string, stops: [string, string][]) => ({ id, number: id, operator: "tra", service: "測試車次", stops: stops.map(([station, time]) => ({ station, arrival: at(time), departure: at(time) })) });
         await route.fulfill({ json: { schemaVersion: 1, date: "2026-09-21", generatedAt: "2026-09-21T04:30:00+08:00", coverage: { tra: true, thsr: false }, sources: ["自動化測試專用資料"], trains: [
             train("BRANCH", [["tra:1208", "08:10"], ["tra:1193", "08:40"]]),
-            train("SHUTTLE", [["tra:1193", "09:10"], ["tra:1210", "09:25"]]),
+            train("SHUTTLE", [["tra:1193", "09:11"], ["tra:1210", "09:25"]]),
         ] } });
     });
     await page.reload();
@@ -216,13 +216,13 @@ test("設定轉乘上限後立即重算，重新開啟保留，等於上限不�
     await page.getByLabel("高鐵接駁上限（分鐘）").fill("60");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
-    await expect(page.locator(".transfer-hint")).toHaveText("調整轉乘時間");
+    await expect(page.locator(".transfer-hint")).toHaveText("調整轉乘間隔時間");
     await page.reload();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await page.getByRole("button", { name: "開啟設定" }).click();
     await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toHaveValue("31");
     await expect(page.getByLabel("高鐵接駁上限（分鐘）")).toHaveValue("60");
-    await page.getByLabel("台鐵轉乘上限（分鐘）").fill("5");
+    await page.getByLabel("台鐵轉乘上限（分鐘）").fill("4");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.getByLabel("台鐵轉乘上限（分鐘）").fill("30");
@@ -334,21 +334,21 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     await page.evaluate(() => localStorage.setItem("neiwan.filters.v1", JSON.stringify({ reservedOnly: true, directOutbound: false, directReturn: false, metroService: "express" })));
     await page.reload();
     await expect(page.locator(".journey-card")).toHaveCount(2);
-    await page.getByRole("button", { name: "調整轉乘時間" }).click();
-    await page.getByLabel("機捷接駁上限（分鐘）").fill("12");
+    await page.getByRole("button", { name: "調整轉乘間隔時間" }).click();
+    await page.getByLabel("機捷接駁上限（分鐘）").fill("11");
     await expect(page.getByLabel("高鐵接駁上限（分鐘）")).toHaveValue("40");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await expect(page.locator(".journey-card")).toContainText("機捷普通車");
     await page.reload();
-    await page.getByRole("button", { name: "調整轉乘時間" }).click();
-    await expect(page.getByLabel("機捷接駁上限（分鐘）")).toHaveValue("12");
+    await page.getByRole("button", { name: "調整轉乘間隔時間" }).click();
+    await expect(page.getByLabel("機捷接駁上限（分鐘）")).toHaveValue("11");
     await page.getByLabel("機捷接駁上限（分鐘）").fill("16");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await page.getByRole("button", { name: "交換起迄站" }).click();
     await expect(page.locator(".journey-card")).toHaveCount(2);
-    await page.getByRole("button", { name: "調整轉乘時間" }).click();
-    await page.getByLabel("機捷接駁上限（分鐘）").fill("15");
+    await page.getByRole("button", { name: "調整轉乘間隔時間" }).click();
+    await page.getByLabel("機捷接駁上限（分鐘）").fill("14");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await expect(page.locator(".journey-card")).toContainText("機捷直達車");
@@ -428,17 +428,17 @@ test("設定光箱可清除查詢偏好並保留分析選擇", async ({ page }) 
     await page.getByRole("button", { name: "拒絕", exact: true }).click();
     await page.getByRole("button", { name: "交換起迄站" }).click();
     await page.getByLabel("出發日期", { exact: true }).fill("2026-09-24");
-    await page.getByRole("button", { name: "調整轉乘時間", exact: true }).click();
+    await page.getByRole("button", { name: "調整轉乘間隔時間", exact: true }).click();
     await page.getByLabel("台鐵轉乘上限（分鐘）").fill("60");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
-    await page.getByRole("button", { name: "調整轉乘時間", exact: true }).click();
+    await page.getByRole("button", { name: "調整轉乘間隔時間", exact: true }).click();
     await page.getByRole("dialog").getByRole("button", { name: "清除查詢偏好", exact: true }).click();
     await expect(page.getByText("查詢偏好已清除。", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "選擇起站：內灣" })).toBeVisible();
     await expect(page.getByRole("button", { name: "選擇迄站：新竹" })).toBeVisible();
     await expect(page.getByLabel("出發日期", { exact: true })).toHaveValue("2026-09-21");
     await page.reload();
-    await page.getByRole("button", { name: "調整轉乘時間", exact: true }).click();
+    await page.getByRole("button", { name: "調整轉乘間隔時間", exact: true }).click();
     await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toHaveValue("30");
     await expect(page.locator("#analytics-consent-status")).toHaveText("已拒絕 Cookie 與 GA 分析");
 });
@@ -518,4 +518,34 @@ test("日期選擇器拒絕範圍外及空白輸入，不查詢或儲存無效�
         await expect(date).toBeVisible();
         expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     }
+});
+
+
+test("轉乘間隔可設定上下限、驗證順序並顯示原本預設值", async ({ page }) => {
+    await page.getByRole("button", { name: "開啟設定" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.locator(".transfer-range")).toHaveCount(3);
+    await expect(dialog.locator("#tra-defaults")).toContainText("預設：至少 5 分鐘、最多 30 分鐘");
+    await expect(dialog.locator("#thsr-defaults")).toContainText("預設：至少 10 分鐘、最多 40 分鐘");
+    await expect(dialog.locator("#metro-defaults")).toContainText("預設：至少 10 分鐘、最多 40 分鐘");
+    await page.getByLabel("台鐵轉乘下限（分鐘）").fill("31");
+    await page.getByRole("button", { name: "儲存設定", exact: true }).click();
+    await expect(dialog).toBeVisible();
+    await expect(page.getByLabel("台鐵轉乘下限（分鐘）")).toHaveJSProperty("validationMessage", "至少保留的時間不能大於最多不超過的時間。");
+    await page.getByLabel("台鐵轉乘下限（分鐘）").fill("3");
+    await page.getByLabel("高鐵轉乘下限（分鐘）").fill("15");
+    await page.getByLabel("機捷轉乘下限（分鐘）").fill("20");
+    await page.getByRole("button", { name: "儲存設定", exact: true }).click();
+    await page.reload();
+    await page.getByRole("button", { name: "開啟設定" }).click();
+    await expect(page.getByLabel("台鐵轉乘下限（分鐘）")).toHaveValue("3");
+    await expect(page.getByLabel("高鐵轉乘下限（分鐘）")).toHaveValue("15");
+    await expect(page.getByLabel("機捷轉乘下限（分鐘）")).toHaveValue("20");
+    await expect(dialog.locator("#tra-defaults")).toContainText("至少 5 分鐘");
+    await page.getByRole("button", { name: "清除查詢偏好", exact: true }).click();
+    await page.getByRole("button", { name: "開啟設定" }).click();
+    await expect(page.getByLabel("台鐵轉乘下限（分鐘）")).toHaveValue("5");
+    await expect(page.getByLabel("高鐵轉乘下限（分鐘）")).toHaveValue("10");
+    await expect(page.getByLabel("機捷轉乘下限（分鐘）")).toHaveValue("10");
+    expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
 });

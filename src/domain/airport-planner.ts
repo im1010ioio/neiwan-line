@@ -19,5 +19,5 @@ export function planAirportJourneys(trains: Train[], origin: string, destination
         }).filter(j => j.departure >= Date.parse(`${date}T00:00:00+08:00`) && j.departure < Date.parse(`${addDays(date, 1)}T00:00:00+08:00`));
     }
     const legs = metroLegs(snapshot, reversed ? station : "tymc:A18", reversed ? "tymc:A18" : station, date, "all");
-    return connectMetro(rail, legs, reversed, date, filters.metroMaxMinutes ?? 40);
+    return connectMetro(rail, legs, reversed, date, filters.metroMaxMinutes ?? 40, filters.metroMinMinutes ?? 10);
 }

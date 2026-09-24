@@ -4,7 +4,7 @@ const reservedTransferExceptionStations = new Set(stationData.filter(station => 
 import { passedRailStations, approachesDestination, sameMainlineTransfer } from "./rail-path";
 import { addDays } from "./query";
 
-export interface PlannerFilters { traMaxMinutes?: number; thsrMaxMinutes?: number; metroMaxMinutes?: number; reservedOnly?: boolean; directOnly?: boolean; }
+export interface PlannerFilters { traMinMinutes?: number; thsrMinMinutes?: number; metroMinMinutes?: number; traMaxMinutes?: number; thsrMaxMinutes?: number; metroMaxMinutes?: number; reservedOnly?: boolean; directOnly?: boolean; }
 import { localStations as branchStations } from "./local-stations";
 
 interface Label {
@@ -31,6 +31,8 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                 accessWalk: { origin: atStart ? "thsr:1030" : "tra:1194", destination: atStart ? "tra:1194" : "thsr:1030", departure, arrival, position: atStart ? "start" as const : "end" as const } };
         }).filter(j => j.departure >= Date.parse(`${date}T00:00:00+08:00`));
     }
+    const traMin = filters.traMinMinutes ?? 5;
+    const thsrMin = filters.thsrMinMinutes ?? 10;
     const traMax = filters.traMaxMinutes ?? 30;
     const thsrMax = filters.thsrMaxMinutes ?? 40;
     const start = Date.parse(`${date}T00:00:00+08:00`);
@@ -61,7 +63,7 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
         }
         const interchange = from.station === "tra:1194" ? "thsr:1030" : from.station === "thsr:1030" ? "tra:1194" : undefined;
         const recent = (station: string): Label[] => {
-            const labels = (arrivals.get(station) ?? []).filter(label => label.legs.at(-1)!.arrival > from.departure - Math.max(traMax, thsrMax) * 60000);
+            const labels = (arrivals.get(station) ?? []).filter(label => label.legs.at(-1)!.arrival >= from.departure - Math.max(traMax, thsrMax) * 60000);
             arrivals.set(station, labels);
             return labels;
         };
@@ -70,7 +72,7 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
             const last = label.legs.at(-1)!;
             const wait = (from.departure - last.arrival) / 60000;
             const crossing = last.destination !== from.station;
-            if (last.trip !== train.id && wait >= (crossing ? 10 : 5) && wait < (crossing ? thsrMax : traMax)) {
+            if (last.trip !== train.id && wait >= (crossing ? thsrMin : traMin) && wait <= (crossing ? thsrMax : traMax)) {
                 // Direct mode permits at most one transfer, exclusively at Hsinchu in either direction.
                 if (filters.directOnly && (label.legs.length >= 2 || from.station !== "tra:1210" || last.destination !== "tra:1210")) continue;
                 const previousTrain = trainsById.get(last.trip)!;

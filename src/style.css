@@ -12,6 +12,7 @@
     --soft: #f7f7f7;
 }
 * { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
 body { margin: 0; }
 button, input, select { font: inherit; }
 button, a, input, select { -webkit-tap-highlight-color: transparent; }
@@ -23,7 +24,7 @@ button, select { touch-action: manipulation; }
 h1, h2, h3, p { margin-top: 0; }
 h1 { font-size: 28px; font-weight: 600; letter-spacing: -.7px; margin-bottom: 10px; }
 h2 { font-size: 20px; font-weight: 600; }
-.site-header { height: 88px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 max(24px, calc((100vw - 1100px) / 2)); gap: 24px; }
+.site-header { height: 88px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; padding: 0 max(24px, calc((100vw - 1100px) / 2)); gap: 24px; position: sticky; top: 0; z-index: 2; }
 .brand { display: flex; align-items: center; gap: 10px; color: #d90b3c; text-decoration: none; font-weight: 600; font-size: 20px; white-space: nowrap; }
 .brand-sub { display: block; font-size: 14px; color: var(--muted); letter-spacing: 2px; }
 nav { display: flex; height: 100%; align-items: center; gap: 30px; font-size: 14px; }
@@ -168,7 +169,6 @@ dialog::backdrop { background: #0008; }
     .station-title { font-size: 23px; gap: 6px; }
     .swap-button { width: 40px; height: 40px; font-size: 23px; }
     .query-controls { gap: 14px; padding: 16px 0; grid-template-columns: 1.22fr 1fr; }
-    .query-controls select { font-size: 14px; padding-right: 4px; }
     .filter-row { flex-wrap: wrap; padding: 10px 0 14px; gap: 4px; }
     .transfer-hint { font-size: 14px; width: 100%; }
     .journey-card { padding: 18px; border-radius: 16px; }
@@ -431,7 +431,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .leg-stations span, .empty-icon { color: var(--muted); }
 .status-dot { background: var(--azul); }
 .spinner { border-color: var(--line); border-top-color: var(--primary); }
-dialog::backdrop { background: rgb(27 31 42 / 62%); }
+dialog::backdrop { background: rgb(0 0 0 / 30%); backdrop-filter: blur(5px); }
 footer a:hover, footer .text-button:hover, .privacy a { color: var(--primary); }
 
 /* Larger palette surfaces give the five reference hues distinct jobs. */
@@ -519,3 +519,52 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
     touch-action: manipulation;
 }
 .query-controls input[type="date"]::-webkit-date-and-time-value { text-align: left; }
+
+
+/* Settings hierarchy: section headings, compact labeled fields, scoped actions. */
+#settings-dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
+#settings-dialog .dialog-header { gap: 12px; position: relative; flex-shrink: 0; }
+#settings-dialog .dialog-header h2 { font-size: 20px; font-weight: 600; }
+#settings-dialog .settings-body { padding: 0 20px max(24px, env(safe-area-inset-bottom)); overflow-y: auto; min-height: 0; overscroll-behavior: contain; scroll-padding-block: 16px; }
+#settings-dialog .settings-section { padding-block: 24px; }
+#settings-dialog .settings-section + .settings-section { border-top: 1px solid var(--line); }
+#settings-dialog .settings-section:last-child { padding-bottom: 0; }
+#settings-dialog h3 { font-size: 17px; font-weight: 600; margin: 0 0 8px; }
+#settings-dialog h4 { font-size: 13px; font-weight: 600; color: var(--muted); margin: 0 0 6px; }
+#settings-dialog p { line-height: 1.65; margin: 0; }
+#settings-dialog .section-description { margin-bottom: 20px; }
+#settings-dialog .settings-group > p { margin-bottom: 4px; }
+#settings-dialog .setting-row { display: grid; grid-template-columns: minmax(0, 1fr) 104px; gap: 16px; align-items: center; padding-block: 14px; }
+#settings-dialog .setting-row + .setting-row { border-top: 1px solid var(--line-soft); }
+#settings-dialog .setting-copy label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; }
+#settings-dialog .setting-copy p { font-size: 12px; }
+#settings-dialog .setting-number { display: flex; align-items: center; gap: 6px; }
+#settings-dialog .setting-number input { width: 72px; min-width: 0; min-height: 48px; margin: 0; padding: 10px 6px; text-align: center; font-size: 16px; border-color: var(--line); border-radius: 10px; }
+#settings-dialog .setting-number span { font-size: 12px; color: var(--muted); white-space: nowrap; }
+#settings-dialog .departure-settings { margin-top: 10px; padding-top: 20px; border-top: 1px solid var(--line); }
+#settings-dialog .settings-save { margin-top: 14px; }
+#settings-dialog .settings-save button { width: 100%; min-height: 48px; }
+#settings-dialog .settings-save p { text-align: center; margin-top: 8px; font-size: 12px; }
+#settings-dialog #analytics-consent-status { padding: 12px 14px; border-radius: 10px; background: var(--surface-soft); color: var(--ink); margin-bottom: 14px; font-size: 13px; }
+#settings-dialog .privacy-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+#settings-dialog .privacy-actions button { min-height: 44px; padding: 10px 8px; font-size: 14px; }
+#settings-dialog .analytics-details { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; margin-top: 10px; }
+#settings-dialog .analytics-details span { color: var(--muted); font-size: 12px; }
+#settings-dialog .analytics-details a { margin: 0; min-height: 44px; display: inline-flex; align-items: center; font-size: 12px; }
+#settings-dialog .home-screen-help summary { color: var(--ink); font-size: 14px; }
+#settings-dialog .home-screen-help details[open] p { margin: 10px 0; }
+#settings-dialog .settings-reset { margin-top: 12px; }
+#settings-dialog .settings-reset button { min-height: 44px; padding: 0; font-size: 14px; color: var(--muted); }
+#settings-dialog .settings-reset p { font-size: 12px; margin-top: 2px; }
+@media (min-width: 641px) {
+    #settings-dialog .settings-body { padding-inline: 28px; }
+    #settings-dialog .dialog-header { padding-inline: 28px; }
+}
+
+
+#settings-dialog .transfer-range { min-width: 0; margin: 18px 0 0; padding: 16px; border: 1px solid var(--line); border-radius: 14px; }
+#settings-dialog .transfer-range legend { padding-inline: 6px; font-size: 14px; font-weight: 600; }
+#settings-dialog .transfer-bound { display: grid; grid-template-columns: minmax(0, 1fr) 72px auto; align-items: center; gap: 8px; margin-bottom: 10px; font-size: 14px; }
+#settings-dialog .transfer-bound input { width: 72px; min-width: 0; min-height: 44px; margin: 0; padding: 8px 6px; text-align: center; font-size: 16px; border-color: var(--line); }
+#settings-dialog .transfer-bound span { color: var(--muted); font-size: 12px; }
+#settings-dialog .transfer-defaults { font-size: 12px; color: var(--muted); margin-top: 12px; }
