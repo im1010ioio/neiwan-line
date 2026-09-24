@@ -66,7 +66,12 @@ function heading() {
     return `<header class="site-header"><a class="brand" href="#" aria-label="回到車班查詢"><img src="${import.meta.env.BASE_URL}icon.svg" width="42" height="42" alt=""><span>內灣線<span class="brand-sub">轉乘攻略</span></span></a><nav aria-label="主要導覽"><a href="#" ${location.hash !== "#privacy" ? 'aria-current="page"' : ""}>車班查詢</a><span class="soon-nav">內灣線特色 <small>準備中</small></span><button class="icon-button" id="settings-open" aria-label="開啟設定">⚙</button></nav></header>`;
 }
 function footer() {
-    return `<footer><div><button class="text-button" id="privacy-settings">設定</button><a href="#privacy">隱私權與使用條款</a><a href="https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/gobytime" target="_blank" rel="noreferrer">台鐵官方查詢 ↗</a><a href="https://www.thsrc.com.tw/" target="_blank" rel="noreferrer">高鐵官方查詢 ↗</a><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷官方查詢 ↗</a></div><p>資料來源：臺鐵官方開放資料、交通部 TDX。提供含今天 ${QUERY_DAYS} 天的班表，每日補齊可查詢日期。行程時間僅供參考，未反映臨時班次調整或誤點，請預留轉乘時間；實際運行與座位請以官方資訊為準。</p><h3>小額贊助</h3><p>如果您喜歡這個小工具，歡迎點擊下方圖片，送杯珍奶鼓勵我！🧋</p><a href="https://im1010ioio.bobaboba.me/" target="_blank"><img style="width: 100%;" src="https://css.im1010ioio.dev/_astro/donate.Dco48NzS_ZO5ymk.png"></a></footer>`;
+    return `<footer><div><button class="text-button" id="privacy-settings">設定</button><a href="#privacy">隱私權與使用條款</a><a href="https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/gobytime" target="_blank" rel="noreferrer">台鐵官方查詢 ↗</a><a href="https://www.thsrc.com.tw/" target="_blank" rel="noreferrer">高鐵官方查詢 ↗</a><a href="https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18" target="_blank" rel="noreferrer">桃捷官方查詢 ↗</a></div><p>資料來源：臺鐵官方開放資料、交通部 TDX。提供含今天 ${QUERY_DAYS} 天的班表，每日補齊可查詢日期。行程時間僅供參考，未反映臨時班次調整或誤點，請預留轉乘時間；實際運行與座位請以官方資訊為準。</p><section class="footer-support" aria-labelledby="support-title">
+        <h3 id="support-title">小額贊助</h3>
+        <p>喜歡這個小工具嗎？<br>歡迎送杯珍奶，支持網站持續更新。🧋</p>
+        <a class="support-link" href="https://im1010ioio.bobaboba.me/" target="_blank" rel="noopener noreferrer" aria-label="贊助一杯珍奶（另開視窗）"><img src="https://css.im1010ioio.dev/_astro/donate.Dco48NzS_ZO5ymk.png" alt="送杯珍奶支持作者" loading="lazy" decoding="async"></a>
+    </section>
+    <p class="footer-copyright">©${dateInTaipei().slice(0, 4)} All Rights Reserved by <a href="https://im1010ioio.dev/" target="_blank" rel="noopener noreferrer">Eva Chen</a>.</p></footer>`;
 }
 function consentBanner() {
     if (consent !== "unknown") return "";
@@ -242,12 +247,16 @@ function settingsDialog() {
                 <div class="privacy-actions"><button type="button" class="secondary" id="settings-allow" aria-pressed="${consent === 'granted'}">允許分析</button><button type="button" class="secondary" id="settings-deny" aria-pressed="${consent === 'denied'}">拒絕分析</button></div>
                 <div class="analytics-details"><span>選擇後立即生效</span><a href="#privacy" id="settings-privacy">隱私權與使用條款 ↗</a></div>
             </section>
-            <section class="settings-section settings-other" aria-labelledby="other-settings-title">
-                <h3 id="other-settings-title">其他選項</h3>
-                <div class="home-screen-help">
-                    <details><summary>加入手機主畫面</summary><p><strong>iPhone／iPad：</strong>在 Safari 點選「分享」→「加入主畫面」；若有「以網頁 App 打開」選項，請保持開啟。</p><p><strong>Android：</strong>在 Chrome 點選選單「⋮」→「加入主畫面」或「安裝應用程式」。</p><p>查詢班表需要網路連線。首次開啟若未帶入偏好，可重新選擇；之後會在 Web App 中記住。</p></details>
-                </div>
-                <div class="settings-reset"><button type="button" class="text-button" id="settings-clear-preferences">清除查詢偏好</button><p>恢復預設起迄站、日期、篩選與時間設定，不影響 Cookie 與 GA 分析的選擇。</p></div>
+            <section class="settings-section home-screen-help" aria-labelledby="home-screen-title">
+                <h3 id="home-screen-title">加入手機主畫面</h3>
+                <p><strong>iPhone／iPad：</strong>在 Safari 點選「分享」→「加入主畫面」；若有「以網頁 App 打開」選項，請保持開啟。</p>
+                <p><strong>Android：</strong>在 Chrome 點選選單「⋮」→「加入主畫面」或「安裝應用程式」。</p>
+                <p>查詢班表需要網路連線。首次開啟若未帶入偏好，可重新選擇；之後會在 Web App 中記住。</p>
+            </section>
+            <section class="settings-section settings-reset" aria-labelledby="reset-settings-title">
+                <h3 id="reset-settings-title">清除查詢偏好</h3>
+                <p class="section-description">恢復預設起迄站、日期、篩選與時間設定，不影響 Cookie 與 GA 分析的選擇。</p>
+                <button type="button" class="secondary" id="settings-clear-preferences">清除查詢偏好</button>
             </section>
         </div>
     </dialog>`;

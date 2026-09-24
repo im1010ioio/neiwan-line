@@ -463,8 +463,6 @@ body { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-ins
 .site-header { height: calc(72px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top); }
 footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 .consent-banner { bottom: calc(20px + env(safe-area-inset-bottom)); }
-.home-screen-help summary { cursor: pointer; color: var(--primary); padding-block: 10px; min-height: 44px; }
-.home-screen-help summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 4px; border-radius: 4px; }
 @media (display-mode: standalone) {
     .home-screen-help { display: none; }
 }
@@ -551,11 +549,6 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 #settings-dialog .analytics-details { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 4px 12px; margin-top: 10px; }
 #settings-dialog .analytics-details span { color: var(--muted); font-size: 12px; }
 #settings-dialog .analytics-details a { margin: 0; min-height: 44px; display: inline-flex; align-items: center; font-size: 12px; }
-#settings-dialog .home-screen-help summary { color: var(--ink); font-size: 14px; }
-#settings-dialog .home-screen-help details[open] p { margin: 10px 0; }
-#settings-dialog .settings-reset { margin-top: 12px; }
-#settings-dialog .settings-reset button { min-height: 44px; padding: 0; font-size: 14px; color: var(--muted); }
-#settings-dialog .settings-reset p { font-size: 12px; margin-top: 2px; }
 @media (min-width: 641px) {
     #settings-dialog .settings-body { padding-inline: 28px; }
     #settings-dialog .dialog-header { padding-inline: 28px; }
@@ -568,3 +561,54 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 #settings-dialog .transfer-bound input { width: 72px; min-width: 0; min-height: 44px; margin: 0; padding: 8px 6px; text-align: center; font-size: 16px; border-color: var(--line); }
 #settings-dialog .transfer-bound span { color: var(--muted); font-size: 12px; }
 #settings-dialog .transfer-defaults { font-size: 12px; color: var(--muted); margin-top: 12px; }
+
+/* Keep support content quieter than the journey search, in both themes. */
+footer .footer-support {
+    margin-top: 28px;
+    padding: 24px 20px;
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: var(--surface);
+    text-align: center;
+}
+footer .footer-support h3 {
+    margin: 0;
+    color: var(--ink);
+    font-size: 16px;
+    font-weight: 600;
+}
+footer .footer-support p {
+    margin: 10px 0 18px;
+    line-height: 1.8;
+}
+footer .support-link {
+    display: block;
+    width: 100%;
+    margin-inline: auto;
+    border-radius: 12px;
+}
+footer .support-link img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: inherit;
+}
+footer .support-link:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 5px;
+}
+footer .footer-copyright {
+    margin: 24px 0 0;
+    text-align: center;
+    font-size: 12px;
+    line-height: 1.8;
+    text-wrap: balance;
+}
+footer .footer-copyright a {
+    color: inherit;
+    text-underline-offset: 3px;
+    white-space: nowrap;
+}
+
+#settings-dialog .home-screen-help p { margin: 12px 0 0; line-height: 1.8; }
+#settings-dialog .settings-reset button { min-height: 44px; padding: 10px 18px; font-size: 14px; }
