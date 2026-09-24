@@ -72,7 +72,7 @@ function footer() {
         <p>喜歡這個小工具嗎？<br>歡迎送杯珍奶，支持網站持續更新。🧋</p>
         <a class="support-link" href="https://im1010ioio.bobaboba.me/" target="_blank" rel="noopener noreferrer" aria-label="贊助一杯珍奶（另開視窗）"><img src="https://css.im1010ioio.dev/_astro/donate.Dco48NzS_ZO5ymk.png" alt="送杯珍奶支持作者" loading="lazy" decoding="async"></a>
     </section>
-    <p class="footer-copyright">©${dateInTaipei().slice(0, 4)} All Rights Reserved by <a href="https://im1010ioio.dev/" target="_blank" rel="noopener noreferrer">Eva Chen</a>.</p></footer>`;
+    <p class="footer-copyright">©${dateInTaipei().slice(0, 4)} All Rights Reserved by <a href="https://im1010ioio.dev/" target="_blank" rel="noopener noreferrer">Eva (Yi Lin) Chen</a>.</p></footer>`;
 }
 function consentBanner() {
     if (consent !== "unknown") return "";
