@@ -134,7 +134,7 @@ function privacyPage() {
         <h1>隱私權與使用條款</h1>
         <p class="muted">條款更新日期：2026/09/23</p>
         <p>歡迎使用內灣線轉乘攻略！</p>
-        <p>存取及使用本網站，即表示您同意遵守以下使用條款。本條款說明使用內灣線轉乘攻略網站（<a href="https://im1010ioio.github.io/neiwan-line/">im1010ioio.github.io/neiwan-line</a>）時應遵守的規範。若您不同意本使用條款，請勿使用本網站。Cookie 與 Google Analytics（GA）分析另由您選擇是否允許，使用網站不代表同意分析。</p>
+        <p>存取及使用本網站，即表示您同意遵守以下使用條款。本條款說明使用內灣線轉乘攻略網站（<a href="https://neiwan-line.im1010ioio.dev/">neiwan-line.im1010ioio.dev</a>）時應遵守的規範。若您不同意本使用條款，請勿使用本網站。Cookie 與 Google Analytics（GA）分析另由您選擇是否允許，使用網站不代表同意分析。</p>
         <hr>
         <h2>使用規範</h2>
         <p>內灣線轉乘攻略為免費提供的個人旅程查詢工具。您可以：</p>

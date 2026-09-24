@@ -30,11 +30,12 @@ jobs:
             - run: npm test
             - run: npx playwright install --with-deps chromium
             - run: npm run test:e2e
+            - uses: actions/configure-pages@v5
+              id: pages
             - run: npm run build
               env:
-                  BASE_PATH: /${{ github.event.repository.name }}/
+                  BASE_PATH: ${{ steps.pages.outputs.base_path }}/
                   VITE_GA_MEASUREMENT_ID: ${{ vars.VITE_GA_MEASUREMENT_ID || 'G-DKH16N2ZM8' }}
-            - uses: actions/configure-pages@v5
             - uses: actions/upload-pages-artifact@v3
               with:
                   path: dist
