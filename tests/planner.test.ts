@@ -355,3 +355,21 @@ it("台鐵與高鐵雙向套用自訂下限，上下限相等時保留剛好符�
         expect(planJourneys(high, from, to, "2026-09-21", { thsrMinMinutes: 16 })).toHaveLength(0);
     }
 });
+
+it("支線內往返新竹不得先搭反方向的六家車，原車直達時不在竹中換車", () => {
+    const services = [
+        train("wrong-way", [["tra:1191", "08:00"], ["tra:1193", "08:10"], ["tra:1194", "08:15"]]),
+        train("back", [["tra:1193", "08:20"], ["tra:1210", "08:35"]]),
+        train("right-way", [["tra:1191", "08:10"], ["tra:1210", "08:25"]]),
+        train("through", [["tra:1208", "09:00"], ["tra:1193", "09:30"], ["tra:1210", "09:50"]]),
+        train("extra-change", [["tra:1193", "09:40"], ["tra:1210", "10:00"]]),
+    ];
+    expect(planJourneys(services, "tra:1191", "tra:1210", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["right-way"]]);
+    expect(planJourneys(services, "tra:1208", "tra:1210", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["through"]]);
+    const reverse = [
+        train("out", [["tra:1210", "10:00"], ["tra:1193", "10:20"], ["tra:1194", "10:25"]]),
+        train("back", [["tra:1193", "10:30"], ["tra:1191", "10:40"]]),
+    ];
+    expect(planJourneys(reverse, "tra:1210", "tra:1191", "2026-09-21")).toEqual([]);
+    expect(planJourneys(services, "tra:1191", "tra:1194", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["wrong-way"]]);
+});

@@ -38,10 +38,12 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
     const start = Date.parse(`${date}T00:00:00+08:00`);
     const end = Date.parse(`${addDays(date, 1)}T00:00:00+08:00`);
     const usesHighSpeed = origin.startsWith("thsr:") || destination.startsWith("thsr:");
+    const localJourney = branchStations.has(origin) && branchStations.has(destination);
     const railTarget = destination.startsWith("thsr:") ? "tra:1194" : destination;
     const connections = trains.filter(t => t.operator === "tra" || usesHighSpeed).flatMap(train =>
         train.stops.slice(0, -1).map((from, i) => ({ train, from, to: train.stops[i + 1], i })))
         .filter(c => c.train.operator !== "tra" || (branchStations.has(c.from.station) && branchStations.has(c.to.station)) || approachesDestination(c.from.station, c.to.station, railTarget))
+        .filter(c => !localJourney || approachesDestination(c.from.station, c.to.station, destination))
         .filter(c => !filters.reservedOnly || c.train.reserved === true || (branchStations.has(c.from.station) && branchStations.has(c.to.station)))
         .filter(c => c.from.departure >= start && c.from.departure < end + 86400000)
         .sort((a, b) => a.from.departure - b.from.departure || a.i - b.i);
@@ -76,6 +78,8 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                 // Direct mode permits at most one transfer, exclusively at Hsinchu in either direction.
                 if (filters.directOnly && (label.legs.length >= 2 || from.station !== "tra:1210" || last.destination !== "tra:1210")) continue;
                 const previousTrain = trainsById.get(last.trip)!;
+                // Local journeys stay on a train that already reaches their destination.
+                if (localJourney && previousTrain.stops.some(stop => stop.station === destination && stop.arrival >= last.arrival)) continue;
                 if (previousTrain.operator === "tra" && train.operator === "tra"
                     && previousTrain.reserved === true && train.reserved === true) {
                     // Toward Neiwan, check the incoming service; away from it, the onward service.

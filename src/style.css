@@ -85,7 +85,6 @@ input[type="checkbox"] { width: 18px; height: 18px; accent-color: #222; margin: 
 .leg-stations { font-size: 15px; font-weight: 500; padding-top: 6px; }
 .leg-stations span { font-size: 14px; margin: 0 14px; color: #929292; }
 .transfer { margin: 14px 0 0; padding: 9px 14px; border-radius: 8px; background: var(--soft); color: var(--muted); font-size: 14px; display: flex; justify-content: space-between; gap: 10px; }
-.access-walk { font-size: 14px; color: var(--muted); background: var(--soft); padding: 10px; border-radius: 8px; }
 .is-past { background: #fcfcfc; }
 .is-past .journey-summary { color: #767676; }
 .primary, .secondary { border-radius: 8px; padding: 14px 20px; min-height: 48px; font-size: 14px; font-weight: 500; }
@@ -612,3 +611,31 @@ footer .footer-copyright a {
 
 #settings-dialog .home-screen-help p { margin: 12px 0 0; line-height: 1.8; }
 #settings-dialog .settings-reset button { min-height: 44px; padding: 10px 18px; font-size: 14px; }
+
+.endpoint .endpoint-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.endpoint-position {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
+    font-size: 12px;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.query-controls .query-range-hint {
+    grid-column: 1 / -1;
+    margin: -4px 0 0;
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 1.6;
+}
