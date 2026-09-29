@@ -593,3 +593,33 @@ test("外層起迄標籤顯示所選支線，共站竹中保留選取分類", as
     await page.reload();
     await expect(page.locator('[data-pick="other"] .endpoint-label')).toContainText("內灣線");
 });
+
+test("獨立條款頁可直接開啟與重整，保留查詢偏好且不下載班表", async ({ page }) => {
+    await page.getByRole("button", { name: "交換起迄站" }).click();
+    await page.locator("footer").getByRole("link", { name: "隱私權與使用條款" }).click();
+    await expect(page).toHaveURL(/\/privacy\/$/);
+    await expect(page).toHaveTitle("隱私權與使用條款｜內灣線轉乘攻略");
+    await expect(page.getByRole("heading", { name: "隱私權與使用條款", exact: true })).toBeVisible();
+    const dataRequests: string[] = [];
+    page.on("request", request => { if (request.url().includes("/data/")) dataRequests.push(request.url()); });
+    await page.reload();
+    await expect(page.locator("#privacy-deny")).toBeVisible();
+    await page.locator("#privacy-deny").click();
+    expect(dataRequests).toEqual([]);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute("href", "https://neiwan-line.im1010ioio.dev/privacy/");
+    await page.getByRole("link", { name: "← 回到車班查詢" }).click();
+    await expect(page.getByRole("button", { name: "選擇起站：新竹" })).toBeVisible();
+    await page.goto("/#privacy");
+    await expect(page).toHaveURL(/\/privacy\/$/);
+    await expect(page.getByRole("heading", { name: "隱私權與使用條款", exact: true })).toBeVisible();
+});
+
+test("條款正文不依賴 JavaScript", async ({ browser, baseURL }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await page.goto(`${baseURL}/privacy/`);
+    await expect(page.getByRole("heading", { name: "隱私權與使用條款", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "使用規範", exact: true })).toBeVisible();
+    await expect(page.getByRole("link", { name: "← 回到車班查詢" })).toHaveAttribute("href", "/");
+    await context.close();
+});

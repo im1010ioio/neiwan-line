@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://neiwan-line.im1010ioio.dev/sitemap.xml
