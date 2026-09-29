@@ -10,3 +10,4 @@ playwright-report/
 .playwright-cli/
 output/
 .env.example
+.agents/skills/airbnb-design/SKILL.md
