@@ -85,7 +85,7 @@ test("六家線快捷分類、同站停用與取消選站", async ({ page }) => 
     await expect(page.getByRole("button", { name: "竹中 與起站相同" })).toBeDisabled();
     await page.getByRole("tab", { name: "高鐵", exact: true }).click();
     await page.getByRole("button", { name: "關閉選站" }).click();
-    await expect(page.getByRole("button", { name: "選擇迄站：新竹" })).toContainText("台鐵");
+    await expect(page.getByRole("button", { name: "選擇迄站：新竹" })).toContainText("內灣線");
 });
 
 test("拒絕分析後重新開啟不載入 GA，允許與撤回可從設定變更", async ({ page }) => {
@@ -549,4 +549,47 @@ test("轉乘間隔可設定上下限、驗證順序並顯示原本預設值", as
     await expect(page.getByLabel("高鐵轉乘下限（分鐘）")).toHaveValue("10");
     await expect(page.getByLabel("機捷轉乘下限（分鐘）")).toHaveValue("10");
     expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+});
+
+test("台鐵分類先列內灣線，可選沿線車站、交換並記住偏好", async ({ page }) => {
+    await page.route("**/data/*.json", route => {
+        const date = "2026-09-21";
+        const at = (hour: number) => Date.parse(`${date}T${hour}:00:00+08:00`);
+        return route.fulfill({ json: { schemaVersion: 1, date, generatedAt: `${date}T04:30:00+08:00`, coverage: { tra: true, thsr: true }, sources: ["測試資料"], trains: [
+            { id: "branch-out", number: "TEST-OUT", operator: "tra", service: "區間車", stops: [{ station: "tra:1208", arrival: at(10), departure: at(10) }, { station: "tra:1204", arrival: at(11), departure: at(11) }] },
+            { id: "branch-back", number: "TEST-BACK", operator: "tra", service: "區間車", stops: [{ station: "tra:1204", arrival: at(12), departure: at(12) }, { station: "tra:1208", arrival: at(13), departure: at(13) }] },
+        ] } });
+    });
+    await page.reload();
+    await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
+    await expect(page.locator("[data-county]").nth(0)).toHaveText("內灣線同支線");
+    await expect(page.locator("[data-county]").nth(1)).toContainText("六家線");
+    await page.getByRole("button", { name: "內灣線 同支線", exact: true }).click();
+    await expect(page.getByRole("button", { name: "內灣 與起站相同" })).toBeDisabled();
+    await page.locator('[data-station="tra:1204"]').click();
+    await expect(page.locator(".journey-card").first()).toContainText("TEST-OUT");
+    await page.getByRole("button", { name: "交換起迄站" }).click();
+    await expect(page.locator(".journey-card").first()).toContainText("TEST-BACK");
+    await page.reload();
+    await expect(page.locator(".journey-card").first()).toContainText("TEST-BACK");
+    await page.locator('[data-pick="other"]').click();
+    await expect(page.locator('[data-county="內灣線"]')).toHaveAttribute("aria-pressed", "true");
+    await expect(page.getByRole("button", { name: "內灣 與迄站相同" })).toBeDisabled();
+});
+
+
+test("外層起迄標籤顯示所選支線，共站竹中保留選取分類", async ({ page }) => {
+    await page.getByRole("button", { name: "選擇迄站：新竹" }).click();
+    await page.getByRole("button", { name: "六家線 六家・竹中" }).click();
+    await page.getByRole("button", { name: "竹中", exact: true }).click();
+    await expect(page.locator('[data-pick="other"] .endpoint-label')).toContainText("六家線");
+    await page.getByRole("button", { name: "交換起迄站" }).click();
+    await page.reload();
+    await expect(page.getByRole("button", { name: "選擇起站：竹中" })).toContainText("六家線");
+    await page.getByRole("button", { name: "選擇起站：竹中" }).click();
+    await page.getByRole("button", { name: "內灣線 同支線", exact: true }).click();
+    await page.getByRole("button", { name: "竹中", exact: true }).click();
+    await expect(page.locator('[data-pick="other"] .endpoint-label')).toContainText("內灣線");
+    await page.reload();
+    await expect(page.locator('[data-pick="other"] .endpoint-label')).toContainText("內灣線");
 });

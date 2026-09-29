@@ -5,6 +5,7 @@ export const PREFERENCES_KEY = "neiwan.preferences.v1";
 export interface Preferences {
     neiwan: string;
     other: string;
+    otherLine?: "內灣線" | "六家線";
     reversed: boolean;
     date: string;
     preparation: number;
@@ -31,6 +32,7 @@ export function loadPreferences(storage: StorageLike | undefined, today: string)
         else reset = true;
         if (stationById.has(stored.other)) value.other = stored.other;
         else reset = true;
+        if (value.other === "tra:1193" && (stored.otherLine === "內灣線" || stored.otherLine === "六家線")) value.otherLine = stored.otherLine;
         if (typeof stored.reversed === "boolean") value.reversed = stored.reversed;
         else reset = true;
         if (Number.isInteger(stored.preparation) && stored.preparation >= 0 && stored.preparation <= 180) value.preparation = stored.preparation;
@@ -63,7 +65,7 @@ export function loadPreferences(storage: StorageLike | undefined, today: string)
 }
 export function savePreferences(storage: StorageLike | undefined, value: Preferences): boolean {
     try {
-        storage?.setItem(PREFERENCES_KEY, JSON.stringify({ neiwan: value.neiwan, other: value.other, reversed: value.reversed, date: value.date, preparation: value.preparation, traMinMinutes: value.traMinMinutes, thsrMinMinutes: value.thsrMinMinutes, metroMinMinutes: value.metroMinMinutes, traMaxMinutes: value.traMaxMinutes, thsrMaxMinutes: value.thsrMaxMinutes, metroMaxMinutes: value.metroMaxMinutes }));
+        storage?.setItem(PREFERENCES_KEY, JSON.stringify({ neiwan: value.neiwan, other: value.other, otherLine: value.otherLine, reversed: value.reversed, date: value.date, preparation: value.preparation, traMinMinutes: value.traMinMinutes, thsrMinMinutes: value.thsrMinMinutes, metroMinMinutes: value.metroMinMinutes, traMaxMinutes: value.traMaxMinutes, thsrMaxMinutes: value.thsrMaxMinutes, metroMaxMinutes: value.metroMaxMinutes }));
         return Boolean(storage);
     } catch { return false; }
 }
