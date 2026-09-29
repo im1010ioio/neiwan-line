@@ -40,12 +40,23 @@ export function restoreSlices(days: DayData[]): TimetableSlices {
     return slices;
 }
 
+/** Refresh near-term HSR dates plus one oldest complete distant date per run. */
+export function thsrRefreshKeys(cached: TimetableSlices, dates: string[], available?: Set<string>): Set<string> {
+    const keys = new Set(dates.slice(0, 3).filter(date => !available || available.has(date)).map(date => `thsr:${date}`));
+    const distant = dates.slice(3).filter(date => (!available || available.has(date))
+        && cached.has(`thsr:${date}`) && !cached.get(`thsr:${date}`)!.stale)
+        .sort((a, b) => Date.parse(cached.get(`thsr:${a}`)!.updatedAt) - Date.parse(cached.get(`thsr:${b}`)!.updatedAt) || a.localeCompare(b));
+    if (distant[0]) keys.add(`thsr:${distant[0]}`);
+    return keys;
+}
+
 export async function fillSlices(options: {
     cached: TimetableSlices;
     dates: string[];
     updatedAt: string;
     force: boolean;
     refreshOperators: RailOperator[];
+    refreshKeys?: Set<string>;
     fetchDay: (operator: RailOperator, date: string) => Promise<Train[]>;
     onFailure: (operator: RailOperator, date: string, error: unknown) => void;
 }): Promise<TimetableSlices> {
@@ -62,7 +73,7 @@ export async function fillSlices(options: {
         for (const operator of operators) {
             const key = `${operator}:${date}`;
             const cached = slices.get(key);
-            if (cached && !cached.stale && !options.force && !options.refreshOperators.includes(operator)) continue;
+            if (cached && !cached.stale && !options.force && !options.refreshOperators.includes(operator) && !options.refreshKeys?.has(key)) continue;
             try {
                 const trains = await options.fetchDay(operator, date);
                 if (!trains.length) throw new Error("尚無完整班表");

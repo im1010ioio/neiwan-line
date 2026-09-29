@@ -383,13 +383,13 @@ test("班表狀態依搭乘日期判斷，昨日取得的未來班表仍可使�
 });
 
 
-test("所選日期缺少班表時，顯示日期與內灣線手動更新入口", async ({ page }) => {
+test("所選日期缺少班表時顯示日期，不提供管理入口", async ({ page }) => {
     await page.route("**/data/*.json", route => route.fulfill({ status: 404, body: "" }));
     await page.getByLabel("出發日期", { exact: true }).fill("2026-09-23");
     const status = page.locator(".schedule-status");
     await expect(status).toHaveClass(/schedule-status--warning/);
     await expect(status).toContainText("2026/09/23 班表尚未取得");
-    await expect(status.getByRole("link", { name: "班表更新管理 ↗" })).toHaveAttribute("href", "https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml");
+    await expect(page.locator('a[href*="github.com"][href*="actions"]')).toHaveCount(0);
 });
 
 test("注音組字期間保留搜尋框與結果，選字後更新清單且不中斷游標", async ({ page }) => {

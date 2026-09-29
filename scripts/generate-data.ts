@@ -3,7 +3,7 @@ import { mkdir } from "node:fs/promises";
 import { addDays, dateInTaipei } from "../src/domain/query";
 import { normalizeOds, normalizeTdx, records } from "./normalize";
 import { createTdxClient } from "./tdx-client";
-import { fillSlices } from "./timetable-cache";
+import { fillSlices, thsrRefreshKeys } from "./timetable-cache";
 import { publishTimetables, readCachedSlices } from "./publish-timetables";
 import type { RailOperator, Train } from "../src/domain/types";
 
@@ -54,7 +54,7 @@ if (source === "official") {
 // Published availability may be shorter than the configured query window.
 // Check once before filling missing days, rather than requesting unpublished dates.
 let thsrDates: Set<string> | undefined;
-if (client && dates.some(date => force || !cached.has(`thsr:${date}`) || cached.get(`thsr:${date}`)?.stale)) {
+if (client) {
     try {
         requests++;
         const availability = await client.getJson("/v2/Rail/THSR/DailyTimetable/TrainDates?$format=JSON") as { TrainDates?: string[] };
@@ -69,6 +69,7 @@ const slices = await fillSlices({
     cached, dates, updatedAt: generatedAt, force,
     // TRA's free official feed can still refresh daily without using TDX quota.
     refreshOperators: source === "official" ? ["tra"] : [],
+    refreshKeys: thsrRefreshKeys(cached, dates, thsrDates),
     fetchDay: async (operator, date) => {
         if (operator === "thsr" && thsrDates && !thsrDates.has(date)) throw new Error("高鐵尚未提供此日期班表，待後續補齊");
         let trains: Train[];

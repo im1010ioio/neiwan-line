@@ -130,14 +130,13 @@ function card(journey: Journey) {
 }
 function statusLine() {
     const selectedDate = preferences.date.replaceAll("-", "/");
-    const updateLink = '<a href="https://github.com/im1010ioio/neiwan-line/actions/workflows/daily-data.yml" target="_blank" rel="noreferrer" title="需具備 GitHub 專案操作權限">班表更新管理 ↗</a>';
     const fullTime = (value: string) => {
         const date = new Date(value);
         return Number.isFinite(date.getTime()) ? `${dateInTaipei(date).replaceAll("-", "/")} ${date.toLocaleTimeString("zh-TW", { timeZone: "Asia/Taipei", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })}` : "時間不明";
     };
     if (!data) {
         if (phase === "loading") return `<section class="schedule-status" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>正在讀取 ${selectedDate} 班表</strong></div></section>`;
-        return `<section class="schedule-status schedule-status--warning" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${selectedDate} 班表尚未取得</strong><p>所選日期的資料尚未取得或暫時無法讀取，請稍後再試。</p></div>${updateLink}</section>`;
+        return `<section class="schedule-status schedule-status--warning" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${selectedDate} 班表尚未取得</strong><p>所選日期的資料尚未取得或暫時無法讀取，請稍後再試。</p></div></section>`;
     }
     const context = data.contextCoverage;
     const required = (preferences.other.startsWith("tymc:") || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030")) ? ["tra", "thsr"] as const : ["tra"] as const;
@@ -147,7 +146,7 @@ function statusLine() {
     const stale = required.some(op => data!.staleOperators?.includes(op));
     const warning = metroData?.warning || stale || contextMissing || phase === "missing" || phase === "error";
     const title = phase === "missing" ? `${selectedDate} 班表尚未完整取得` : phase === "error" ? `${selectedDate} 行程暫時無法計算` : stale ? `${selectedDate} 班表更新未成功` : contextMissing ? `${selectedDate} 部分銜接資料尚未完整` : `${selectedDate} 班表已取得`;
-    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong>${acquired.length ? `<p>班表取得時間｜${escapeHtml(acquired.join("；"))}</p>` : ""}<p>${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "依已取得的班表查詢，臨時異動請以官方資訊為準。"}</p>${metroData ? `<p class="metro-health">${escapeHtml(metroData.text)}</p>` : ""}${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div>${warning ? updateLink : ""}</section>`;
+    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong>${acquired.length ? `<p>班表取得時間｜${escapeHtml(acquired.join("；"))}</p>` : ""}<p>${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "依已取得的班表查詢，臨時異動請以官方資訊為準。"}</p>${metroData ? `<p class="metro-health">${escapeHtml(metroData.text)}</p>` : ""}${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div></section>`;
 }
 
 function activeRouteFilters() {

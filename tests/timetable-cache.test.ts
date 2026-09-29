@@ -1,7 +1,7 @@
 import { expect, it } from "vitest";
 import { addDays } from "../src/domain/query";
 import type { DayData, RailOperator, Train } from "../src/domain/types";
-import { assembleDay, fillSlices, restoreSlices, type TimetableSlices } from "../scripts/timetable-cache";
+import { assembleDay, fillSlices, restoreSlices, thsrRefreshKeys, type TimetableSlices } from "../scripts/timetable-cache";
 
 const start = "2026-09-23";
 const firstUpdate = "2026-09-23T04:30:00+08:00";
@@ -89,4 +89,39 @@ it("相容原有班表並忽略損壞資料，不能拿無效車次當快取", a
     const cached = restoreSlices([...days, corrupted, null as unknown as DayData]);
     expect(cached.get("thsr:2026-10-21")?.updatedAt).toBe(firstUpdate);
     expect((await run(cached, "2026-09-24")).tdxCalls).toEqual(["thsr:2026-10-22"]);
+});
+
+
+it("高鐵每天補一天、更新近期三天及最久未更新的一天，不重複請求", async () => {
+    const first = await run();
+    const window = dates("2026-09-24");
+    const calls: string[] = [];
+    const result = await fillSlices({
+        cached: first.slices, dates: window, updatedAt: secondUpdate, force: false, refreshOperators: [],
+        refreshKeys: thsrRefreshKeys(first.slices, window),
+        fetchDay: async (operator, date) => { if (operator === "thsr") calls.push(date); return [train(operator, date)]; },
+        onFailure: () => { throw Error("unexpected failure"); },
+    });
+    expect(calls).toEqual(["2026-09-24", "2026-09-25", "2026-09-26", "2026-09-27", "2026-10-22"]);
+    expect(new Set(calls).size).toBe(calls.length);
+    expect(thsrRefreshKeys(result, window).has("thsr:2026-09-28")).toBe(true);
+});
+
+it("輪替跳過未發布及失敗日期，缺漏與失敗另行補齊；更新失敗保留資料", async () => {
+    const first = await run();
+    const window = dates(start);
+    const failed = `thsr:${window[3]}`;
+    first.slices.get(failed)!.stale = true;
+    const available = new Set(window.filter(date => date !== window[4]));
+    const keys = thsrRefreshKeys(first.slices, window, available);
+    expect([...keys]).toEqual(window.slice(0, 3).concat(window[5]).map(date => `thsr:${date}`));
+    const calls: string[] = [];
+    const result = await fillSlices({
+        cached: first.slices, dates: window, updatedAt: secondUpdate, force: false, refreshOperators: [], refreshKeys: keys,
+        fetchDay: async (operator, date) => { calls.push(`${operator}:${date}`); throw Error("測試失敗"); },
+        onFailure: () => {},
+    });
+    expect(calls).toContain(failed);
+    expect(result.get(`thsr:${start}`)).toEqual({ ...first.slices.get(`thsr:${start}`), stale: true });
+    expect([...thsrRefreshKeys(new Map(), window)]).toHaveLength(3);
 });
