@@ -5,7 +5,13 @@ import type { MetroSnapshot } from "../src/domain/metro";
 const source = snapshot as MetroSnapshot;
 const today = "2026-09-24";
 const now = new Date("2026-09-24T12:00:00+08:00");
-const fresh = () => ({ ...structuredClone(source), generatedAt: now.toISOString() });
+const fresh = (): MetroSnapshot => {
+    const sample = structuredClone(source);
+    sample.generatedAt = now.toISOString();
+    delete sample.updateFailedAt;
+    delete sample.validity;
+    return sample;
+};
 
 describe("機捷更新品質", () => {
     it("下載成功不代表已確認未來有效期間", () => {
