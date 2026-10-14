@@ -257,5 +257,1900 @@
                 }
             }
         ]
+    },
+    {
+        "sourceHash": "87b58743e40910510535fb95c319dac4098de0a372d5173594f9e3dab621a2ce",
+        "reviewedAt": "2026-10-14T02:19:40.800Z",
+        "reason": "線上2026-10-14更新仍取得128列舊欄位格式，與另一180列來源版本班次相同。依官方停站修正A18/A21北向延伸直達SP2→SP5、南向SP5實際終點A21、平日07:00 A21／07:11 A18跳站普通車停站及專屬旅行時間。設計展加班已於10/11結束，接受核實後正常班表作為新基準。",
+        "sources": [
+            "https://www.tymetro.com.tw/tymetro-new/tw/_pages/news/show-2427-1.html",
+            "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18",
+            "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-search.php"
+        ],
+        "validity": {
+            "from": "2026-10-14",
+            "through": "2026-11-30"
+        },
+        "patterns": [
+            {
+                "StoppingPatternID": "SP6",
+                "Stations": [
+                    {
+                        "StationID": "A21",
+                        "Sequence": 1
+                    },
+                    {
+                        "StationID": "A18",
+                        "Sequence": 2
+                    },
+                    {
+                        "StationID": "A13",
+                        "Sequence": 3
+                    },
+                    {
+                        "StationID": "A12",
+                        "Sequence": 4
+                    },
+                    {
+                        "StationID": "A9",
+                        "Sequence": 5
+                    },
+                    {
+                        "StationID": "A8",
+                        "Sequence": 6
+                    },
+                    {
+                        "StationID": "A7",
+                        "Sequence": 7
+                    },
+                    {
+                        "StationID": "A6",
+                        "Sequence": 8
+                    },
+                    {
+                        "StationID": "A5",
+                        "Sequence": 9
+                    },
+                    {
+                        "StationID": "A4",
+                        "Sequence": 10
+                    },
+                    {
+                        "StationID": "A3",
+                        "Sequence": 11
+                    },
+                    {
+                        "StationID": "A2",
+                        "Sequence": 12
+                    },
+                    {
+                        "StationID": "A1",
+                        "Sequence": 13
+                    }
+                ]
+            }
+        ],
+        "corrections": [
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "13:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "14:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "15:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "16:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "17:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "18:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "07:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "08:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "16:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "17:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:45",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A1",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:00",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A2",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "08:06",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "08:02",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "13:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "14:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "15:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "16:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "17:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "18:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:25",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "07:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "08:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "16:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "17:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:55",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:10",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A4",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:59",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A5",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:57",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A6",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:54",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A7",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:47",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:43",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "13:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "14:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "15:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "16:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "17:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "18:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:07",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "07:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "08:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "16:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "17:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:07",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A9",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:40",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:28",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:52",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "07:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "08:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "16:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "17:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:22",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "13:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "14:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "15:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "16:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "17:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "18:37",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:25",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:56",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "07:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "08:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "16:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "17:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "13:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "14:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "15:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "16:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "17:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "18:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:11",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車",
+                    "RunTimeByDestination": {
+                        "A13": 720,
+                        "A12": 960,
+                        "A9": 1740,
+                        "A8": 1920,
+                        "A7": 2160,
+                        "A6": 2520,
+                        "A5": 2760,
+                        "A4": 2880,
+                        "A3": 3000,
+                        "A2": 3240,
+                        "A1": 3600
+                    }
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:41",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "08:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "09:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "17:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "18:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "19:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "20:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "14:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "15:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "16:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "17:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "18:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "19:26",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "13:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "14:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "15:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "16:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "17:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "假日",
+                "departure": "18:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "06:39",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "07:09",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "07:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "08:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "16:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "17:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "18:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:39",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 0,
+                "destination": "A22",
+                "serviceTag": "平日",
+                "departure": "19:54",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP5"
+                },
+                "replacement": {
+                    "DestinationStationID": "A21"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "14:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "15:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "16:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "17:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "18:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "假日",
+                "departure": "19:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:00",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP1"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP6",
+                    "ServiceName": "機捷跳站普通車",
+                    "RunTimeByDestination": {
+                        "A18": 540
+                    }
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:30",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "08:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "09:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "17:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "18:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "19:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "20:15",
+                "expected": {
+                    "TrainType": 2,
+                    "StoppingPatternID": "SP2"
+                },
+                "replacement": {
+                    "StoppingPatternID": "SP5"
+                }
+            }
+        ]
     }
 ]
