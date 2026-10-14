@@ -1,0 +1,261 @@
+[
+    {
+        "sourceHash": "affefb462c70036b84faddf087fc92f29893462e1e8b4913d0b8220374f0bdef",
+        "reviewedAt": "2026-10-13T16:42:29.977Z",
+        "reason": "設計展區間加班於2026-10-11結束。已核對桃捷現行A18時刻表及2026-10-14逐站查詢：平日北向80班、假日77班；TDX已分離直達車並修正終點，但缺少SP6跳站模式定義。補入官方停站及07:11跳站普通車專屬旅行時間；不改其他普通車的旅行時間。",
+        "sources": [
+            "https://www.tymetro.com.tw/tymetro-new/tw/_pages/news/show-2427-1.html",
+            "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18",
+            "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-search.php"
+        ],
+        "validity": {
+            "from": "2026-10-14",
+            "through": "2026-11-30"
+        },
+        "patterns": [
+            {
+                "StoppingPatternID": "SP6",
+                "Stations": [
+                    {
+                        "StationID": "A21",
+                        "Sequence": 1
+                    },
+                    {
+                        "StationID": "A18",
+                        "Sequence": 2
+                    },
+                    {
+                        "StationID": "A13",
+                        "Sequence": 3
+                    },
+                    {
+                        "StationID": "A12",
+                        "Sequence": 4
+                    },
+                    {
+                        "StationID": "A9",
+                        "Sequence": 5
+                    },
+                    {
+                        "StationID": "A8",
+                        "Sequence": 6
+                    },
+                    {
+                        "StationID": "A7",
+                        "Sequence": 7
+                    },
+                    {
+                        "StationID": "A6",
+                        "Sequence": 8
+                    },
+                    {
+                        "StationID": "A5",
+                        "Sequence": 9
+                    },
+                    {
+                        "StationID": "A4",
+                        "Sequence": 10
+                    },
+                    {
+                        "StationID": "A3",
+                        "Sequence": 11
+                    },
+                    {
+                        "StationID": "A2",
+                        "Sequence": 12
+                    },
+                    {
+                        "StationID": "A1",
+                        "Sequence": 13
+                    }
+                ]
+            }
+        ],
+        "corrections": [
+            {
+                "station": "A2",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "08:06",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A3",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "08:02",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A4",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:59",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A5",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:57",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A6",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:54",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A7",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:47",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A8",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:43",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A9",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:40",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A12",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:28",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A13",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:25",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車"
+                }
+            },
+            {
+                "station": "A18",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:11",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車",
+                    "RunTimeByDestination": {
+                        "A13": 720,
+                        "A12": 960,
+                        "A9": 1740,
+                        "A8": 1920,
+                        "A7": 2160,
+                        "A6": 2520,
+                        "A5": 2760,
+                        "A4": 2880,
+                        "A3": 3000,
+                        "A2": 3240,
+                        "A1": 3600
+                    }
+                }
+            },
+            {
+                "station": "A21",
+                "direction": 1,
+                "destination": "A1",
+                "serviceTag": "平日",
+                "departure": "07:00",
+                "expected": {
+                    "TrainType": 1,
+                    "StoppingPatternID": "SP6"
+                },
+                "replacement": {
+                    "ServiceName": "機捷跳站普通車",
+                    "RunTimeByDestination": {
+                        "A18": 540
+                    }
+                }
+            }
+        ]
+    }
+]

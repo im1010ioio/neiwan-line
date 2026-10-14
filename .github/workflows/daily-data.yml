@@ -46,6 +46,14 @@ jobs:
               env:
                   TDX_CLIENT_ID: ${{ secrets.TDX_CLIENT_ID }}
                   TDX_CLIENT_SECRET: ${{ secrets.TDX_CLIENT_SECRET }}
+            - name: Preserve metro update evidence and change report
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: metro-update-report
+                  path: output/metro-update/
+                  if-no-files-found: ignore
+                  retention-days: 30
             - run: npm run build
             - name: Save daily data, including explicit stale status
               id: save

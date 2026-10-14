@@ -1,0 +1,253 @@
+{
+    "observedOn": "2026-10-14",
+    "timeZone": "Asia/Taipei",
+    "officialQueryServiceDate": "2026-10-14",
+    "rawSnapshotGeneratedAt": "2026-10-13T02:26:35.430Z",
+    "service": "平日尖峰跳站普通車",
+    "trainType": 1,
+    "direction": 1,
+    "destinationStationId": "A1",
+    "rawStoppingPatternId": "SP1",
+    "officialStoppingStations": [
+        "A21",
+        "A18",
+        "A13",
+        "A12",
+        "A9",
+        "A8",
+        "A7",
+        "A6",
+        "A5",
+        "A4",
+        "A3",
+        "A2",
+        "A1"
+    ],
+    "stops": [
+        {
+            "stationId": "A21",
+            "arrivalTime": "07:00",
+            "departureTime": "07:00",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "raw-tdx",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A18",
+            "arrivalTime": "07:09",
+            "departureTime": "07:11",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A13",
+            "arrivalTime": "07:23",
+            "departureTime": "07:25",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A12",
+            "arrivalTime": "07:27",
+            "departureTime": "07:28",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A9",
+            "arrivalTime": "07:40",
+            "departureTime": "07:40",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A8",
+            "arrivalTime": "07:43",
+            "departureTime": "07:43",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A7",
+            "arrivalTime": "07:47",
+            "departureTime": "07:47",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A6",
+            "arrivalTime": "07:53",
+            "departureTime": "07:54",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A5",
+            "arrivalTime": "07:57",
+            "departureTime": "07:57",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-od-query"
+        },
+        {
+            "stationId": "A4",
+            "arrivalTime": "07:59",
+            "departureTime": "07:59",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A3",
+            "arrivalTime": "08:01",
+            "departureTime": "08:02",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A2",
+            "arrivalTime": "08:05",
+            "departureTime": "08:06",
+            "rawTdxMatchCount": 1,
+            "arrivalSource": "official-od-query",
+            "departureSource": "official-station-timetable"
+        },
+        {
+            "stationId": "A1",
+            "arrivalTime": "08:11",
+            "departureTime": null,
+            "rawTdxMatchCount": 0,
+            "arrivalSource": "official-od-query",
+            "departureSource": null
+        }
+    ],
+    "verifiedLegs": [
+        {
+            "from": "A21",
+            "to": "A18",
+            "departureTime": "07:00",
+            "arrivalTime": "07:09",
+            "durationSeconds": 540
+        },
+        {
+            "from": "A18",
+            "to": "A13",
+            "departureTime": "07:11",
+            "arrivalTime": "07:23",
+            "durationSeconds": 720
+        },
+        {
+            "from": "A18",
+            "to": "A12",
+            "departureTime": "07:11",
+            "arrivalTime": "07:27",
+            "durationSeconds": 960
+        },
+        {
+            "from": "A18",
+            "to": "A9",
+            "departureTime": "07:11",
+            "arrivalTime": "07:40",
+            "durationSeconds": 1740
+        },
+        {
+            "from": "A18",
+            "to": "A8",
+            "departureTime": "07:11",
+            "arrivalTime": "07:43",
+            "durationSeconds": 1920
+        },
+        {
+            "from": "A18",
+            "to": "A7",
+            "departureTime": "07:11",
+            "arrivalTime": "07:47",
+            "durationSeconds": 2160
+        },
+        {
+            "from": "A18",
+            "to": "A6",
+            "departureTime": "07:11",
+            "arrivalTime": "07:53",
+            "durationSeconds": 2520
+        },
+        {
+            "from": "A18",
+            "to": "A5",
+            "departureTime": "07:11",
+            "arrivalTime": "07:57",
+            "durationSeconds": 2760
+        },
+        {
+            "from": "A18",
+            "to": "A4",
+            "departureTime": "07:11",
+            "arrivalTime": "07:59",
+            "durationSeconds": 2880
+        },
+        {
+            "from": "A18",
+            "to": "A3",
+            "departureTime": "07:11",
+            "arrivalTime": "08:01",
+            "durationSeconds": 3000
+        },
+        {
+            "from": "A18",
+            "to": "A2",
+            "departureTime": "07:11",
+            "arrivalTime": "08:05",
+            "durationSeconds": 3240
+        },
+        {
+            "from": "A18",
+            "to": "A1",
+            "departureTime": "07:11",
+            "arrivalTime": "08:11",
+            "durationSeconds": 3600
+        }
+    ],
+    "sources": [
+        {
+            "id": "official-od-query",
+            "url": "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-search.php",
+            "method": "Read-only public website UI queries through cua_repl; selected service date 2026-10-14. Queried A21→A18 from 07:00, A18→each northbound stop from 07:00, and A5→A1 from 07:30. Every verifiedLegs record was directly displayed in official query results. A1 08:11 is directly confirmed, not inferred."
+        },
+        {
+            "id": "official-station-timetable",
+            "urls": [
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A21",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A18",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A13",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A12",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A9",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A8",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A7",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A6",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A4",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A3",
+                "https://www.tymetro.com.tw/tymetro-new/tw/_pages/travel-guide/timetable-A2"
+            ],
+            "method": "Official station timetables label this exact departure with the diamond symbol for the peak skip-stop commuter service; stopping order A21,A18,A13,A12,A9 through A1 all stations. The header says the 07:00 A21 service changed on 2025-10-16."
+        },
+        {
+            "id": "raw-tdx",
+            "path": "GitHub Actions metro-update-report/candidate.raw.json",
+            "method": "Existing snapshot only; no new TDX call. All 12 nonterminal arrival/departure pairs match exactly one TrainType 1 / SP1 / Direction 1 / destination A1 weekday departure."
+        }
+    ],
+    "limits": [
+        "Official observation establishes this current published weekday service only; bind the correction to the reviewed input fingerprint and validity window instead of permanently changing SP1.",
+        "A1 is a terminal: no departure time is asserted.",
+        "Do not modify generic TrainType 1 travel times for all ordinary trains. Verified durations are specific to this departure.",
+        "If the application keeps all metro arrivals marked estimated, that label can remain; these specific scheduled times are nevertheless directly supported by official query results."
+    ]
+}

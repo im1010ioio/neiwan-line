@@ -1,7 +1,11 @@
-import type { MetroSnapshot } from "../src/domain/metro";
+import type { MetroSnapshot, MetroVersion } from "../src/domain/metro";
 
 /** The UI connects every airport metro destination through A18; names come from the station list. */
 export function projectMetro(snapshot: MetroSnapshot): MetroSnapshot {
+    return { ...projectVersion(snapshot), ...(snapshot.future?.length ? { future: snapshot.future.map(projectVersion) } : {}) };
+}
+
+function projectVersion(snapshot: MetroVersion): MetroVersion {
     const patterns = snapshot.patterns.filter(pattern => pattern.Stations.some(station => station.StationID === "A18"))
         .map(({ StoppingPatternID, Stations }) => ({ StoppingPatternID, Stations: Stations.map(({ StationID, Sequence }) => ({ StationID, Sequence })) }));
     const usable = new Set(patterns.map(pattern => pattern.StoppingPatternID));
@@ -9,9 +13,14 @@ export function projectMetro(snapshot: MetroSnapshot): MetroSnapshot {
         generatedAt: snapshot.generatedAt,
         updateFailedAt: snapshot.updateFailedAt,
         validity: snapshot.validity,
+        staleAfter: snapshot.staleAfter,
         timetables: snapshot.timetables.map(({ StationID, Direction, DestinationStaionID, ServiceDay, Timetables }) => ({
             StationID, Direction, DestinationStaionID, ServiceDay,
-            Timetables: Timetables.filter(time => usable.has(time.StoppingPatternID)).map(({ DepartureTime, TrainType, StoppingPatternID }) => ({ DepartureTime, TrainType, StoppingPatternID })),
+            // Keep contradictory A18 rows for validation instead of silently losing trains.
+            Timetables: Timetables.filter(time => usable.has(time.StoppingPatternID) || StationID === "A18")
+                .map(({ DepartureTime, TrainType, StoppingPatternID, DestinationStationID, RunTimeByDestination, ServiceName }) => ({
+                    DepartureTime, TrainType, StoppingPatternID, DestinationStationID, RunTimeByDestination, ServiceName,
+                })),
         })).filter(row => row.Timetables.length),
         patterns,
         travelTimes: snapshot.travelTimes.map(({ TrainType, TravelTimes }) => ({ TrainType,

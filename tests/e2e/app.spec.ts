@@ -314,6 +314,7 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     const ServiceDay = { Monday: true, Tuesday: true, Wednesday: true, Thursday: true, Friday: true, Saturday: true, Sunday: true, NationalHolidays: true };
     await page.route("**/data/metro.json", route => route.fulfill({ json: {
         generatedAt: "2026-09-21T04:30:00+08:00",
+        validity: { from: "2026-09-21", through: "2026-10-19" },
         timetables: [
             { StationID: "A18", Direction: 1, DestinationStaionID: "A12", ServiceDay, Timetables: [{ DepartureTime: "09:10", TrainType: 1, StoppingPatternID: "SP1" }, { DepartureTime: "09:12", TrainType: 2, StoppingPatternID: "SP5" }] },
             { StationID: "A12", Direction: 0, DestinationStaionID: "A18", ServiceDay, Timetables: [{ DepartureTime: "10:00", TrainType: 1, StoppingPatternID: "SP1" }, { DepartureTime: "10:02", TrainType: 2, StoppingPatternID: "SP5" }] },
@@ -331,7 +332,7 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     await expect(page.locator(".journey-card")).toHaveCount(2);
     await expect(page.getByLabel("內灣新竹直達車", { exact: true })).toHaveCount(0);
     await expect(page.getByLabel("機捷車種", { exact: true })).toHaveCount(0);
-    await expect(page.locator(".metro-health")).toContainText("來源未提供適用期間");
+    await expect(page.locator(".metro-health")).toContainText("適用至 2026-10-19");
     await page.evaluate(() => localStorage.setItem("neiwan.filters.v1", JSON.stringify({ reservedOnly: true, directOutbound: false, directReturn: false, metroService: "express" })));
     await page.reload();
     await expect(page.locator(".journey-card")).toHaveCount(2);
