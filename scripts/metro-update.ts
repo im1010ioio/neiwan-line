@@ -4,6 +4,7 @@ import { metroSnapshotForDate } from "../src/domain/metro";
 import { assessMetro } from "../src/domain/metro-health";
 import { addDays } from "../src/domain/query";
 import { projectMetro } from "./project-metro";
+import { compareMetroService } from "./metro-equivalence";
 
 type Departure = MetroVersion["timetables"][number]["Timetables"][number];
 export interface MetroCorrection {
@@ -27,11 +28,14 @@ export interface MetroReview {
 export interface MetroUpdateReport {
     generatedAt: string;
     sourceHash: string;
-    status: "accepted" | "scheduled" | "needs-review" | "invalid";
+    status: "accepted" | "scheduled" | "needs-review" | "invalid" | "fetch-failed";
     errors: string[];
     changes: ReturnType<typeof assessMetro>["changes"];
     review?: Pick<MetroReview, "reviewedAt" | "reason" | "sources" | "validity">;
     corrections: number;
+    reason?: string;
+    equivalence?: { matched: boolean; supplements: number; validity?: MetroVersion["validity"];
+        removed: ReturnType<typeof compareMetroService>["removed"]; added: ReturnType<typeof compareMetroService>["added"] };
 }
 
 /** Ignore feed refresh metadata; bind reviews to all operational content, including arrival times. */
@@ -140,7 +144,29 @@ export function prepareMetroUpdate(raw: MetroVersion, previous: MetroSnapshot | 
         const sourceAssessment = assessMetro(candidate, undefined, assessmentDate);
         report.errors.push(...sourceAssessment.errors);
         if (report.errors.length) return { report };
-        const projected = projectMetro(candidate);
+        let projected = projectMetro(candidate);
+        if (!candidate.validity && previous) {
+            const active = metroSnapshotForDate(previous, today);
+            if (!active?.validity) {
+                if ([previous, ...(previous.future ?? [])].some(version => version.validity)) {
+                    report.status = "needs-review";
+                    report.reason = "先前核實班表不適用今日，不能沿用效期；需核對新來源的適用期間";
+                    return { report };
+                }
+            } else {
+                const comparison = compareMetroService(active, projected);
+                report.equivalence = { matched: comparison.equivalent, supplements: comparison.supplements,
+                    validity: active.validity, removed: comparison.removed, added: comparison.added };
+                if (!comparison.equivalent) {
+                    report.status = "needs-review";
+                    report.reason = "實際班次內容已變動，但新來源未提供適用日期；需核對改班期間與差異";
+                    return { report };
+                }
+                projected = comparison.candidate;
+                projected.validity = { ...active.validity };
+                report.reason = "來源格式已變動，本站使用的實際服務內容相同；沿用原核實期間，不延長效期";
+            }
+        }
         const snapshot = mergeMetroVersions(previous, projected, today);
         const assessment = assessMetro(snapshot, previous, assessmentDate);
         report.errors.push(...assessment.errors);
@@ -161,8 +187,17 @@ export function prepareMetroUpdate(raw: MetroVersion, previous: MetroSnapshot | 
 export function metroReportMarkdown(report: MetroUpdateReport): string {
     const lines = ["## 機捷更新", "", `結果：${report.status}`, `資料指紋：\`${report.sourceHash}\``,
         `已核實欄位修正：${report.corrections} 筆`, ""];
+    if (report.reason) lines.push(report.reason, "");
+    if (report.equivalence) {
+        const comparison = report.equivalence;
+        lines.push(`實際服務比對：${comparison.matched ? "相同" : "不同"}；沿用專屬旅行時間 ${comparison.supplements} 筆。`,
+            `原核實期間：${comparison.validity?.from} 至 ${comparison.validity?.through}。`, "");
+        if (!comparison.matched) lines.push("### 班次差異（含行駛日、停站與旅行時間）", "",
+            `移除或變更 ${comparison.removed.length} 筆，新增或變更 ${comparison.added.length} 筆；完整差異見 report.json。`,
+            "```json", JSON.stringify({ removed: comparison.removed.slice(0, 6), added: comparison.added.slice(0, 6) }, null, 4), "```", "");
+    }
     if (report.review) lines.push(`核實依據：${report.review.reason}`, ...report.review.sources.map(url => `- ${url}`), "");
-    if (report.errors.length) lines.push("### 資料錯誤", "", ...report.errors.map(error => `- ${error}`), "");
+    if (report.errors.length) lines.push(report.status === "fetch-failed" ? "### 取得失敗" : "### 資料錯誤", "", ...report.errors.map(error => `- ${error}`), "");
     if (report.changes.length) lines.push("### 需核對的班表異動", "", "完整日期、方向、班數及首末班差異請下載 metro-update-report 附件。", "", "```json", JSON.stringify(report.changes.slice(0, 12), null, 4), "```");
     return `${lines.join("\n")}\n`;
 }

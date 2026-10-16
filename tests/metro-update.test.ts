@@ -115,10 +115,123 @@ describe("機捷更新決策與版本保存", () => {
         expect(metroSnapshotForDate(merged, "2026-11-01")).toBeDefined();
     });
 
-    it("未提供日期的新來源不能覆蓋已核實期間", () => {
+    it("未提供日期且實際改班的新來源須核實期間並列出差異", () => {
         const next = createMetroFixture();
         delete next.validity;
-        expect(prepareMetroUpdate(next, createMetroFixture(), today, []).snapshot).toBeUndefined();
+        next.timetables[0].Timetables[0].DepartureTime = "06:05";
+        const result = prepareMetroUpdate(next, createMetroFixture(), today, []);
+        expect(result.snapshot).toBeUndefined();
+        expect(result.report.status).toBe("needs-review");
+        expect(result.report.errors).toEqual([]);
+        expect(result.report.equivalence?.added[0].departure).toBe("06:05");
+        expect(result.report.equivalence?.removed[0].departure).toBe("06:00");
+    });
+
+    it("拆列、排序、模式代碼與標籤改名不影響服務，可沿用效期且清除失敗標記", () => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        previous.updateFailedAt = "2026-10-14T01:00:00Z";
+        delete next.validity;
+        next.generatedAt = "2026-10-14T02:00:00Z";
+        next.patterns[0].StoppingPatternID = "renamed";
+        next.patterns[0].Stations.reverse();
+        next.timetables = next.timetables.flatMap(row => row.Timetables.map(time => ({ ...row,
+            ServiceDay: { ...row.ServiceDay, ServiceTag: "新名稱" }, Timetables: [{ ...time, DepartureTime: `${time.DepartureTime}:00`, StoppingPatternID: "renamed" }] }))).reverse();
+        const input = structuredClone(next);
+        const result = prepareMetroUpdate(next, previous, today, []);
+        expect(result.report.status).toBe("accepted");
+        expect(result.report.equivalence).toMatchObject({ matched: true, removed: [], added: [] });
+        expect(result.snapshot?.validity).toEqual(previous.validity);
+        expect(result.snapshot?.generatedAt).toBe(next.generatedAt);
+        expect(result.snapshot?.updateFailedAt).toBeUndefined();
+        expect(next).toEqual(input);
+    });
+
+    it("行駛日拆成多列仍能辨識相同服務，任何一天減班都會攔下", () => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        delete next.validity;
+        next.timetables = next.timetables.flatMap(row => Object.keys(row.ServiceDay).map(day => ({ ...row,
+            ServiceDay: Object.fromEntries(Object.keys(row.ServiceDay).map(key => [key, key === day])) })));
+        expect(prepareMetroUpdate(next, previous, today, []).report.status).toBe("accepted");
+        next.timetables[0] = { ...next.timetables[0], Timetables: next.timetables[0].Timetables.slice(1) };
+        expect(prepareMetroUpdate(next, previous, today, []).report.status).toBe("needs-review");
+    });
+
+    it.each(["stops", "terminal", "duration", "duplicate", "type"])("實際 %s 差異不可當成格式變動", kind => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        delete next.validity;
+        const row = next.timetables.find(row => row.StationID === "A18" && row.Direction === 1)!;
+        if (kind === "stops") {
+            next.patterns.push({ StoppingPatternID: "skip", Stations: next.patterns[0].Stations.filter(stop => stop.StationID !== "A10") });
+            row.Timetables[0].StoppingPatternID = "skip";
+        } else if (kind === "terminal") row.Timetables[0].DestinationStationID = "A2";
+        else if (kind === "duration") next.travelTimes[0].TravelTimes.find(time => time.FromStationID === "A18" && time.ToStationID === "A1")!.RunTime++;
+        else if (kind === "duplicate") row.Timetables.push({ ...row.Timetables[0] });
+        else {
+            next.travelTimes.push({ ...structuredClone(next.travelTimes[0]), TrainType: 2 });
+            row.Timetables[0].TrainType = 2;
+        }
+        const result = prepareMetroUpdate(next, previous, today, []);
+        expect(result.snapshot).toBeUndefined();
+        expect(["needs-review", "invalid"]).toContain(result.report.status);
+    });
+
+    it("只對完全相符班次沿用已核實旅行時間，後續刷新仍保留且不延長效期", () => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        delete next.validity;
+        const row = previous.timetables.find(row => row.StationID === "A18" && row.Direction === 1)!;
+        row.Timetables[0].RunTimeByDestination = { A1: 540 };
+        row.Timetables[0].ServiceName = "測試跳站車";
+        const first = prepareMetroUpdate(next, previous, today, []);
+        expect(first.report.status).toBe("accepted");
+        expect(first.report.equivalence?.supplements).toBe(1);
+        const second = prepareMetroUpdate(next, first.snapshot, "2026-10-15", []);
+        expect(second.report.status).toBe("accepted");
+        expect(second.snapshot?.validity).toEqual(previous.validity);
+        const legs = metroLegs(second.snapshot!, "tymc:A18", "tymc:A1", today, "all");
+        expect(legs[0].arrival - legs[0].departure).toBe(540000);
+        expect(legs[0].service).toBe("測試跳站車");
+        expect(legs[1].arrival - legs[1].departure).toBe(600000);
+    });
+
+    it.each(["base", "override", "departure", "stops"])("有 %s 新資訊時不以舊旅行時間掩蓋差異", kind => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        delete next.validity;
+        previous.timetables.find(row => row.StationID === "A18" && row.Direction === 1)!.Timetables[0].RunTimeByDestination = { A1: 540 };
+        const row = next.timetables.find(row => row.StationID === "A18" && row.Direction === 1)!;
+        if (kind === "base") next.travelTimes[0].TravelTimes.find(time => time.FromStationID === "A18" && time.ToStationID === "A1")!.RunTime = 660;
+        if (kind === "override") row.Timetables[0].RunTimeByDestination = { A1: 550 };
+        if (kind === "departure") row.Timetables[0].DepartureTime = "06:01";
+        if (kind === "stops") {
+            next.patterns.push({ StoppingPatternID: "skip", Stations: next.patterns[0].Stations.filter(stop => stop.StationID !== "A10") });
+            row.Timetables[0].StoppingPatternID = "skip";
+        }
+        const result = prepareMetroUpdate(next, previous, today, []);
+        expect(result.snapshot).toBeUndefined();
+        expect(result.report.status).toBe("needs-review");
+        expect(result.report.equivalence?.supplements).toBe(0);
+    });
+
+    it.each(["expired", "future"])("不能從 %s 班表借用效期", kind => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        delete next.validity;
+        previous.validity = kind === "expired" ? { from: "2026-10-01", through: "2026-10-13" } : { from: "2026-10-15", through: "2026-11-11" };
+        const result = prepareMetroUpdate(next, previous, today, []);
+        expect(result.snapshot).toBeUndefined();
+        expect(result.report.status).toBe("needs-review");
+    });
+
+    it("相同服務刷新保留另存的未來班表，不能提前使用或延長舊版", () => {
+        const previous = createMetroFixture(), future = createMetroFixture(), next = createMetroFixture();
+        previous.validity!.through = "2026-10-19";
+        future.validity = { from: "2026-10-20", through: "2026-11-11" };
+        future.timetables[0].Timetables[0].DepartureTime = "06:05";
+        previous.future = [future];
+        delete next.validity;
+        const result = prepareMetroUpdate(next, previous, today, []);
+        expect(result.report.status).toBe("accepted");
+        expect(result.snapshot?.validity).toEqual(previous.validity);
+        expect(metroSnapshotForDate(result.snapshot!, "2026-10-20")).toEqual(future);
+        expect(metroSnapshotForDate(result.snapshot!, "2026-11-12")).toBeUndefined();
     });
 
     it("提前取得下週班表保留今天版本，到期不復活舊版", () => {

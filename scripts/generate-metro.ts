@@ -22,13 +22,13 @@ try {
     await writeFile(`${reportDirectory}/candidate.raw.json`, JSON.stringify(raw));
     const result = prepareMetroUpdate(raw, previous, dateInTaipei(), reviews);
     report = result.report;
-    if (!result.snapshot) throw Error(report.errors[0] ?? `機捷 ${report.changes.length} 項班表異動待核實，詳見更新報告`);
+    if (!result.snapshot) throw Error(report.errors[0] ?? report.reason ?? `機捷 ${report.changes.length} 項班表異動待核實，詳見更新報告`);
     await writeFile(`${reportDirectory}/candidate.json`, JSON.stringify(result.snapshot));
     await writeFile("public/data/metro.tmp", JSON.stringify(result.snapshot));
     await rename("public/data/metro.tmp", "public/data/metro.json");
     console.log(`機捷班表${report.status === "scheduled" ? "已保存，於生效日自動切換" : "更新完成"}，TDX 資料請求 3 次，核實修正 ${report.corrections} 筆。`);
 } catch (error) {
-    if (!report) report = { generatedAt, sourceHash: "", status: "invalid", errors: [String(error)], changes: [], corrections: 0 };
+    if (!report) report = { generatedAt, sourceHash: "", status: "fetch-failed", errors: [String(error)], changes: [], corrections: 0 };
     if (previous) {
         await writeFile("public/data/metro.tmp", JSON.stringify({ ...previous, updateFailedAt: generatedAt }));
         await rename("public/data/metro.tmp", "public/data/metro.json");
