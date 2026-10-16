@@ -24,6 +24,8 @@ export interface MetroReview {
     validity: { from: string; through: string };
     corrections?: MetroCorrection[];
     patterns?: MetroVersion["patterns"];
+    /** Original stopping definitions required before reusing a structural repair across feed formats. */
+    sourcePatterns?: Record<string, string[]>;
 }
 export interface MetroUpdateReport {
     generatedAt: string;
@@ -70,12 +72,16 @@ export function normalizeMetroDirections(raw: MetroVersion): MetroVersion {
     return next;
 }
 
-export function applyMetroReview(raw: MetroVersion, review: MetroReview): MetroVersion {
-    if (metroSourceHash(raw) !== review.sourceHash) throw Error("機捷核實紀錄不符合這次取得的資料版本");
+function validateMetroReview(review: MetroReview): void {
     if (!Number.isFinite(Date.parse(review.reviewedAt)) || !review.reason.trim() || !review.sources.length
         || review.sources.some(url => !url.startsWith("https://"))
         || !validDate(review.validity.from) || !validDate(review.validity.through)
         || review.validity.from > review.validity.through) throw Error("機捷核實紀錄缺少有效日期或官方依據");
+}
+
+export function applyMetroReview(raw: MetroVersion, review: MetroReview): MetroVersion {
+    if (metroSourceHash(raw) !== review.sourceHash) throw Error("機捷核實紀錄不符合這次取得的資料版本");
+    validateMetroReview(review);
     const next = normalizeMetroDirections(raw);
     next.validity = { ...review.validity };
     for (const pattern of review.patterns ?? []) {
@@ -93,6 +99,48 @@ export function applyMetroReview(raw: MetroVersion, review: MetroReview): MetroV
         Object.assign(matches[0], structuredClone(correction.replacement));
     }
     return next;
+}
+
+/** Reuse only reviewed structural repairs with unchanged selectors and stopping definitions.
+ * This does not grant validity: the entire repaired service must still match the active version.
+ * Travel-time supplements are handled separately by compareMetroService with base-time guards.
+ */
+function repairEquivalentSource(raw: MetroVersion, active: MetroVersion, reviews: MetroReview[], today: string) {
+    const candidate = structuredClone(raw);
+    let corrections = 0;
+    const definition = (pattern: MetroVersion["patterns"][number] | undefined) => pattern
+        ? [...pattern.Stations].sort((a, b) => a.Sequence - b.Sequence).map(station => station.StationID) : undefined;
+    const same = (a: unknown, b: unknown) => a !== undefined && b !== undefined && JSON.stringify(a) === JSON.stringify(b);
+    for (const review of reviews) {
+        if (!review.sourcePatterns || !active.validity || review.validity.from > active.validity.from
+            || review.validity.through < active.validity.through || review.validity.from > today || review.validity.through < today) continue;
+        validateMetroReview(review);
+        for (const correction of review.corrections ?? []) {
+            const replacement = correction.replacement;
+            if (!replacement.StoppingPatternID && !replacement.DestinationStationID) continue;
+            const sourcePattern = candidate.patterns.find(pattern => pattern.StoppingPatternID === correction.expected.StoppingPatternID);
+            if (!same(definition(sourcePattern), review.sourcePatterns[correction.expected.StoppingPatternID])) continue;
+            const replacementID = replacement.StoppingPatternID ?? correction.expected.StoppingPatternID;
+            const declared = review.patterns?.find(pattern => pattern.StoppingPatternID === replacementID);
+            const expectedStops = definition(declared) ?? review.sourcePatterns[replacementID];
+            const existing = candidate.patterns.find(pattern => pattern.StoppingPatternID === replacementID);
+            if (!expectedStops || (existing && !same(definition(existing), expectedStops)) || (!existing && !declared)) continue;
+            const matches = candidate.timetables.filter(row => row.StationID === correction.station && row.Direction === correction.direction
+                && row.DestinationStaionID === correction.destination && row.ServiceDay.ServiceTag === correction.serviceTag)
+                .flatMap(row => row.Timetables.filter(time => time.DepartureTime === correction.departure
+                    && time.TrainType === correction.expected.TrainType && time.StoppingPatternID === correction.expected.StoppingPatternID));
+            if (matches.length !== 1) continue;
+            if (!existing) candidate.patterns.push(structuredClone(declared!));
+            // An upstream per-trip terminal is new evidence; never overwrite a conflict.
+            if (matches[0].DestinationStationID && replacement.DestinationStationID
+                && matches[0].DestinationStationID !== replacement.DestinationStationID) continue;
+            if (replacement.StoppingPatternID) matches[0].StoppingPatternID = replacement.StoppingPatternID;
+            if (replacement.DestinationStationID) matches[0].DestinationStationID = replacement.DestinationStationID;
+            if (!matches[0].ServiceName && replacement.ServiceName) matches[0].ServiceName = replacement.ServiceName;
+            corrections++;
+        }
+    }
+    return { candidate, corrections };
 }
 
 /** Preserve operating-day versions around a change, including the previous day's after-midnight trains. */
@@ -138,7 +186,15 @@ export function prepareMetroUpdate(raw: MetroVersion, previous: MetroSnapshot | 
             candidate = applyMetroReview(raw, review);
             report.review = { reviewedAt: review.reviewedAt, reason: review.reason, sources: review.sources, validity: review.validity };
             report.corrections = review.corrections?.length ?? 0;
-        } else candidate = normalizeMetroDirections(raw);
+        } else {
+            candidate = normalizeMetroDirections(raw);
+            const active = previous && metroSnapshotForDate(previous, today);
+            if (!candidate.validity && active?.validity) {
+                const repaired = repairEquivalentSource(candidate, active, reviews, today);
+                candidate = repaired.candidate;
+                report.corrections = repaired.corrections;
+            }
+        }
         const assessmentDate = candidate.validity && candidate.validity.from > today ? candidate.validity.from : today;
         // Validate the full source before projection can discard non-A18 patterns.
         const sourceAssessment = assessMetro(candidate, undefined, assessmentDate);

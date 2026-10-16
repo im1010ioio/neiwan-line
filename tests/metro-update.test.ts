@@ -10,6 +10,24 @@ const reviewOf = (source: ReturnType<typeof createMetroFixture>): MetroReview =>
     validity: { from: today, through: "2026-11-11" },
 });
 
+function structuralRepairCase() {
+    const previous = createMetroFixture(), raw = createMetroFixture();
+    delete raw.validity;
+    const originalStops = raw.patterns[0].Stations;
+    raw.patterns.push({ StoppingPatternID: "wrong", Stations: originalStops.filter(stop => stop.StationID !== "A18") });
+    const row = raw.timetables.find(row => row.StationID === "A18" && row.Direction === 1)!;
+    row.ServiceDay.ServiceTag = "測試行駛日";
+    row.Timetables[0].StoppingPatternID = "wrong";
+    const review: MetroReview = { ...reviewOf(raw), validity: { ...previous.validity! },
+        sourcePatterns: Object.fromEntries(raw.patterns.map(pattern => [pattern.StoppingPatternID, pattern.Stations.map(stop => stop.StationID)])),
+        corrections: [{ station: "A18", direction: 1, destination: "A1", serviceTag: "測試行駛日", departure: "06:00",
+            expected: { TrainType: 1, StoppingPatternID: "wrong" }, replacement: { StoppingPatternID: "local" } }],
+    };
+    // Another API adds a definition, changing the feed hash without changing existing departures.
+    raw.patterns.push({ StoppingPatternID: "additional", Stations: structuredClone(originalStops) });
+    return { previous, raw, review, row };
+}
+
 describe("機捷更新決策與版本保存", () => {
     it("小幅調整自動接受且不污染來源資料", () => {
         const previous = createMetroFixture(), next = createMetroFixture();
@@ -232,6 +250,41 @@ describe("機捷更新決策與版本保存", () => {
         expect(result.snapshot?.validity).toEqual(previous.validity);
         expect(metroSnapshotForDate(result.snapshot!, "2026-10-20")).toEqual(future);
         expect(metroSnapshotForDate(result.snapshot!, "2026-11-12")).toBeUndefined();
+    });
+
+    it("不同來源格式只在原始停站定義及班次吻合時重用官方結構修正", () => {
+        const { previous, raw, review } = structuralRepairCase();
+        expect(metroSourceHash(raw)).not.toBe(review.sourceHash);
+        const before = structuredClone(raw);
+        const result = prepareMetroUpdate(raw, previous, today, [review]);
+        expect(result.report.status).toBe("accepted");
+        expect(result.report.corrections).toBe(1);
+        expect(result.report.equivalence?.matched).toBe(true);
+        expect(result.snapshot?.validity).toEqual(previous.validity);
+        expect(raw).toEqual(before);
+    });
+
+    it.each(["original-pattern", "replacement-pattern", "duplicate", "departure", "expired-review", "missing-evidence"])("官方結構修正遇到 %s 不可盲目沿用", kind => {
+        const { previous, raw, review, row } = structuralRepairCase();
+        if (kind === "original-pattern") raw.patterns.find(pattern => pattern.StoppingPatternID === "wrong")!.Stations.pop();
+        if (kind === "replacement-pattern") raw.patterns[0].Stations.pop();
+        if (kind === "duplicate") row.Timetables.push({ ...row.Timetables[0] });
+        if (kind === "departure") row.Timetables[0].DepartureTime = "06:01";
+        if (kind === "expired-review") review.validity.through = "2026-10-13";
+        if (kind === "missing-evidence") review.sources = [];
+        const result = prepareMetroUpdate(raw, previous, today, [review]);
+        expect(result.snapshot).toBeUndefined();
+        expect(result.report.status).toBe("invalid");
+    });
+
+    it("成功套用官方結構修正仍須整體服務相同，不能掩蓋其他班次異動", () => {
+        const { previous, raw, review } = structuralRepairCase();
+        raw.timetables[0].Timetables[1].DepartureTime = "12:01";
+        const result = prepareMetroUpdate(raw, previous, today, [review]);
+        expect(result.snapshot).toBeUndefined();
+        expect(result.report.corrections).toBe(1);
+        expect(result.report.status).toBe("needs-review");
+        expect(result.report.equivalence?.matched).toBe(false);
     });
 
     it("提前取得下週班表保留今天版本，到期不復活舊版", () => {
