@@ -1,3 +1,4 @@
+import { endpointConnection } from "./endpoint-connection";
 import type { Journey, Leg, Train } from "./types";
 import stationData from "../stations.json";
 const reservedTransferExceptionStations = new Set(stationData.filter(station => /基隆|宜蘭|花蓮|臺東|台東|屏東/.test(station.county)).map(station => station.id));
@@ -40,11 +41,13 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
     const usesHighSpeed = origin.startsWith("thsr:") || destination.startsWith("thsr:");
     const localJourney = branchStations.has(origin) && branchStations.has(destination);
     const railTarget = destination.startsWith("thsr:") ? "tra:1194" : destination;
+    const connector = filters.reservedOnly ? endpointConnection(trains, origin, destination) : undefined;
     const connections = trains.filter(t => t.operator === "tra" || usesHighSpeed).flatMap(train =>
         train.stops.slice(0, -1).map((from, i) => ({ train, from, to: train.stops[i + 1], i })))
         .filter(c => c.train.operator !== "tra" || (branchStations.has(c.from.station) && branchStations.has(c.to.station)) || approachesDestination(c.from.station, c.to.station, railTarget))
         .filter(c => !localJourney || approachesDestination(c.from.station, c.to.station, destination))
-        .filter(c => !filters.reservedOnly || c.train.reserved === true || (branchStations.has(c.from.station) && branchStations.has(c.to.station)))
+        .filter(c => !filters.reservedOnly || c.train.reserved === true || (branchStations.has(c.from.station) && branchStations.has(c.to.station))
+            || c.train.reserved === false && connector?.stations.has(c.from.station) && connector.stations.has(c.to.station))
         .filter(c => c.from.departure >= start && c.from.departure < end + 86400000)
         .sort((a, b) => a.from.departure - b.from.departure || a.i - b.i);
     const trainsById = new Map(trains.map(train => [train.id, train]));
@@ -105,6 +108,15 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                     }
                 }
                 if (previousTrain.operator === "tra" && train.operator === "tra"
+                    && previousTrain.reserved === false && train.reserved === true && !branchTrain(previousTrain)) {
+                    // Do not take a mainline local ahead to board a reserved train that
+                    // can already be boarded at the local leg's origin. This would
+                    // split the wait to bypass the transfer-time upper bound.
+                    const canBoardAtOrigin = train.stops.some(stop => stop.station === last.origin
+                        && stop.departure >= last.departure && stop.departure < from.departure);
+                    if (canBoardAtOrigin) continue;
+                }
+                if (previousTrain.operator === "tra" && train.operator === "tra"
                     && previousTrain.reserved === false && train.reserved === false && !crossing
                     && !branchTrain(previousTrain) && !branchTrain(train)) {
                     const arrivalIndex = previousTrain.stops.findIndex(stop => stop.station === last.destination && stop.arrival === last.arrival);
@@ -116,9 +128,10 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                         const hub = approachesFromSouth || previousTrain.reserved === true ? "tra:1210" : "tra:1190";
                         const arrivalIndex = previousTrain.stops.findIndex(stop => stop.station === last.destination && stop.arrival === last.arrival);
                         const canStayToHub = previousTrain.stops.slice(arrivalIndex + 1).some(stop => stop.station === hub);
+                        const endpointFeeder = from.station === connector?.gateway && previousTrain.reserved === false && train.reserved === true;
                         const passedHub = previousTrain.stops.slice(0, arrivalIndex + 1).some(stop => stop.station === hub && stop.departure >= last.departure);
                         // Stay on the mainline train to its interchange; do not replace it en route.
-                        if (from.station !== hub && (canStayToHub || passedHub)
+                        if (from.station !== hub && (canStayToHub || passedHub) && !endpointFeeder
                             && !(regionalTransferException && !passedHub && previousTrain.reserved === true && train.reserved === true)) continue;
                         if (branchTrain(train) && from.station !== hub) continue;
                         // Once at the hub, board a branch service rather than another mainline train.
