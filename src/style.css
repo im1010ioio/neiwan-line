@@ -483,7 +483,7 @@ footer { padding-bottom: calc(160px + env(safe-area-inset-bottom)); }
 .schedule-status > a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
 
 /* Keep train number and rolling-stock details in the same text flow. */
-.leg-line { align-items: flex-start; }
+.leg-line { align-items: center; }
 .train-tag, .leg-time { flex-shrink: 0; }
 .train-number { min-width: 0; }
 .train-type { display: inline; font-size: 12px; line-height: 1.5; overflow-wrap: anywhere; color: var(--muted); }
@@ -639,3 +639,48 @@ footer .footer-copyright a {
     font-size: 12px;
     line-height: 1.6;
 }
+
+/* Alternative departures share the existing dialog and timetable typography. */
+.other-trains-button { padding: 4px 8px; min-height: 32px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 12px; white-space: nowrap; }
+.other-trains-button:hover { border-color: var(--primary); color: var(--primary); }
+.leg-line:has(.other-trains-button) { flex-wrap: wrap; }
+#other-trains-dialog[open] { display: flex; flex-direction: column; overflow: hidden; }
+#other-trains-dialog .dialog-header { flex-shrink: 0; gap: 16px; }
+#other-trains-title { font-size: 20px; }
+.alternatives-body { padding: 20px 24px; overflow-y: auto; overscroll-behavior: contain; }
+.alternative-route { margin: 0 0 20px; font-size: 14px; }
+.alternative-explanation { font-size: 13px; line-height: 1.7; color: var(--muted); margin: 20px 0; }
+.alternative-list { list-style: none; padding: 0; margin: 0; }
+.alternative-list li { padding: 0; }
+.alternative-list li + li { border-top: 1px solid var(--line); }
+.alternative-row { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-variant-numeric: tabular-nums; }
+.alternative-list p { font-size: 12px; line-height: 1.6; margin: 5px 0 0; }
+.alternative-warning { color: var(--route-tag-ink); }
+@media (max-width: 600px) {
+    .alternatives-body { padding: 16px 20px; }
+    .other-trains-button { min-height: 36px; }
+}
+
+.alternative-option { display: flex; align-items: flex-start; gap: 12px; padding: 16px 8px; cursor: pointer; border-radius: 10px; }
+.alternative-option:has(input:checked) { background: var(--route-tag-bg); }
+.alternative-option input { flex: 0 0 auto; width: 18px; height: 18px; margin: 2px 0 0; accent-color: var(--primary); }
+.alternative-option-content { display: block; flex: 1; min-width: 0; }
+.alternative-original { display: inline-block; font-size: 11px; font-weight: 500; color: var(--muted); }
+.alternative-service, .alternative-notes { display: block; }
+.alternative-service { font-size: 12px; line-height: 1.6; margin-top: 5px; }
+
+.alternative-notes > span { display: block; font-size: 12px; line-height: 1.6; margin-top: 5px; }
+
+.alternative-setting-note { font-size: 12px; line-height: 1.6; color: var(--muted); margin: 0 0 12px; }
+
+.selected-leg-variant { color: var(--route-tag-ink); background: var(--route-tag-bg); border-radius: 6px; padding: 3px 7px; font-size: 12px; white-space: nowrap; }
+.transfer .transfer-warning { color: var(--route-tag-ink); font-weight: 600; }
+
+.train-number-core { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; vertical-align: middle; }
+
+.journey-adjustment { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px 16px; margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--line); }
+.journey-adjustment p { margin: 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
+.restore-best-button { padding: 6px 10px; min-height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font-size: 12px; white-space: nowrap; }
+.restore-best-button:hover { color: var(--primary); border-color: var(--primary); }
+
+.alternative-option:has(input:disabled) { opacity: 0.55; cursor: not-allowed; }

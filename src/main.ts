@@ -1,3 +1,5 @@
+import { canConnectLeg, withSelectedLegs } from "./domain/alternatives";
+import type { AlternativeTrains } from "./domain/alternatives";
 import { privacyPage } from "./privacy-page";
 import { QUERY_DAYS } from "./domain/schedule-window";
 import "./style.css";
@@ -40,6 +42,8 @@ analytics.setConsent(consent);
 let data: DaySummary | undefined;
 let metroData: { generatedAt?: string; warning: boolean; text: string } | undefined;
 let journeys: Journey[] = [];
+const selectedLegs = new Map<string, Map<number, Leg>>();
+const displayedJourney = (journey: Journey) => withSelectedLegs(journey, selectedLegs.get(journey.id) ?? new Map());
 let phase: "loading" | "ready" | "missing" | "error" = "loading";
 let requestId = 0;
 let worker: Worker | undefined;
@@ -93,18 +97,34 @@ function endpointButton(role: "neiwan" | "other", position: "起" | "迄") {
         : stationById.get(id)?.neiwanOrder !== undefined ? "內灣線" : operatorLabel(id);
     return `<button class="endpoint" data-pick="${role}" aria-label="選擇${position}站：${escapeHtml(stationName(id))}"><span class="eyebrow endpoint-label"><span class="endpoint-position" aria-hidden="true">${position}</span>${lineLabel}</span><span class="station-title">${escapeHtml(stationName(id))}<svg class="chevron" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="m4 6 4 4 4-4"/></svg></span></button>`;
 }
+function visibleJourneys() {
+    const visibleIds = new Set(filterJourneys(journeys.map(displayedJourney), { date: preferences.date, time, showPast }, new Date()).map(journey => journey.id));
+    return journeys.filter(journey => visibleIds.has(journey.id));
+}
 function results() {
     if (phase === "loading") return `<div class="empty-state" role="status"><span class="spinner"></span><h2>正在整理可搭行程</h2><p>依班表尋找符合轉乘時間的組合。</p></div>`;
     if (phase === "missing") return `<div class="empty-state" role="status"><span class="empty-icon">◷</span><h2>班表資料尚未齊全</h2><p>所選日期的${preferences.other.startsWith("tymc:") ? "台鐵、高鐵或機捷" : preferences.other.startsWith("thsr:") ? "台鐵或高鐵" : "台鐵"}資料尚未完整取得或暫時無法讀取。請稍後再試，或查看官方班表。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     if (phase === "error") return `<div class="empty-state" role="alert"><h2>暫時無法整理行程</h2><p>請重新讀取班表後再試。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
-    const visible = filterJourneys(journeys, { date: preferences.date, time, showPast }, new Date());
+    const visible = visibleJourneys();
     if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘間隔 ${preferences.traMinMinutes}–${preferences.traMaxMinutes} 分鐘，高鐵接駁間隔 ${preferences.thsrMinMinutes}–${preferences.thsrMaxMinutes} 分鐘。${preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" ? `機捷接駁間隔 ${preferences.metroMinMinutes}–${preferences.metroMaxMinutes} 分鐘。` : ""}可在設定中調整。</p>${Object.values(activeRouteFilters()).some(Boolean) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
+    visible.sort((a, b) => displayedJourney(a).departure - displayedJourney(b).departure || displayedJourney(a).arrival - displayedJourney(b).arrival);
     return `<div class="results-heading"><h2>可搭行程 <span>${visible.length} 組</span></h2><span>依出發時間排序</span></div><div class="journey-list">${(showAll ? visible : visible.slice(0, 3)).map(card).join("")}</div>${visible.length > 3 ? `<button id="show-all" class="secondary show-all">${showAll ? "收合為前 3 組" : `顯示全部 ${visible.length} 組`}</button>` : ""}`;
 }
 function hasNoStanding(leg: Leg): boolean {
     return leg.operator === "tra" && /EMU\s*3000|自強[（(]3000[）)]|普悠瑪|太魯閣/i.test(leg.trainType ?? leg.service);
 }
-function card(journey: Journey) {
+function transferStatus(before: Leg, after: Leg) {
+    const minutes = Math.round((after.departure - before.arrival) / 60000);
+    const metro = before.operator === "tymc" || after.operator === "tymc";
+    const highSpeed = before.operator === "thsr" || after.operator === "thsr";
+    const minimum = metro ? preferences.metroMinMinutes : highSpeed ? preferences.thsrMinMinutes : preferences.traMinMinutes;
+    const maximum = metro ? preferences.metroMaxMinutes : highSpeed ? preferences.thsrMaxMinutes : preferences.traMaxMinutes;
+    const warning = minutes < minimum ? "低於設定，請自行評估" : minutes > maximum ? "等待時間超過設定" : "";
+    return { minutes, warning };
+}
+function card(originalJourney: Journey) {
+    const journey = displayedJourney(originalJourney);
+    const modified = selectedLegs.has(originalJourney.id);
     const stale = data?.staleOperators?.some(op => op === "tra" || ((preferences.other.startsWith("thsr:") || preferences.other.startsWith("tymc:")) && op === "thsr"));
     const state = stale ? "scheduled" : journeyState(journey, preferences.date, preferences.preparation, new Date());
     const labels = { past: "已過", warning: "即將到來", upcoming: "即將到來", scheduled: stale ? "沿用先前班表" : "預定班次" };
@@ -124,9 +144,10 @@ function card(journey: Journey) {
         const reservedTra = leg.operator === "tra" && leg.reserved === true;
         const trainType = (leg.trainType ?? leg.service).replace(/^普悠瑪\(普悠瑪\)$/, "普悠瑪").replace(/^太魯閣\(太魯閣\)$/, "太魯閣");
         const noStanding = hasNoStanding(leg);
-        const transfer = next ? Math.round((next.departure - leg.arrival) / 60000) : 0;
-        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span>${leg.operator === "tymc" ? "" : `<span class="train-number">${escapeHtml(leg.number)} 次${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}${noStanding ? ' <span class="no-standing">無售站票</span>' : ""}</span>`}<span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : ""}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}${hasNoStanding(next) ? "（需出站購票再進站）" : ""}<span>間隔 ${transfer} 分鐘</span></p>` : ""}</li>`;
-    }).join("")}</ol>${walk?.position === "end" ? walkHtml : ""}</article>`;
+        const transfer = next ? transferStatus(leg, next) : undefined;
+        const selectedVariant = leg.trip !== originalJourney.legs[index].trip ? (leg.departure < originalJourney.legs[index].departure ? "較早組合" : "較晚組合") : "";
+        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span>${leg.operator === "tymc" ? (selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : "") : `<span class="train-number"><span class="train-number-core">${escapeHtml(leg.number)} 次${selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : ""}</span>${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}${noStanding ? ' <span class="no-standing">無售站票</span>' : ""}</span>`}${leg.operator === "thsr" || leg.operator === "tymc" || reservedTra ? `<button type="button" class="other-trains-button" data-journey="${escapeHtml(journey.id)}" data-leg="${index}" aria-label="查看 ${escapeHtml(leg.operator === "tymc" ? leg.service : `${leg.number} 次`)}的可搭乘車次">可搭乘車次</button>` : ""}<span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : ""}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}${hasNoStanding(next) ? "（需出站購票再進站）" : ""}<span class="${transfer?.warning ? "transfer-warning" : ""}">間隔 ${transfer?.minutes} 分鐘${transfer?.warning ? ` · ${transfer.warning}` : ""}</span></p>` : ""}</li>`;
+    }).join("")}</ol>${walk?.position === "end" ? walkHtml : ""}${modified ? `<div class="journey-adjustment"><p>較早／較晚組合不適用轉乘間隔時間設定</p><button type="button" class="restore-best-button" data-restore-journey="${escapeHtml(originalJourney.id)}">恢復最佳組合</button></div>` : ""}</article>`;
 }
 function statusLine() {
     const selectedDate = preferences.date.replaceAll("-", "/");
@@ -221,7 +242,7 @@ function settingsDialog() {
 
 function render() {
     const privacy = isPrivacyPage;
-    app.innerHTML = `${heading()}${notice ? `<div class="notice" role="status">${escapeHtml(notice)}</div>` : ""}${privacy ? privacyPage(baseUrl, analytics.configured, consent) : `<main><section class="intro"><p class="eyebrow accent">NEIWAN LINE · RAIL JOURNEYS</p><h1>內灣線轉乘攻略</h1><p>往來內灣老街，查詢班次再也不麻煩。</p></section><section class="search-panel" aria-label="車班查詢條件"><div class="route-picker">${endpointButton(preferences.reversed ? "other" : "neiwan", "起")}<span class="route-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></span>${endpointButton(preferences.reversed ? "neiwan" : "other", "迄")}<button id="swap" class="swap-button" aria-label="交換起迄站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></svg></button></div><div class="query-controls"><label class="date-field"><span class="date-heading"><span class="eyebrow">出發日期</span><span id="date-weekday" class="date-weekday">${dateLabel().slice(-3).replace("(", "(星期")}</span></span><input id="date" type="date" aria-label="出發日期" aria-describedby="date-weekday query-range-hint" min="${today}" max="${addDays(today, QUERY_DAYS - 1)}" value="${preferences.date}" required></label><label><span class="eyebrow">出發時間</span><select id="time" aria-label="出發時間">${preferences.date === today ? `<option value="now" ${time === "now" ? "selected" : ""}>現在出發</option>` : ""}<option value="all" ${time === "all" ? "selected" : ""}>全天</option>${Array.from({ length: 20 }, (_, i) => `${String(i + 4).padStart(2, "0")}:00`).map(value => `<option value="${value}" ${time === value ? "selected" : ""}>${value} 以後</option>`).join("")}</select></label><p class="query-range-hint" id="query-range-hint">可查詢 ${QUERY_DAYS} 天內的車班 (${shortDate(today)} - ${shortDate(addDays(today, QUERY_DAYS - 1))})</p></div>${filterControls()}<div class="filter-row">${preferences.date === today ? `<label class="checkbox"><input type="checkbox" id="past" ${showPast ? "checked" : ""}>顯示已過組合</label>${showPast ? '<span class="muted">包含已發車行程</span>' : ""}` : '<span class="muted">未來班表 · 預定班次</span>'}<button type="button" id="transfer-settings" class="transfer-hint text-button">調整轉乘間隔時間</button></div></section>${statusLine()}<section id="results" aria-label="查詢結果">${results()}</section><section class="features-note"><div><span class="eyebrow">慢慢探索</span><h2>內灣線特色</h2><p>列車、車站、景點、故事與美食，內容準備中。</p></div><span class="outline-badge">即將推出</span></section></main>`}${footer()}${consentBanner()}<dialog id="station-dialog" aria-labelledby="station-dialog-title"></dialog>${settingsDialog()}`;
+    app.innerHTML = `${heading()}${notice ? `<div class="notice" role="status">${escapeHtml(notice)}</div>` : ""}${privacy ? privacyPage(baseUrl, analytics.configured, consent) : `<main><section class="intro"><p class="eyebrow accent">NEIWAN LINE · RAIL JOURNEYS</p><h1>內灣線轉乘攻略</h1><p>往來內灣老街，查詢班次再也不麻煩。</p></section><section class="search-panel" aria-label="車班查詢條件"><div class="route-picker">${endpointButton(preferences.reversed ? "other" : "neiwan", "起")}<span class="route-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></span>${endpointButton(preferences.reversed ? "neiwan" : "other", "迄")}<button id="swap" class="swap-button" aria-label="交換起迄站"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h16m-4-4 4 4-4 4M20 16H4m4-4-4 4 4 4"/></svg></button></div><div class="query-controls"><label class="date-field"><span class="date-heading"><span class="eyebrow">出發日期</span><span id="date-weekday" class="date-weekday">${dateLabel().slice(-3).replace("(", "(星期")}</span></span><input id="date" type="date" aria-label="出發日期" aria-describedby="date-weekday query-range-hint" min="${today}" max="${addDays(today, QUERY_DAYS - 1)}" value="${preferences.date}" required></label><label><span class="eyebrow">出發時間</span><select id="time" aria-label="出發時間">${preferences.date === today ? `<option value="now" ${time === "now" ? "selected" : ""}>現在出發</option>` : ""}<option value="all" ${time === "all" ? "selected" : ""}>全天</option>${Array.from({ length: 20 }, (_, i) => `${String(i + 4).padStart(2, "0")}:00`).map(value => `<option value="${value}" ${time === value ? "selected" : ""}>${value} 以後</option>`).join("")}</select></label><p class="query-range-hint" id="query-range-hint">可查詢 ${QUERY_DAYS} 天內的車班 (${shortDate(today)} - ${shortDate(addDays(today, QUERY_DAYS - 1))})</p></div>${filterControls()}<div class="filter-row">${preferences.date === today ? `<label class="checkbox"><input type="checkbox" id="past" ${showPast ? "checked" : ""}>顯示已過組合</label>${showPast ? '<span class="muted">包含已發車行程</span>' : ""}` : '<span class="muted">未來班表 · 預定班次</span>'}<button type="button" id="transfer-settings" class="transfer-hint text-button">調整轉乘間隔時間</button></div></section>${statusLine()}<section id="results" aria-label="查詢結果">${results()}</section><section class="features-note"><div><span class="eyebrow">慢慢探索</span><h2>內灣線特色</h2><p>列車、車站、景點、故事與美食，內容準備中。</p></div><span class="outline-badge">即將推出</span></section></main>`}${footer()}${consentBanner()}<dialog id="station-dialog" aria-labelledby="station-dialog-title"></dialog>${settingsDialog()}<dialog id="other-trains-dialog" aria-labelledby="other-trains-title"></dialog>`;
     bind();
 }
 function on(id: string, event: string, handler: (event: Event) => void) { document.getElementById(id)?.addEventListener(event, handler); }
@@ -339,10 +360,17 @@ function renderAfterLoad() {
 function refresh(force = false) {
     if (isPrivacyPage) { render(); return; }
     const id = ++requestId;
+    selectedLegs.clear();
     phase = "loading"; data = undefined; metroData = undefined; journeys = []; render();
     if (!worker) {
         worker = new Worker(new URL("./planner.worker.ts", import.meta.url), { type: "module" });
         worker.onmessage = event => {
+            if (event.data.kind === "alternatives") {
+                if (event.data.id === requestId && currentAlternative?.journey.id === event.data.journeyId && currentAlternative?.index === event.data.index) {
+                    renderAlternatives(event.data.alternatives);
+                }
+                return;
+            }
             if (event.data.id !== requestId) return;
             journeys = event.data.journeys ?? [];
             data = event.data.data;
@@ -382,4 +410,82 @@ setInterval(() => {
         if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(true); }); }
     }
 }, 30000);
+
+interface AlternativeSelection { journey: Journey; index: number; }
+let currentAlternative: AlternativeSelection | undefined;
+app.addEventListener("click", event => {
+    const restore = (event.target as Element).closest<HTMLButtonElement>("[data-restore-journey]");
+    if (restore) {
+        const journeyId = restore.dataset.restoreJourney!;
+        selectedLegs.delete(journeyId);
+        render();
+        const trigger = [...app.querySelectorAll<HTMLButtonElement>("[data-journey]")].find(button => button.dataset.journey === journeyId);
+        trigger?.focus({ preventScroll: true });
+        return;
+    }
+    const button = (event.target as Element).closest<HTMLButtonElement>("[data-journey][data-leg]");
+    if (!button || phase !== "ready") return;
+    const journey = journeys.find(item => item.id === button.dataset.journey);
+    if (!journey) return;
+    currentAlternative = { journey, index: Number(button.dataset.leg) };
+    const dialog = document.querySelector<HTMLDialogElement>("#other-trains-dialog")!;
+    renderAlternatives(null);
+    dialog.showModal();
+    const usedTrips = [...new Set(visibleJourneys().flatMap(item => [...item.legs, ...displayedJourney(item).legs].map(leg => leg.trip)))];
+    worker?.postMessage({ kind: "alternatives", id: requestId, journeyId: journey.id, index: currentAlternative.index, usedTrips, legs: displayedJourney(journey).legs });
+});
+
+function renderAlternatives(alternatives: AlternativeTrains | null | undefined) {
+    const dialog = document.querySelector<HTMLDialogElement>("#other-trains-dialog");
+    if (!dialog || !currentAlternative) return;
+    const { journey, index } = currentAlternative;
+    const original = journey.legs[index];
+    const displayed = displayedJourney(journey);
+    const selectedTrip = displayed.legs[index].trip;
+    function transferNotes(leg: Leg) {
+        const notes: string[] = [];
+        for (const [before, after, label] of [
+            [displayed.legs[index - 1], leg, "前段轉乘"],
+            [leg, displayed.legs[index + 1], "後段轉乘"],
+        ] as const) {
+            if (!before || !after) continue;
+            const { minutes, warning } = transferStatus(before, after);
+            const crossStation = before.destination !== after.origin;
+            notes.push(`<span class="${warning ? "alternative-warning" : "muted"}">${label} ${minutes} 分鐘${crossStation ? "（含跨站步行）" : ""}${warning ? ` · ${warning}` : ""}</span>`);
+        }
+        return notes.join("");
+    }
+    function row(leg: Leg) {
+        const disabled = !canConnectLeg(displayed, index, leg);
+        return `<li><label class="alternative-option"><input type="radio" name="rideable-train" value="${escapeHtml(leg.trip)}" ${leg.trip === selectedTrip ? "checked" : ""} ${disabled ? 'disabled aria-describedby="incompatible-train-note"' : ""}><span class="alternative-option-content"><span class="alternative-row"><strong>${escapeHtml(leg.operator === "tymc" ? leg.service : `${leg.number} 次`)} <small class="alternative-original">${leg.trip === original.trip ? "最佳組合" : leg.departure < original.departure ? "較早組合" : "較晚組合"}</small></strong><span>${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></span><span class="alternative-service muted">${leg.operator === "tymc" ? "抵達時間為預估" : escapeHtml(leg.trainType ?? leg.service)}${leg.estimatedArrival && leg.operator !== "tymc" ? " · 抵達時間為預估" : ""}${hasNoStanding(leg) ? " · 無售站票" : ""}${leg.departure < Date.now() && preferences.date === today ? " · 已發車" : ""}</span><span class="alternative-notes">${transferNotes(leg)}</span></span></label></li>`;
+    }
+    const candidates = [...new Map([original, displayed.legs[index], ...(alternatives?.earlier ?? []), ...(alternatives?.later ?? [])].map(leg => [leg.trip, leg])).values()].sort((a, b) => a.departure - b.departure || a.arrival - b.arrival);
+    dialog.innerHTML = `<div class="dialog-header"><h2 id="other-trains-title">可搭乘車次</h2><button type="button" class="icon-button" id="close-other-trains" aria-label="關閉可搭乘車次">×</button></div><div class="alternatives-body"><p class="alternative-route">${escapeHtml(preferences.date.replaceAll("-", "/"))} · ${escapeHtml(stationName(original.origin))} → ${escapeHtml(stationName(original.destination))}</p><p class="alternative-explanation">選取車次後，會直接更新畫面中的組合與轉乘時間。</p><p class="alternative-setting-note">較早／較晚組合不適用轉乘間隔時間設定。</p>${candidates.some(leg => !canConnectLeg(displayed, index, leg)) ? '<p id="incompatible-train-note" class="alternative-setting-note">原班次無法銜接目前所選的其他路段；若要還原全部車次，請使用行程卡下方的「恢復最佳組合」。</p>' : ""}<ul class="alternative-list" aria-label="可搭乘車次">${candidates.map(row).join("")}</ul>${alternatives === null ? '<p role="status">正在尋找其他可搭乘車次…</p>' : alternatives === undefined ? '<p role="alert">暫時無法取得其他可搭乘車次，請關閉後重試。</p>' : candidates.length === 1 ? '<p class="muted">沒有其他可銜接的班次</p>' : ""}</div>`;
+    dialog.onchange = event => {
+        const input = event.target;
+        if (!(input instanceof HTMLInputElement) || input.name !== "rideable-train") return;
+        const chosen = candidates.find(leg => leg.trip === input.value);
+        if (!chosen || !canConnectLeg(displayed, index, chosen)) return;
+        const selections = new Map(selectedLegs.get(journey.id));
+        if (chosen.trip === original.trip) selections.delete(index);
+        else selections.set(index, chosen);
+        const updated = withSelectedLegs(journey, selections);
+        // Recheck against the other selected segments before committing the choice.
+        if (!canConnectLeg(updated, index, chosen)) return;
+        if (selections.size) selectedLegs.set(journey.id, selections);
+        else selectedLegs.delete(journey.id);
+        dialog.close();
+        render();
+        const trigger = [...app.querySelectorAll<HTMLButtonElement>("[data-journey][data-leg]")].find(button => button.dataset.journey === journey.id && Number(button.dataset.leg) === index);
+        trigger?.focus({ preventScroll: true });
+    };
+    on("close-other-trains", "click", () => dialog.close());
+    if (dialog.open) dialog.querySelector<HTMLButtonElement>("#close-other-trains")?.focus();
+    dialog.onclick = event => {
+        if (event.target !== dialog) return;
+        const rect = dialog.getBoundingClientRect();
+        if (event.clientX < rect.left || event.clientX > rect.right || event.clientY < rect.top || event.clientY > rect.bottom) dialog.close();
+    };
+}
+
 void refresh();

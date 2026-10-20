@@ -57,3 +57,26 @@ it("沒有適用期間且超過七天未更新的機捷班表在查詢端停止�
     expect(result).toMatchObject({ status: "missing", metro: { usable: false, text: expect.stringContaining("超過 7 天") } });
     expect(result.journeys).toBeUndefined();
 });
+
+it("機捷可搭乘車次使用已載入的班表，不重新取得資料", async () => {
+    const { createMetroFixture } = await import("./helpers/metro-fixture");
+    const metro = createMetroFixture();
+    metro.generatedAt = `${date}T04:30:00+08:00`;
+    metro.validity = { from: date, through: date };
+    metro.timetables.forEach(row => {
+        row.Timetables = ["09:10", "09:20", "10:00"].map(DepartureTime => ({ DepartureTime, TrainType: 1, StoppingPatternID: "local" }));
+    });
+    mocks.loadMetro.mockResolvedValue(metro);
+    const trains = [train("N", "tra", [["tra:1208", "07:30"], ["tra:1193", "08:00"]]), train("L", "tra", [["tra:1193", "08:05"], ["tra:1194", "08:10"]]), train("H", "thsr", [["thsr:1030", "08:25"], ["thsr:1020", "09:00"]])];
+    const result = await query("tra:1208", "tymc:A12", trains);
+    expect(result.status).toBe("ready");
+    const journey = result.journeys[0];
+    expect(journey).toBeDefined();
+    const worker = self as unknown as { onmessage: (event: { data: unknown }) => Promise<void>; postMessage: ReturnType<typeof vi.fn> };
+    await worker.onmessage({ data: { kind: "alternatives", id: 1, journeyId: journey.id, index: journey.legs.length - 1, usedTrips: journey.legs.map((leg: { trip: string }) => leg.trip) } });
+    const response = worker.postMessage.mock.calls.at(-1)![0];
+    expect(response.kind).toBe("alternatives");
+    expect(response.alternatives.later.map((leg: { departure: number }) => leg.departure)).toEqual([at("09:20"), at("10:00")]);
+    expect(mocks.loadMetro).toHaveBeenCalledTimes(1);
+    expect(mocks.loadDay).toHaveBeenCalledTimes(1);
+});
