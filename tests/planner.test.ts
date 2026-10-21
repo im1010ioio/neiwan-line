@@ -29,7 +29,7 @@ it("反向高鐵接駁同樣適用，抵达高鐵新竹可以步行結束", () =
     const reverse = [train("H", [["thsr:1000", "08:00"], ["thsr:1030", "08:30"]], "thsr"), train("S", [["tra:1194", "08:40"], ["tra:1193", "08:45"]]), train("N", [["tra:1193", "08:50"], ["tra:1208", "09:20"]])];
     expect(planJourneys(reverse, "thsr:1000", "tra:1208", "2026-09-21")).toHaveLength(1);
     const outward = [train("L", [["tra:1208", "08:00"], ["tra:1194", "08:30"]])];
-    expect(planJourneys(outward, "tra:1208", "thsr:1030", "2026-09-21")[0]?.arrival).toBe(at("08:40"));
+    expect(planJourneys(outward, "tra:1208", "thsr:1030", "2026-09-21")[0]?.arrival).toBe(at("08:35"));
 });
 it("排除更早出發、抵達更晚且轉乘更多的繞路組合", () => {
     const trains = [train("detour1", [["tra:A", "07:00"], ["tra:B", "07:40"]]), train("detour2", [["tra:B", "07:45"], ["tra:C", "09:00"]]), train("direct", [["tra:A", "08:00"], ["tra:C", "08:30"]])];
@@ -49,7 +49,7 @@ it("不足最短轉乘時間不能搭乘，高鐵新竹出發包含步行時間"
     const fast = [train("a", [["tra:A", "08:00"], ["tra:B", "08:10"]]), train("b", [["tra:B", "08:14"], ["tra:C", "08:30"]])];
     expect(planJourneys(fast, "tra:A", "tra:C", "2026-09-21")).toEqual([]);
     const shuttle = train("walk", [["tra:1194", "08:10"], ["tra:1208", "09:00"]]);
-    expect(planJourneys([shuttle], "thsr:1030", "tra:1208", "2026-09-21")[0].departure).toBe(at("08:00"));
+    expect(planJourneys([shuttle], "thsr:1030", "tra:1208", "2026-09-21")[0].departure).toBe(at("08:05"));
 });
 it("直達較快時仍保留竹中轉乘，去回程均適用", () => {
     const outbound = [
@@ -90,8 +90,8 @@ it("自訂台鐵與高鐵間隔包含上限，超過原本 40 分鐘的接駁也
     expect(planJourneys(tra, "tra:1208", "tra:1210", "2026-09-21", { traMaxMinutes: 49 })).toHaveLength(0);
     expect(planJourneys(tra, "tra:1208", "tra:1210", "2026-09-21", { traMaxMinutes: 50 })).toHaveLength(1);
     const high = [train("a", [["tra:1208", "08:00"], ["tra:1194", "08:20"]]), train("h", [["thsr:1030", "09:10"], ["thsr:1000", "09:40"]], "thsr")];
-    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { thsrMaxMinutes: 49 })).toHaveLength(0);
-    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { thsrMaxMinutes: 50 })).toHaveLength(1);
+    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { traMaxMinutes: 49 })).toHaveLength(0);
+    expect(planJourneys(high, "tra:1208", "thsr:1000", "2026-09-21", { traMaxMinutes: 50 })).toHaveLength(1);
 });
 
 it("往新竹時原車可續搭，不在北新竹改搭另一班車，仍保留必要竹中轉乘", () => {
@@ -352,8 +352,8 @@ it("台鐵與高鐵雙向套用自訂下限，上下限相等時保留剛好符�
         const high = reversed ? [train("H", [["thsr:1000", "08:00"], ["thsr:1030", "08:20"]], "thsr"), train("N", [["tra:1194", "08:35"], ["tra:1208", "09:00"]])]
             : [train("N", [["tra:1208", "08:00"], ["tra:1194", "08:20"]]), train("H", [["thsr:1030", "08:35"], ["thsr:1000", "09:00"]], "thsr")];
         const from = reversed ? "thsr:1000" : "tra:1208", to = reversed ? "tra:1208" : "thsr:1000";
-        expect(planJourneys(high, from, to, "2026-09-21", { thsrMinMinutes: 15, thsrMaxMinutes: 15 })).toHaveLength(1);
-        expect(planJourneys(high, from, to, "2026-09-21", { thsrMinMinutes: 16 })).toHaveLength(0);
+        expect(planJourneys(high, from, to, "2026-09-21", { traMinMinutes: 15, traMaxMinutes: 15 })).toHaveLength(1);
+        expect(planJourneys(high, from, to, "2026-09-21", { traMinMinutes: 16 })).toHaveLength(0);
     }
 });
 
@@ -392,4 +392,10 @@ it("不以對號列車提前移動來拆開等待，後車可在原上車站搭�
             expect((journey.legs[index].departure - journey.legs[index - 1].arrival) / 60000).toBeLessThanOrEqual(30);
         }
     }
+});
+
+it("舊高鐵間隔不覆蓋共用台鐵間隔", () => {
+    const services = [train("L", [["tra:1208", "08:00"], ["tra:1194", "08:20"]]), train("H", [["thsr:1030", "08:25"], ["thsr:1000", "09:00"]], "thsr")];
+    expect(planJourneys(services, "tra:1208", "thsr:1000", "2026-09-21", { traMinMinutes: 5, traMaxMinutes: 5, thsrMinMinutes: 20, thsrMaxMinutes: 40 })).toHaveLength(1);
+    expect(planJourneys(services, "tra:1208", "thsr:1000", "2026-09-21", { traMinMinutes: 6, thsrMinMinutes: 1 })).toHaveLength(0);
 });

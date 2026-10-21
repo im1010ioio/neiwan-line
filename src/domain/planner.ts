@@ -29,16 +29,16 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
     if (origin === "thsr:1030" || destination === "thsr:1030") {
         const atStart = origin === "thsr:1030";
         return planJourneys(trains, atStart ? "tra:1194" : origin, atStart ? destination : "tra:1194", date, filters, options).map(j => {
-            const departure = atStart ? j.departure - 600000 : j.arrival;
-            const arrival = departure + 600000;
+            const departure = atStart ? j.departure - (filters.traMinMinutes ?? 5) * 60000 : j.arrival;
+            const arrival = departure + (filters.traMinMinutes ?? 5) * 60000;
             return { ...j, id: `${j.id}:walk`, departure: atStart ? departure : j.departure, arrival: atStart ? j.arrival : arrival,
                 accessWalk: { origin: atStart ? "thsr:1030" : "tra:1194", destination: atStart ? "tra:1194" : "thsr:1030", departure, arrival, position: atStart ? "start" as const : "end" as const } };
         }).filter(j => j.departure >= Date.parse(`${date}T00:00:00+08:00`));
     }
     const traMin = filters.traMinMinutes ?? 5;
-    const thsrMin = filters.thsrMinMinutes ?? 10;
+    const thsrMin = traMin;
     const traMax = filters.traMaxMinutes ?? 30;
-    const thsrMax = filters.thsrMaxMinutes ?? 40;
+    const thsrMax = traMax;
     const start = Date.parse(`${date}T00:00:00+08:00`);
     const end = Date.parse(`${addDays(date, 1)}T00:00:00+08:00`);
     const usesHighSpeed = origin.startsWith("thsr:") || destination.startsWith("thsr:");

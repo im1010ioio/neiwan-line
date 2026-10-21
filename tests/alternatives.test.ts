@@ -1,5 +1,5 @@
 import { expect, it } from "vitest";
-import { findAlternativeTrains, withSelectedLegs } from "../src/domain/alternatives";
+import { findAlternativeTrains, withSelectedLegs, supportsAlternativeTrains } from "../src/domain/alternatives";
 import type { Journey, Leg, Train } from "../src/domain/types";
 const at = (time: string) => Date.parse(`2026-10-20T${time}:00+08:00`);
 const leg = (trip: string, departure: string, arrival: string, origin = "A", destination = "B"): Leg => ({ trip, number: trip, operator: "tra", reserved: true, service: "自強", origin, destination, departure: at(departure), arrival: at(arrival) });
@@ -73,4 +73,24 @@ it("機捷回程僅保留可接上高鐵的相同區間班次，變更後更新�
     expect(result.earlier.map(item => item.trip)).toEqual(["early"]);
     expect(result.later.map(item => item.trip)).toEqual(["late"]);
     expect(withSelectedLegs(returning, new Map([[0, result.earlier[0]]])).departure).toBe(at("08:00"));
+});
+
+
+it("最後一段區間車可替換，仍排除無法銜接、反向及已使用的班次", () => {
+    const local = { ...leg("local-original", "10:00", "11:00"), reserved: false, service: "區間車" };
+    const route: Journey = { ...journey, legs: [journey.legs[0], local], arrival: local.arrival };
+    const alternative = { ...train("local-later", "11:00", "12:00"), reserved: false, service: "區間車" };
+    expect(supportsAlternativeTrains(route, 1)).toBe(true);
+    const result = findAlternativeTrains([alternative, train("reserved-later", "11:10", "12:10"),
+        { ...alternative, id: "overlap", stops: train("overlap", "08:30", "09:30").stops },
+        { ...alternative, id: "used" }, { ...alternative, id: "reverse", stops: [...alternative.stops].reverse() }], route, 1, new Set(["used"]));
+    expect(result.later.map(item => item.trip)).toEqual(["local-later", "reserved-later"]);
+    expect(withSelectedLegs(route, new Map([[1, result.later[0]]])).arrival).toBe(at("12:00"));
+    expect(supportsAlternativeTrains({ ...route, legs: [local, local, local] }, 1)).toBe(false);
+    expect(supportsAlternativeTrains({ ...route, legs: [local] }, 0)).toBe(true);
+});
+
+it("最後一段原為對號列車時，不因開放末段替換而改搭區間車", () => {
+    const route = { ...journey, legs: [journey.legs[0], journey.legs[1]] };
+    expect(findAlternativeTrains([{ ...train("local", "10:10", "11:10"), reserved: false }], route, 1, new Set())).toEqual({ earlier: [], later: [] });
 });

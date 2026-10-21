@@ -37,19 +37,20 @@ it("回程由台中經新烏日、高鐵新竹與六家回內灣", () => {
 });
 
 it("兩端高鐵轉乘各自遵守設定上下限，使用者可設定低於十分鐘", () => {
-    for (const filters of [{ thsrMinMinutes: 11 }, { thsrMaxMinutes: 9 }]) {
-        expect(planJourneys(outbound, "tra:1208", "tra:3300", date, { includeThsr: true, ...filters })).toEqual([]);
+    const boundary = outbound.filter(item => item.id !== "liujia").map(item => item.id === "branch" ? train("branch", "tra", [["tra:1208", "08:00"], ["tra:1194", "08:40"]]) : item);
+    for (const filters of [{ traMinMinutes: 11 }, { traMaxMinutes: 9 }]) {
+        expect(planJourneys(boundary, "tra:1208", "tra:3300", date, { includeThsr: true, ...filters })).toEqual([]);
     }
-    const tight = outbound.map(item => item.id !== "feeder" ? item : { ...item, stops: item.stops.map(stop => ({ ...stop, arrival: stop.arrival - 60000, departure: stop.departure - 60000 })) });
-    expect(planJourneys(tight, "tra:1208", "tra:3300", date, { includeThsr: true, thsrMinMinutes: 1 })).toHaveLength(1);
-    expect(planJourneys(outbound, "tra:1208", "tra:3300", date, { includeThsr: true, thsrMinMinutes: 10, thsrMaxMinutes: 10 })).toHaveLength(1);
-    expect(planJourneys(tight, "tra:1208", "tra:3300", date, { includeThsr: true, thsrMinMinutes: 10 })).toEqual([]);
+    const tight = boundary.map(item => item.id !== "feeder" ? item : { ...item, stops: item.stops.map(stop => ({ ...stop, arrival: stop.arrival - 60000, departure: stop.departure - 60000 })) });
+    expect(planJourneys(tight, "tra:1208", "tra:3300", date, { includeThsr: true, traMinMinutes: 1 })).toHaveLength(1);
+    expect(planJourneys(boundary, "tra:1208", "tra:3300", date, { includeThsr: true, traMinMinutes: 10, traMaxMinutes: 10 })).toHaveLength(1);
+    expect(planJourneys(tight, "tra:1208", "tra:3300", date, { includeThsr: true, traMinMinutes: 10 })).toEqual([]);
 });
 
 it("目的地就是轉乘台鐵站時仍計入末端步行", () => {
     const result = planJourneys(outbound, "tra:1208", "tra:3340", date, { includeThsr: true });
     expect(result).toHaveLength(1);
-    expect(result[0]).toMatchObject({ arrival: at("09:30"), accessWalk: { origin: "thsr:1040", destination: "tra:3340", position: "end" } });
+    expect(result[0]).toMatchObject({ arrival: at("09:25"), accessWalk: { origin: "thsr:1040", destination: "tra:3340", position: "end" } });
 });
 
 it("保留純台鐵選項，無高鐵班表時也可使用", () => {
@@ -175,14 +176,14 @@ it.each([
         ],
     },
 ])("保留完整銜接候選：$name", ({ origin, destination, minimum, maximum, services }) => {
-    const filters = { includeThsr: true, thsrMinMinutes: minimum, thsrMaxMinutes: maximum };
+    const filters = { includeThsr: true, traMinMinutes: minimum, traMaxMinutes: maximum };
     const withoutFast = planJourneys(services.filter(service => service.id !== "fast"), origin, destination, date, filters);
     const withFast = planJourneys(services, origin, destination, date, filters);
     expect(withoutFast).toHaveLength(1);
     expect(withFast.map(journey => journey.id)).toEqual(withoutFast.map(journey => journey.id));
     expect(withFast[0].legs.some(leg => leg.trip === "valid")).toBe(true);
     // Once the faster service fits the window, it must remain available as a complete journey.
-    const relaxed = planJourneys(services, origin, destination, date, { ...filters, thsrMaxMinutes: maximum + 20 });
+    const relaxed = planJourneys(services, origin, destination, date, { ...filters, traMaxMinutes: maximum + 20 });
     expect(relaxed.some(journey => journey.legs.some(leg => leg.trip === "fast"))).toBe(true);
     for (let index = 1; index < withFast[0].legs.length; index++) {
         const before = withFast[0].legs[index - 1], after = withFast[0].legs[index];

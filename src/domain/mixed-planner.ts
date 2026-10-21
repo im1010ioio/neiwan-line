@@ -99,8 +99,8 @@ export function planMixedJourneys(trains: Train[], origin: string, destination: 
     const remote = outbound ? destination : origin;
     const start = Date.parse(`${date}T00:00:00+08:00`);
     const end = Date.parse(`${addDays(date, 1)}T00:00:00+08:00`);
-    const minimum = (filters.thsrMinMinutes ?? 10) * 60000;
-    const maximum = (filters.thsrMaxMinutes ?? 40) * 60000;
+    const minimum = (filters.traMinMinutes ?? 5) * 60000;
+    const maximum = (filters.traMaxMinutes ?? 30) * 60000;
     const branchOptions = [date, addDays(date, 1)].flatMap(day => planRail(trains,
         outbound ? branch : "tra:1194", outbound ? "tra:1194" : branch, day, plainFilters, { preserveCandidates: true }));
     const branchIndex = timeIndex(branchOptions, outbound ? "arrival" : "departure");

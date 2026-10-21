@@ -1,5 +1,5 @@
 import { mixedRouteAvailable } from "./domain/mixed-route";
-import { canConnectLeg, withSelectedLegs } from "./domain/alternatives";
+import { canConnectLeg, withSelectedLegs, supportsAlternativeTrains } from "./domain/alternatives";
 import type { AlternativeTrains } from "./domain/alternatives";
 import { privacyPage } from "./privacy-page";
 import { QUERY_DAYS } from "./domain/schedule-window";
@@ -107,7 +107,7 @@ function results() {
     if (phase === "missing") return `<div class="empty-state" role="status"><span class="empty-icon">◷</span><h2>班表資料尚未齊全</h2><p>所選日期的${preferences.other.startsWith("tymc:") ? "台鐵、高鐵或機捷" : preferences.other.startsWith("thsr:") ? "台鐵或高鐵" : "台鐵"}資料尚未完整取得或暫時無法讀取。請稍後再試，或查看官方班表。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     if (phase === "error") return `<div class="empty-state" role="alert"><h2>暫時無法整理行程</h2><p>請重新讀取班表後再試。</p><button class="secondary" id="retry">重新讀取班表</button></div>`;
     const visible = visibleJourneys();
-    if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘間隔 ${preferences.traMinMinutes}–${preferences.traMaxMinutes} 分鐘，高鐵接駁間隔 ${preferences.thsrMinMinutes}–${preferences.thsrMaxMinutes} 分鐘。${preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" ? `機捷接駁間隔 ${preferences.metroMinMinutes}–${preferences.metroMaxMinutes} 分鐘。` : ""}可在設定中調整。</p>${Object.values(activeRouteFilters()).some(Boolean) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
+    if (!visible.length) return `<div class="empty-state" role="status"><span class="empty-icon">↗</span><h2>此時段沒有符合轉乘條件的行程</h2><p>試著調整日期、出發時間或起迄站。台鐵轉乘間隔 ${preferences.traMinMinutes}–${preferences.traMaxMinutes} 分鐘，高鐵與台鐵轉乘共用台鐵設定（含步行）。${preferences.other.startsWith("tymc:") && preferences.other !== "tymc:A18" ? `機捷接駁間隔 ${preferences.metroMinMinutes}–${preferences.metroMaxMinutes} 分鐘。` : ""}可在設定中調整。</p>${Object.values(activeRouteFilters()).some(Boolean) ? '<button class="secondary" id="clear-filters">清除篩選</button>' : ""}</div>`;
     visible.sort((a, b) => displayedJourney(a).departure - displayedJourney(b).departure || displayedJourney(a).arrival - displayedJourney(b).arrival);
     return `<div class="results-heading"><h2>可搭行程 <span>${visible.length} 組</span></h2><span>依出發時間排序</span></div><div class="journey-list">${(showAll ? visible : visible.slice(0, 3)).map(card).join("")}</div>${visible.length > 3 ? `<button id="show-all" class="secondary show-all">${showAll ? "收合為前 3 組" : `顯示全部 ${visible.length} 組`}</button>` : ""}`;
 }
@@ -117,9 +117,8 @@ function hasNoStanding(leg: Leg): boolean {
 function transferStatus(before: Leg, after: Leg) {
     const minutes = Math.round((after.departure - before.arrival) / 60000);
     const metro = before.operator === "tymc" || after.operator === "tymc";
-    const highSpeed = before.operator === "thsr" || after.operator === "thsr";
-    const minimum = metro ? preferences.metroMinMinutes : highSpeed ? preferences.thsrMinMinutes : preferences.traMinMinutes;
-    const maximum = metro ? preferences.metroMaxMinutes : highSpeed ? preferences.thsrMaxMinutes : preferences.traMaxMinutes;
+    const minimum = metro ? preferences.metroMinMinutes : preferences.traMinMinutes;
+    const maximum = metro ? preferences.metroMaxMinutes : preferences.traMaxMinutes;
     const warning = minutes < minimum ? "低於設定，請自行評估" : minutes > maximum ? "等待時間超過設定" : "";
     return { minutes, warning };
 }
@@ -148,7 +147,7 @@ function card(originalJourney: Journey) {
         const noStanding = hasNoStanding(leg);
         const transfer = next ? transferStatus(leg, next) : undefined;
         const selectedVariant = leg.trip !== originalJourney.legs[index].trip ? (leg.departure < originalJourney.legs[index].departure ? "較早組合" : "較晚組合") : "";
-        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span>${leg.operator === "tymc" ? (selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : "") : `<span class="train-number"><span class="train-number-core">${escapeHtml(leg.number)} 次${selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : ""}</span>${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}${noStanding ? ' <span class="no-standing">無售站票</span>' : ""}</span>`}${leg.operator === "thsr" || leg.operator === "tymc" || reservedTra ? `<button type="button" class="other-trains-button" data-journey="${escapeHtml(journey.id)}" data-leg="${index}" aria-label="查看 ${escapeHtml(leg.operator === "tymc" ? leg.service : `${leg.number} 次`)}的可搭乘車次">可搭乘車次</button>` : ""}<span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : "台鐵"}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}${hasNoStanding(next) ? "（需出站購票再進站）" : ""}<span class="${transfer?.warning ? "transfer-warning" : ""}">間隔 ${transfer?.minutes} 分鐘${transfer?.warning ? ` · ${transfer.warning}` : ""}</span></p>` : ""}</li>`;
+        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span>${leg.operator === "tymc" ? (selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : "") : `<span class="train-number"><span class="train-number-core">${escapeHtml(leg.number)} 次${selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : ""}</span>${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}${noStanding ? ' <span class="no-standing">無售站票</span>' : ""}</span>`}${supportsAlternativeTrains(originalJourney, index) ? `<button type="button" class="other-trains-button" data-journey="${escapeHtml(journey.id)}" data-leg="${index}" aria-label="查看 ${escapeHtml(leg.operator === "tymc" ? leg.service : `${leg.number} 次`)}的可搭乘車次">可搭乘車次</button>` : ""}<span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : "台鐵"}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}${hasNoStanding(next) ? "（需出站購票再進站）" : ""}<span class="${transfer?.warning ? "transfer-warning" : ""}">間隔 ${transfer?.minutes} 分鐘${transfer?.warning ? ` · ${transfer.warning}` : ""}</span></p>` : ""}</li>`;
     }).join("")}</ol>${walk?.position === "end" ? walkHtml : ""}${modified ? `<div class="journey-adjustment"><p>較早／較晚組合不適用轉乘間隔時間設定</p><button type="button" class="restore-best-button" data-restore-journey="${escapeHtml(originalJourney.id)}">恢復最佳組合</button></div>` : ""}</article>`;
 }
 function statusLine() {
@@ -184,7 +183,7 @@ function filterControls() {
     const available = filterAvailability(preferences.neiwan, preferences.other);
     if (!available.reserved && !available.direct && !mixedRouteAvailable(preferences.neiwan, preferences.other)) return "";
     const active = activeRouteFilters();
-    return `<div class="journey-filters" aria-label="行程篩選">${mixedRouteAvailable(preferences.neiwan, preferences.other) ? `<label class="checkbox"><input id="mixed-filter" type="checkbox" ${active.includeThsr ? "checked" : ""}>包含高鐵轉乘</label>` : ""}${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct && !active.includeThsr ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${active.includeThsr ? '<p class="filter-note">經六家／高鐵新竹及可步行銜接的台鐵站轉乘；保留必要的台鐵接駁，不含公車。高鐵轉乘間隔依設定範圍篩選，包含步行時間。內灣新竹直達車篩選暫停套用。</p>' : ""}${available.reserved ? '<p class="filter-note">主要幹線搭對號列車；內灣線、六家線，以及無對號列車停靠的小站與其他支線，保留必要的區間車接駁。</p>' : ""}</div>`;
+    return `<div class="journey-filters" aria-label="行程篩選">${mixedRouteAvailable(preferences.neiwan, preferences.other) ? `<label class="checkbox"><input id="mixed-filter" type="checkbox" ${active.includeThsr ? "checked" : ""}>包含高鐵轉乘</label>` : ""}${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct && !active.includeThsr ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${active.includeThsr ? '<p class="filter-note">經六家／高鐵新竹及可步行銜接的台鐵站轉乘；保留必要的台鐵接駁，不含公車。高鐵與台鐵轉乘共用台鐵時間設定，包含步行時間。內灣新竹直達車篩選暫停套用。</p>' : ""}${available.reserved ? '<p class="filter-note">主要幹線搭對號列車；內灣線、六家線，以及無對號列車停靠的小站與其他支線，保留必要的區間車接駁。</p>' : ""}</div>`;
 }
 function persistFilters() {
     if (!saveFilters(storage, filters)) notice = "瀏覽器目前無法儲存篩選偏好；本次仍可正常查詢。";
@@ -210,8 +209,7 @@ function settingsDialog() {
                 <p class="section-description">設定會儲存在這個瀏覽器，下次開啟仍會保留。</p>
                 <div class="settings-group">
                     <h4>轉乘間隔</h4><p>前一班抵達到下一班出發的時間，只顯示設定範圍內的組合，包含下限與上限。</p>
-                    ${transferFields("tra", "台鐵", preferences.traMinMinutes, preferences.traMaxMinutes, 5, 30, "")}
-                    ${transferFields("thsr", "高鐵", preferences.thsrMinMinutes, preferences.thsrMaxMinutes, 10, 40, "包含高鐵與台鐵站之間的步行，依設定的下限與上限篩選。")}
+                    ${transferFields("tra", "台鐵", preferences.traMinMinutes, preferences.traMaxMinutes, 5, 30, "高鐵與台鐵之間的轉乘也使用此設定，包含步行。")}
                     ${transferFields("metro", "機捷", preferences.metroMinMinutes, preferences.metroMaxMinutes, 10, 40, "包含高鐵桃園站與機捷 A18 站之間的步行。")}
                 </div>
                 <div class="settings-group departure-settings">
@@ -292,7 +290,6 @@ function bind() {
         const input = document.querySelector<HTMLInputElement>("#preparation")!;
         const ranges = [
             ["tra", "traMinMinutes", "traMaxMinutes"],
-            ["thsr", "thsrMinMinutes", "thsrMaxMinutes"],
             ["metro", "metroMinMinutes", "metroMaxMinutes"],
         ] as const;
         input.required = true;

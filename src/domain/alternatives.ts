@@ -6,6 +6,11 @@ export interface AlternativeTrains {
     later: Leg[];
 }
 
+export function supportsAlternativeTrains(journey: Journey, index: number): boolean {
+    const leg = journey.legs[index];
+    return !!leg && (index === journey.legs.length - 1 || leg.operator === "tymc" || leg.operator === "thsr" || leg.reserved === true);
+}
+
 /** Transfer settings may be relaxed, but segments must still connect in time. */
 export function canConnectLeg(journey: Journey, index: number, leg: Leg): boolean {
     const previous = journey.legs[index - 1];
@@ -18,9 +23,9 @@ export function canConnectLeg(journey: Journey, index: number, leg: Leg): boolea
 export function findAlternativeTrains(trains: Train[], journey: Journey, index: number, usedTrips: Set<string>, metroCandidates: Leg[] = []): AlternativeTrains {
     const original = journey.legs[index];
     const result: AlternativeTrains = { earlier: [], later: [] };
-    if (!original || !(original.operator === "tymc" || original.operator === "thsr" || original.operator === "tra" && original.reserved === true)) return result;
+    if (!original || !supportsAlternativeTrains(journey, index)) return result;
     const candidates = original.operator === "tymc" ? metroCandidates : trains.flatMap(train => {
-        if (train.operator !== original.operator || train.operator === "tra" && train.reserved !== true) return [];
+        if (train.operator !== original.operator || train.operator === "tra" && original.reserved === true && train.reserved !== true) return [];
         const fromIndex = train.stops.findIndex(stop => stop.station === original.origin);
         const toIndex = train.stops.findIndex((stop, i) => i > fromIndex && stop.station === original.destination);
         if (fromIndex < 0 || toIndex < 0) return [];

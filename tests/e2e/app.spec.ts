@@ -213,7 +213,6 @@ test("設定轉乘上限後立即重算，重新開啟保留，等於上限也�
     await expect(page.getByRole("heading", { name: "此時段沒有符合轉乘條件的行程" })).toBeVisible();
     await page.getByRole("button", { name: "開啟設定" }).click();
     await page.getByLabel("台鐵轉乘上限（分鐘）").fill("31");
-    await page.getByLabel("高鐵接駁上限（分鐘）").fill("60");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await expect(page.locator(".transfer-hint")).toHaveText("調整轉乘間隔時間");
@@ -221,7 +220,6 @@ test("設定轉乘上限後立即重算，重新開啟保留，等於上限也�
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await page.getByRole("button", { name: "開啟設定" }).click();
     await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toHaveValue("31");
-    await expect(page.getByLabel("高鐵接駁上限（分鐘）")).toHaveValue("60");
     await page.getByLabel("台鐵轉乘上限（分鐘）").fill("4");
     await page.getByRole("button", { name: "儲存設定" }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
@@ -338,7 +336,7 @@ test("機捷接駁上限獨立設定、舊車種篩選失效且去回程皆套�
     await expect(page.locator(".journey-card")).toHaveCount(2);
     await page.getByRole("button", { name: "調整轉乘間隔時間" }).click();
     await page.getByLabel("機捷接駁上限（分鐘）").fill("11");
-    await expect(page.getByLabel("高鐵接駁上限（分鐘）")).toHaveValue("40");
+    await expect(page.getByLabel("台鐵轉乘上限（分鐘）")).toHaveValue("30");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await expect(page.locator(".journey-card")).toHaveCount(1);
     await expect(page.locator(".journey-card")).toContainText("機捷普通車");
@@ -526,28 +524,24 @@ test("日期選擇器拒絕範圍外及空白輸入，不查詢或儲存無效�
 test("轉乘間隔可設定上下限、驗證順序並顯示原本預設值", async ({ page }) => {
     await page.getByRole("button", { name: "開啟設定" }).click();
     const dialog = page.getByRole("dialog");
-    await expect(dialog.locator(".transfer-range")).toHaveCount(3);
+    await expect(dialog.locator(".transfer-range")).toHaveCount(2);
     await expect(dialog.locator("#tra-defaults")).toContainText("預設：至少 5 分鐘、最多 30 分鐘");
-    await expect(dialog.locator("#thsr-defaults")).toContainText("預設：至少 10 分鐘、最多 40 分鐘");
     await expect(dialog.locator("#metro-defaults")).toContainText("預設：至少 10 分鐘、最多 40 分鐘");
     await page.getByLabel("台鐵轉乘下限（分鐘）").fill("31");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await expect(dialog).toBeVisible();
     await expect(page.getByLabel("台鐵轉乘下限（分鐘）")).toHaveJSProperty("validationMessage", "至少保留的時間不能大於最多不超過的時間。");
     await page.getByLabel("台鐵轉乘下限（分鐘）").fill("3");
-    await page.getByLabel("高鐵轉乘下限（分鐘）").fill("15");
     await page.getByLabel("機捷轉乘下限（分鐘）").fill("20");
     await page.getByRole("button", { name: "儲存設定", exact: true }).click();
     await page.reload();
     await page.getByRole("button", { name: "開啟設定" }).click();
     await expect(page.getByLabel("台鐵轉乘下限（分鐘）")).toHaveValue("3");
-    await expect(page.getByLabel("高鐵轉乘下限（分鐘）")).toHaveValue("15");
     await expect(page.getByLabel("機捷轉乘下限（分鐘）")).toHaveValue("20");
     await expect(dialog.locator("#tra-defaults")).toContainText("至少 5 分鐘");
     await page.getByRole("button", { name: "清除查詢偏好", exact: true }).click();
     await page.getByRole("button", { name: "開啟設定" }).click();
     await expect(page.getByLabel("台鐵轉乘下限（分鐘）")).toHaveValue("5");
-    await expect(page.getByLabel("高鐵轉乘下限（分鐘）")).toHaveValue("10");
     await expect(page.getByLabel("機捷轉乘下限（分鐘）")).toHaveValue("10");
     expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
 });
@@ -623,4 +617,17 @@ test("條款正文不依賴 JavaScript", async ({ browser, baseURL }) => {
     await expect(page.getByRole("heading", { name: "使用規範", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "← 回到車班查詢" })).toHaveAttribute("href", "/");
     await context.close();
+});
+
+test("最後一段非對號列車可切換車次並恢復原組合", async ({ page }) => {
+    const card = page.locator(".journey-card").first();
+    await card.getByRole("button", { name: "查看 TEST-1 次的可搭乘車次", exact: true }).click();
+    const dialog = page.getByRole("dialog", { name: "可搭乘車次" });
+    await expect(dialog).toBeVisible();
+    await dialog.locator('input[value="tra:2026-09-21:TEST-2"]').click();
+    await expect(card).toContainText("TEST-2");
+    await expect(card).toContainText("09:25");
+    await expect(dialog).not.toBeVisible();
+    await card.getByRole("button", { name: "恢復最佳組合" }).click();
+    await expect(card).toContainText("TEST-1");
 });
