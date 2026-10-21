@@ -5,7 +5,7 @@ const at = (time: string) => Date.parse(`2026-10-20T${time}:00+08:00`);
 const leg = (trip: string, departure: string, arrival: string, origin = "A", destination = "B"): Leg => ({ trip, number: trip, operator: "tra", reserved: true, service: "自強", origin, destination, departure: at(departure), arrival: at(arrival) });
 const train = (id: string, departure: string, arrival: string): Train => ({ id, number: id, operator: "tra", reserved: true, service: "自強", stops: [{ station: "A", arrival: at(departure), departure: at(departure) }, { station: "B", arrival: at(arrival), departure: at(arrival) }] });
 const journey: Journey = { id: "j", departure: at("08:00"), arrival: at("12:00"), legs: [leg("before", "08:00", "09:00", "X", "A"), leg("original", "10:00", "11:00"), leg("after", "11:30", "12:00", "B", "Y")] };
-it("排除其他組合車次後，保留超出轉乘上下限的班次並依接近原班次排序", () => {
+it("排除目前行程其他路段車次後，保留超出轉乘上下限的班次並依接近原班次排序", () => {
     const trains = [train("earliest", "09:01", "10:01"), train("earlier", "09:30", "10:30"), train("used", "09:40", "10:40"), train("later", "10:20", "11:20"), train("original", "10:00", "11:00")];
     const result = findAlternativeTrains(trains, journey, 1, new Set(["used"]));
     expect(result.earlier.map(item => item.trip)).toEqual(["earlier", "earliest"]);

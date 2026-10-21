@@ -26,7 +26,7 @@ afterEach(() => {
     document.body.innerHTML = "";
 });
 
-it("多段切換、目前時間篩選、排除新車次與整卡還原保持一致", async () => {
+it("多段切換僅排除目前卡片其他路段的車次，其他卡片與整卡還原不受影響", async () => {
     vi.resetModules();
     vi.useFakeTimers();
     vi.setSystemTime(new Date(at("08:00")));
@@ -48,12 +48,14 @@ it("多段切換、目前時間篩選、排除新車次與整卡還原保持一�
     const respond = (index: number, later: Leg[]) => worker!.onmessage!({ data: { kind: "alternatives", id, journeyId: journey.id, index, alternatives: { earlier: [], later } } });
     const laterB = { ...second, trip: "B-late", number: "B-late", departure: at("11:00"), arrival: at("12:00") };
     click('[data-journey="test-journey"][data-leg="1"]');
+    expect(worker!.postMessage.mock.calls.at(-1)![0].usedTrips).toEqual(["A"]);
     respond(1, [laterB]);
     choose(laterB.trip);
     expect(document.querySelector(".journey-card")!.textContent).toContain("間隔 60 分鐘 · 等待時間超過設定");
     const laterA = { ...first, trip: "A-late", number: "A-late", departure: at("10:00"), arrival: at("10:30") };
     click('[data-journey="test-journey"][data-leg="0"]');
     expect(worker!.postMessage.mock.calls.at(-1)![0].legs[1].trip).toBe(laterB.trip);
+    expect(worker!.postMessage.mock.calls.at(-1)![0].usedTrips).toEqual(["B-late"]);
     respond(0, [laterA]);
     choose(laterA.trip);
     expect(document.querySelector(".journey-card")!.textContent).toContain("較晚組合");
@@ -62,7 +64,7 @@ it("多段切換、目前時間篩選、排除新車次與整卡還原保持一�
     vi.advanceTimersByTime(30000);
     expect(document.querySelector('[data-journey="test-journey"]')).not.toBeNull();
     click('[data-journey="other"][data-leg="0"]');
-    expect(worker!.postMessage.mock.calls.at(-1)![0].usedTrips).toEqual(expect.arrayContaining(["A-late", "B-late", "A", "B"]));
+    expect(worker!.postMessage.mock.calls.at(-1)![0].usedTrips).toEqual([]);
     click("#close-other-trains");
     click('[data-journey="test-journey"][data-leg="1"]');
     respond(1, [laterB]);

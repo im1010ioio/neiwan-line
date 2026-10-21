@@ -435,8 +435,9 @@ app.addEventListener("click", event => {
     const dialog = document.querySelector<HTMLDialogElement>("#other-trains-dialog")!;
     renderAlternatives(null);
     dialog.showModal();
-    const usedTrips = [...new Set(visibleJourneys().flatMap(item => [...item.legs, ...displayedJourney(item).legs].map(leg => leg.trip)))];
-    worker?.postMessage({ kind: "alternatives", id: requestId, journeyId: journey.id, index: currentAlternative.index, usedTrips, legs: displayedJourney(journey).legs });
+    const displayed = displayedJourney(journey);
+    const usedTrips = [...new Set(displayed.legs.filter((_, index) => index !== currentAlternative!.index).map(leg => leg.trip))];
+    worker?.postMessage({ kind: "alternatives", id: requestId, journeyId: journey.id, index: currentAlternative.index, usedTrips, legs: displayed.legs });
 });
 
 function renderAlternatives(alternatives: AlternativeTrains | null | undefined) {
