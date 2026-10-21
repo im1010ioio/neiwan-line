@@ -64,7 +64,7 @@ it("機捷轉乘使用設定範圍且包含上下限，儲存車種不影響其�
     let saved = "";
     const storage = { removeItem: () => { saved = ""; }, getItem: () => saved, setItem: (_: string, value: string) => { saved = value; } };
     storage.setItem("neiwan.filters.v1", JSON.stringify({ reservedOnly: true, directOutbound: true, directReturn: true, metroService: "express" }));
-    expect(loadFilters(storage)).toEqual({ reservedOnly: true, directOutbound: true, directReturn: true });
+    expect(loadFilters(storage)).toEqual({ includeThsr: false, reservedOnly: true, directOutbound: true, directReturn: true });
 });
 it("午夜班次屬前一營運日，且不得越過該班終點", () => {
     const night = structuredClone(snapshot);

@@ -1,11 +1,13 @@
-import { endpointConnection } from "./endpoint-connection";
+import { mixedRouteAvailable } from "./mixed-route";
+import { planMixedJourneys } from "./mixed-planner";
+import { allowsLocalConnection, endpointConnection } from "./endpoint-connection";
 import type { Journey, Leg, Train } from "./types";
 import stationData from "../stations.json";
 const reservedTransferExceptionStations = new Set(stationData.filter(station => /基隆|宜蘭|花蓮|臺東|台東|屏東/.test(station.county)).map(station => station.id));
 import { passedRailStations, approachesDestination, sameMainlineTransfer } from "./rail-path";
 import { addDays } from "./query";
 
-export interface PlannerFilters { traMinMinutes?: number; thsrMinMinutes?: number; metroMinMinutes?: number; traMaxMinutes?: number; thsrMaxMinutes?: number; metroMaxMinutes?: number; reservedOnly?: boolean; directOnly?: boolean; }
+export interface PlannerFilters { includeThsr?: boolean; traMinMinutes?: number; thsrMinMinutes?: number; metroMinMinutes?: number; traMaxMinutes?: number; thsrMaxMinutes?: number; metroMaxMinutes?: number; reservedOnly?: boolean; directOnly?: boolean; }
 import { localStations as branchStations } from "./local-stations";
 
 interface Label {
@@ -21,11 +23,12 @@ function zhuzhongConnection(legs: Leg[]): string {
 }
 
 /** Scan actual train movements in time order; continuing on a train never incurs a transfer. */
-export function planJourneys(trains: Train[], origin: string, destination: string, date: string, filters: PlannerFilters = {}): Journey[] {
+export function planJourneys(trains: Train[], origin: string, destination: string, date: string, filters: PlannerFilters = {}, options: { preserveCandidates?: boolean; nonReservedEdges?: ReadonlySet<string> } = {}): Journey[] {
     if (origin === destination) return [];
+    if (filters.includeThsr && mixedRouteAvailable(origin, destination)) return planMixedJourneys(trains, origin, destination, date, filters, planJourneys);
     if (origin === "thsr:1030" || destination === "thsr:1030") {
         const atStart = origin === "thsr:1030";
-        return planJourneys(trains, atStart ? "tra:1194" : origin, atStart ? destination : "tra:1194", date, filters).map(j => {
+        return planJourneys(trains, atStart ? "tra:1194" : origin, atStart ? destination : "tra:1194", date, filters, options).map(j => {
             const departure = atStart ? j.departure - 600000 : j.arrival;
             const arrival = departure + 600000;
             return { ...j, id: `${j.id}:walk`, departure: atStart ? departure : j.departure, arrival: atStart ? j.arrival : arrival,
@@ -47,7 +50,8 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
         .filter(c => c.train.operator !== "tra" || (branchStations.has(c.from.station) && branchStations.has(c.to.station)) || approachesDestination(c.from.station, c.to.station, railTarget))
         .filter(c => !localJourney || approachesDestination(c.from.station, c.to.station, destination))
         .filter(c => !filters.reservedOnly || c.train.reserved === true || (branchStations.has(c.from.station) && branchStations.has(c.to.station))
-            || c.train.reserved === false && connector?.stations.has(c.from.station) && connector.stations.has(c.to.station))
+            || c.train.reserved === false && (connector?.stations.has(c.from.station) && connector.stations.has(c.to.station)
+                || allowsLocalConnection(options.nonReservedEdges, c.from.station, c.to.station)))
         .filter(c => c.from.departure >= start && c.from.departure < end + 86400000)
         .sort((a, b) => a.from.departure - b.from.departure || a.i - b.i);
     const trainsById = new Map(trains.map(train => [train.id, train]));
@@ -108,9 +112,9 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
                     }
                 }
                 if (previousTrain.operator === "tra" && train.operator === "tra"
-                    && previousTrain.reserved === false && train.reserved === true && !branchTrain(previousTrain)) {
-                    // Do not take a mainline local ahead to board a reserved train that
-                    // can already be boarded at the local leg's origin. This would
+                    && train.reserved === true && !branchTrain(previousTrain)) {
+                    // Do not take any mainline train ahead to board a reserved train that
+                    // can already be boarded at the previous leg's origin. This would
                     // split the wait to bypass the transfer-time upper bound.
                     const canBoardAtOrigin = train.stops.some(stop => stop.station === last.origin
                         && stop.departure >= last.departure && stop.departure < from.departure);
@@ -186,7 +190,8 @@ export function planJourneys(trains: Train[], origin: string, destination: strin
         }
     }
     const all = [...results.values()].filter(j => !filters.directOnly || !zhuzhongConnection(j.legs));
-    const useful = all.filter(j => !all.some(other => other !== j && zhuzhongConnection(other.legs) === zhuzhongConnection(j.legs) && other.departure >= j.departure && other.arrival <= j.arrival
+    // A standalone winner can violate a later segment’s transfer window.
+    const useful = options.preserveCandidates ? all : all.filter(j => !all.some(other => other !== j && zhuzhongConnection(other.legs) === zhuzhongConnection(j.legs) && other.departure >= j.departure && other.arrival <= j.arrival
         && other.legs.length <= j.legs.length && (other.departure > j.departure || other.arrival < j.arrival || other.legs.length < j.legs.length)));
     return useful.sort((a, b) => a.departure - b.departure || a.arrival - b.arrival || a.legs.length - b.legs.length);
 }

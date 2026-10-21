@@ -1,3 +1,4 @@
+import { mixedRouteAvailable } from "./domain/mixed-route";
 import { findAlternativeTrains } from "./domain/alternatives";
 import type { Journey, Leg, Train } from "./domain/types";
 import { planAirportJourneys } from "./domain/airport-planner";
@@ -26,21 +27,22 @@ self.onmessage = async (event: MessageEvent<{ id: number; origin: string; destin
     alternativeContext = undefined;
     latestId = id;
     try {
-        const groups = timetableGroups(origin, destination);
+        const mixed = filters?.includeThsr && mixedRouteAvailable(origin, destination);
+        const groups = mixed ? ["tra", "thsr"] as const : timetableGroups(origin, destination);
         const needsMetro = origin.startsWith("tymc:") || destination.startsWith("tymc:");
         const needsMetroTimetable = needsMetro && origin !== "tymc:A18" && destination !== "tymc:A18";
-        const [loaded, metro] = await Promise.all([loadDay(date, groups, force), needsMetroTimetable ? loadMetro(date, force) : undefined]);
+        const [loaded, metro] = await Promise.all([loadDay(date, [...groups], force), needsMetroTimetable ? loadMetro(date, force) : undefined]);
         if (id !== latestId) return;
         if (loaded.status !== "ready") { self.postMessage({ id, status: "missing" }); return; }
         // Only metadata and visible journey information cross the worker boundary.
         const { trains, ...data } = loaded.data;
         const health = needsMetroTimetable ? metroHealth(metro, date) : undefined;
         const metroSummary = health ? { ...health, generatedAt: metro && metroSnapshotForDate(metro, date)?.generatedAt } : undefined;
-        if (!data.coverage.tra || (groups.includes("thsr") && !data.coverage.thsr) || (needsMetroTimetable && !health?.usable)) {
+        if (!data.coverage.tra || (!mixed && groups.includes("thsr") && !data.coverage.thsr) || (needsMetroTimetable && !health?.usable)) {
             self.postMessage({ id, status: "missing", data, metro: metroSummary }); return;
         }
         const journeys = needsMetro ? planAirportJourneys(trains, origin, destination, date, filters ?? {}, metro)
-            : planJourneys(trains, origin, destination, date, filters);
+            : planJourneys(trains, origin, destination, date, mixed && !data.coverage.thsr ? { ...filters, includeThsr: false, directOnly: false } : filters);
         alternativeContext = { id, trains, journeys, date, metro };
         self.postMessage({ id, status: "ready", data, metro: metroSummary, journeys });
     } catch { if (id === latestId) self.postMessage({ id, status: "error" }); }

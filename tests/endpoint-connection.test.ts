@@ -84,3 +84,16 @@ it("對號車未停區間車起站，或已在起站開走時，保留必要的�
     const slow = train("slow-reserved", true, [["tra:1210", "08:55"], ["tra:1250", "09:35"], ["tra:4220", "12:00"]]);
     expect(planJourneys([feeder, local, slow, connector], "tra:1208", "tra:4250", date).map(j => j.legs.map(l => l.trip))).toEqual([["feeder", "local", "slow-reserved", "connector"]]);
 });
+
+it("混搭接駁只開放兩端無對號路段，跳停區間快也不能跨越幹線豁免", async () => {
+    const { mixedConnectionEdges, allowsLocalConnection } = await import("../src/domain/endpoint-connection");
+    const trains = [train("reserved", true, [["tra:3300", "09:00"], ["tra:3160", "09:30"]])];
+    const edges = mixedConnectionEdges(trains, "tra:3340", "tra:3150");
+    expect(allowsLocalConnection(edges, "tra:3340", "tra:3300")).toBe(true);
+    expect(allowsLocalConnection(edges, "tra:3160", "tra:3150")).toBe(true);
+    expect(allowsLocalConnection(edges, "tra:3300", "tra:3160")).toBe(false);
+    expect(allowsLocalConnection(edges, "tra:3340", "tra:3150")).toBe(false);
+    // Opposite-direction reserved trains must not block a necessary local feeder.
+    const opposite = mixedConnectionEdges(trains.map(service => ({ ...service, stops: [...service.stops].reverse() })), "tra:3340", "tra:3150");
+    expect(allowsLocalConnection(opposite, "tra:3340", "tra:3150")).toBe(true);
+});

@@ -310,7 +310,7 @@ it("預設可在新竹等待22分鐘直接接對號列車，不提前在竹中�
 });
 
 
-it("未停新竹或指定縣市可保留必要對號轉乘，去回程皆適用", () => {
+it("未停新竹保留必要對號轉乘，指定縣市亦不得以提前搭車拆開等待", () => {
     for (const destination of ["tra:0980", "tra:7000", "tra:0900", "tra:7190", "tra:5000"]) {
         const regional = destination !== "tra:0980";
         const interchange = destination === "tra:5000" ? "tra:4400" : "tra:1000";
@@ -321,7 +321,8 @@ it("未停新竹或指定縣市可保留必要對號轉乘，去回程皆適用"
         ];
         const inbound = outbound.map(t => ({ ...t, stops: [...t.stops].reverse().map(stop => ({ ...stop, arrival: at("23:00") - (stop.departure - at("00:00")), departure: at("23:00") - (stop.arrival - at("00:00")) })) }));
         for (const reservedOnly of [false, true]) {
-            expect(planJourneys(outbound, "tra:1202", destination, "2026-09-21", { reservedOnly }).map(j => j.legs.map(l => l.number))).toEqual([["branch", "first", "onward"]]);
+            // Regional exceptions do not allow splitting the 40-minute wait at Hsinchu.
+            expect(planJourneys(outbound, "tra:1202", destination, "2026-09-21", { reservedOnly }).map(j => j.legs.map(l => l.number))).toEqual(regional ? [] : [["branch", "first", "onward"]]);
             // The return through service misses the branch waiting window; the exception keeps the necessary connection.
             const back = planJourneys(inbound, destination, "tra:1202", "2026-09-21", { reservedOnly });
             expect(back.map(j => j.legs.map(l => l.number))).toEqual([["onward", "first", "branch"]]);
@@ -372,4 +373,23 @@ it("支線內往返新竹不得先搭反方向的六家車，原車直達時不�
     ];
     expect(planJourneys(reverse, "tra:1210", "tra:1191", "2026-09-21")).toEqual([]);
     expect(planJourneys(services, "tra:1191", "tra:1194", "2026-09-21").map(j => j.legs.map(l => l.number))).toEqual([["wrong-way"]]);
+});
+
+it("不以對號列車提前移動來拆開等待，後車可在原上車站搭乘時不再換車追車", () => {
+    const trains = [
+        train("branch-early", [["tra:1208", "12:00"], ["tra:1210", "13:00"]]),
+        train("branch-later", [["tra:1208", "12:20"], ["tra:1210", "13:20"]]),
+        { ...train("120", [["tra:1210", "13:10"], ["tra:1000", "14:10"], ["tra:0990", "14:20"]]), reserved: true },
+        { ...train("172", [["tra:1210", "13:40"], ["tra:1000", "14:40"], ["tra:0990", "14:50"]]), reserved: true },
+        { ...train("434", [["tra:1000", "15:00"], ["tra:0990", "15:10"], ["tra:6000", "19:00"]]), reserved: true },
+    ];
+    const journeys = planJourneys(trains, "tra:1208", "tra:6000", "2026-09-21", { reservedOnly: true, traMaxMinutes: 30 });
+    expect(journeys.some(journey => journey.legs.some(leg => leg.trip === "120") && journey.legs.some(leg => leg.trip === "172"))).toBe(false);
+    expect(journeys.some(journey => journey.legs.some(leg => leg.trip === "172") && journey.legs.some(leg => leg.trip === "434"))).toBe(true);
+    expect(journeys.every(journey => journey.legs[0].trip !== "branch-early")).toBe(true);
+    for (const journey of journeys) {
+        for (let index = 1; index < journey.legs.length; index++) {
+            expect((journey.legs[index].departure - journey.legs[index - 1].arrival) / 60000).toBeLessThanOrEqual(30);
+        }
+    }
 });

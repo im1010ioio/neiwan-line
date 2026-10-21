@@ -26,9 +26,9 @@ it("篩選偏好分方向儲存，損壞欄位回預設並保留其他有效設�
     const { loadFilters, saveFilters, FILTERS_KEY } = await import("../src/filters");
     const store = memory();
     saveFilters(store, { reservedOnly: false, directOutbound: true, directReturn: false });
-    expect(loadFilters(store)).toEqual({ reservedOnly: false, directOutbound: true, directReturn: false });
+    expect(loadFilters(store)).toEqual({ includeThsr: false, reservedOnly: false, directOutbound: true, directReturn: false });
     store.setItem(FILTERS_KEY, JSON.stringify({ reservedOnly: "false", directOutbound: true, previousDestination: "bad" }));
-    expect(loadFilters(store)).toEqual({ reservedOnly: true, directOutbound: true, directReturn: false });
+    expect(loadFilters(store)).toEqual({ includeThsr: false, reservedOnly: true, directOutbound: true, directReturn: false });
 });
 it("舊偏好沿用預設上限，自訂上限可保存，無效欄位個別還原", () => {
     const store = memory();

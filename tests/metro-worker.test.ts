@@ -80,3 +80,14 @@ it("機捷可搭乘車次使用已載入的班表，不重新取得資料", asyn
     expect(mocks.loadMetro).toHaveBeenCalledTimes(1);
     expect(mocks.loadDay).toHaveBeenCalledTimes(1);
 });
+
+it("混搭額外載入高鐵，缺漏時仍回傳純台鐵組合", async () => {
+    const worker = { onmessage: undefined as undefined | ((event: { data: unknown }) => Promise<void>), postMessage: vi.fn() };
+    vi.stubGlobal("self", worker);
+    const trains = [train("N", "tra", [["tra:1208", "08:00"], ["tra:1210", "09:00"]]), train("T", "tra", [["tra:1210", "09:10"], ["tra:3300", "10:30"]])];
+    mocks.loadDay.mockResolvedValue({ status: "ready", data: { coverage: { tra: true, thsr: false }, trains } });
+    await import("../src/planner.worker");
+    await worker.onmessage!({ data: { id: 1, origin: "tra:1208", destination: "tra:3300", date, filters: { includeThsr: true } } });
+    expect(mocks.loadDay).toHaveBeenCalledWith(date, ["tra", "thsr"], false);
+    expect(worker.postMessage.mock.calls[0][0]).toMatchObject({ status: "ready", journeys: [{ legs: [{ trip: "N" }, { trip: "T" }] }] });
+});

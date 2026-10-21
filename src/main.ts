@@ -1,3 +1,4 @@
+import { mixedRouteAvailable } from "./domain/mixed-route";
 import { canConnectLeg, withSelectedLegs } from "./domain/alternatives";
 import type { AlternativeTrains } from "./domain/alternatives";
 import { privacyPage } from "./privacy-page";
@@ -125,28 +126,29 @@ function transferStatus(before: Leg, after: Leg) {
 function card(originalJourney: Journey) {
     const journey = displayedJourney(originalJourney);
     const modified = selectedLegs.has(originalJourney.id);
-    const stale = data?.staleOperators?.some(op => op === "tra" || ((preferences.other.startsWith("thsr:") || preferences.other.startsWith("tymc:")) && op === "thsr"));
+    const stale = data?.staleOperators?.some(op => journey.legs.some(leg => leg.operator === op));
     const state = stale ? "scheduled" : journeyState(journey, preferences.date, preferences.preparation, new Date());
     const labels = { past: "已過", warning: "即將到來", upcoming: "即將到來", scheduled: stale ? "沿用先前班表" : "預定班次" };
     const minutes = Math.max(0, Math.ceil((journey.departure - Date.now()) / 60000));
     const countdown = (state === "warning" || state === "upcoming") ? `<span class="countdown">${minutes < 60 ? `${minutes} 分鐘後出發` : `${Math.floor(minutes / 60)} 小時 ${minutes % 60} 分後出發`}</span>` : "";
     const duration = Math.round((journey.arrival - journey.departure) / 60000);
+    const mixedLabel = journey.legs.some(leg => leg.operator === "thsr") && preferences.other.startsWith("tra:") ? " · 含高鐵" : "";
     const durationText = duration >= 60 ? `${Math.floor(duration / 60)} 小時 ${duration % 60 ? `${duration % 60} 分` : ""}` : `${duration} 分鐘`;
     const walk = journey.accessWalk;
     const walkDestination = walk?.destination === "thsr:1030" ? "新竹高鐵站"
         : walk?.destination === "tra:1194" ? "台鐵六家站"
         : walk?.destination === "thsr:1020" ? "桃園高鐵站"
         : walk?.destination === "tymc:A18" ? "機捷 A18 高鐵桃園站"
-        : walk ? stationName(walk.destination) : "";
+        : walk ? `${operatorLabel(walk.destination)}${stationName(walk.destination)}站` : "";
     const walkHtml = walk ? `<p class="transfer access-walk">步行至${escapeHtml(walkDestination)}</p>` : "";
-    return `<article class="journey-card ${state === "past" ? "is-past" : ""}"><header><div class="state-row"><span class="badge badge--${state}">${labels[state]}</span>${countdown}</div><span class="duration">${durationText}</span></header><div class="journey-summary"><strong>${displayTime(journey.departure, preferences.date)}</strong><span class="summary-line"><small>${journey.legs.length === 1 ? "免換車" : `轉乘 ${journey.legs.length - 1} 次`}</small><i></i></span><strong>${displayTime(journey.arrival, preferences.date)}</strong></div>${walk?.position === "start" ? walkHtml : ""}<ol class="timeline">${journey.legs.map((leg, index) => {
+    return `<article class="journey-card ${state === "past" ? "is-past" : ""}"><header><div class="state-row"><span class="badge badge--${state}">${labels[state]}</span>${countdown}</div><span class="duration">${durationText}${mixedLabel}</span></header><div class="journey-summary"><strong>${displayTime(journey.departure, preferences.date)}</strong><span class="summary-line"><small>${journey.legs.length === 1 ? "免換車" : `轉乘 ${journey.legs.length - 1} 次`}</small><i></i></span><strong>${displayTime(journey.arrival, preferences.date)}</strong></div>${walk?.position === "start" ? walkHtml : ""}<ol class="timeline">${journey.legs.map((leg, index) => {
         const next = journey.legs[index + 1];
         const reservedTra = leg.operator === "tra" && leg.reserved === true;
         const trainType = (leg.trainType ?? leg.service).replace(/^普悠瑪\(普悠瑪\)$/, "普悠瑪").replace(/^太魯閣\(太魯閣\)$/, "太魯閣");
         const noStanding = hasNoStanding(leg);
         const transfer = next ? transferStatus(leg, next) : undefined;
         const selectedVariant = leg.trip !== originalJourney.legs[index].trip ? (leg.departure < originalJourney.legs[index].departure ? "較早組合" : "較晚組合") : "";
-        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span>${leg.operator === "tymc" ? (selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : "") : `<span class="train-number"><span class="train-number-core">${escapeHtml(leg.number)} 次${selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : ""}</span>${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}${noStanding ? ' <span class="no-standing">無售站票</span>' : ""}</span>`}${leg.operator === "thsr" || leg.operator === "tymc" || reservedTra ? `<button type="button" class="other-trains-button" data-journey="${escapeHtml(journey.id)}" data-leg="${index}" aria-label="查看 ${escapeHtml(leg.operator === "tymc" ? leg.service : `${leg.number} 次`)}的可搭乘車次">可搭乘車次</button>` : ""}<span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : ""}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}${hasNoStanding(next) ? "（需出站購票再進站）" : ""}<span class="${transfer?.warning ? "transfer-warning" : ""}">間隔 ${transfer?.minutes} 分鐘${transfer?.warning ? ` · ${transfer.warning}` : ""}</span></p>` : ""}</li>`;
+        return `<li><div class="leg-line"><span class="train-tag ${leg.operator}">${leg.operator === "thsr" ? "高鐵" : reservedTra ? "對號列車" : escapeHtml(leg.service)}</span>${leg.operator === "tymc" ? (selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : "") : `<span class="train-number"><span class="train-number-core">${escapeHtml(leg.number)} 次${selectedVariant ? `<span class="selected-leg-variant">${selectedVariant}</span>` : ""}</span>${reservedTra ? ` <span class="train-type">${escapeHtml(trainType)}</span>` : ""}${noStanding ? ' <span class="no-standing">無售站票</span>' : ""}</span>`}${leg.operator === "thsr" || leg.operator === "tymc" || reservedTra ? `<button type="button" class="other-trains-button" data-journey="${escapeHtml(journey.id)}" data-leg="${index}" aria-label="查看 ${escapeHtml(leg.operator === "tymc" ? leg.service : `${leg.number} 次`)}的可搭乘車次">可搭乘車次</button>` : ""}<span class="leg-time">${displayTime(leg.departure, preferences.date)}–${displayTime(leg.arrival, preferences.date)}</span></div><div class="leg-stations">${escapeHtml(stationName(leg.origin))}<span>→</span>${escapeHtml(stationName(leg.destination))}</div>${next ? `<p class="transfer">${leg.destination !== next.origin ? `出站至${next.operator === "thsr" ? "高鐵" : next.operator === "tymc" ? "機捷" : "台鐵"}${escapeHtml(stationName(next.origin))}轉乘` : `${escapeHtml(stationName(leg.destination))}站內換車`}${hasNoStanding(next) ? "（需出站購票再進站）" : ""}<span class="${transfer?.warning ? "transfer-warning" : ""}">間隔 ${transfer?.minutes} 分鐘${transfer?.warning ? ` · ${transfer.warning}` : ""}</span></p>` : ""}</li>`;
     }).join("")}</ol>${walk?.position === "end" ? walkHtml : ""}${modified ? `<div class="journey-adjustment"><p>較早／較晚組合不適用轉乘間隔時間設定</p><button type="button" class="restore-best-button" data-restore-journey="${escapeHtml(originalJourney.id)}">恢復最佳組合</button></div>` : ""}</article>`;
 }
 function statusLine() {
@@ -160,28 +162,29 @@ function statusLine() {
         return `<section class="schedule-status schedule-status--warning" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${selectedDate} 班表尚未取得</strong><p>所選日期的資料尚未取得或暫時無法讀取，請稍後再試。</p></div></section>`;
     }
     const context = data.contextCoverage;
-    const required = (preferences.other.startsWith("tymc:") || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030")) ? ["tra", "thsr"] as const : ["tra"] as const;
+    const required = (activeRouteFilters().includeThsr || preferences.other.startsWith("tymc:") || (preferences.other.startsWith("thsr:") && preferences.other !== "thsr:1030")) ? ["tra", "thsr"] as const : ["tra"] as const;
     const contextMissing = required.some(op => context?.[op]?.some(v => !v));
     const acquired = required.filter(op => data!.coverage[op]).map(op => `${op === "tra" ? "台鐵" : "高鐵"}：${fullTime(data!.operatorUpdatedAt?.[op] ?? data!.generatedAt)}`);
     if (metroData?.generatedAt) acquired.push(`機捷：${fullTime(metroData.generatedAt)}`);
     const stale = required.some(op => data!.staleOperators?.includes(op));
-    const warning = metroData?.warning || stale || contextMissing || phase === "missing" || phase === "error";
+    const warning = (activeRouteFilters().includeThsr && !data.coverage.thsr) || metroData?.warning || stale || contextMissing || phase === "missing" || phase === "error";
     const title = phase === "missing" ? `${selectedDate} 班表尚未完整取得` : phase === "error" ? `${selectedDate} 行程暫時無法計算` : stale ? `${selectedDate} 班表更新未成功` : contextMissing ? `${selectedDate} 部分銜接資料尚未完整` : `${selectedDate} 班表已取得`;
-    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong>${acquired.length ? `<p>班表取得時間｜${escapeHtml(acquired.join("；"))}</p>` : ""}<p>${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "依已取得的班表查詢，臨時異動請以官方資訊為準。"}</p>${metroData ? `<p class="metro-health">${escapeHtml(metroData.text)}</p>` : ""}${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div></section>`;
+    return `<section class="schedule-status schedule-status--${warning ? "warning" : "ready"}" role="status"><span class="schedule-status-dot" aria-hidden="true"></span><div><strong>${title}</strong>${acquired.length ? `<p>班表取得時間｜${escapeHtml(acquired.join("；"))}</p>` : ""}<p>${stale ? "部分運具更新未成功，目前沿用該日期上次取得的班表，請以官方資訊為準。" : warning ? "請以官方資訊為準。" : "依已取得的班表查詢，臨時異動請以官方資訊為準。"}</p>${activeRouteFilters().includeThsr && !data.coverage.thsr ? '<p>高鐵班表尚未齊全，目前僅顯示純台鐵行程。</p>' : ""}${metroData ? `<p class="metro-health">${escapeHtml(metroData.text)}</p>` : ""}${contextMissing ? '<p>部分凌晨或跨日銜接資料尚未完整取得；日間行程仍可查詢。</p>' : ""}</div></section>`;
 }
 
 function activeRouteFilters() {
     const available = filterAvailability(preferences.neiwan, preferences.other);
     return {
+        includeThsr: mixedRouteAvailable(preferences.neiwan, preferences.other) && filters.includeThsr === true,
         reservedOnly: available.reserved && filters.reservedOnly,
-        directOnly: available.direct && (preferences.reversed ? filters.directReturn : filters.directOutbound),
+        directOnly: !(mixedRouteAvailable(preferences.neiwan, preferences.other) && filters.includeThsr) && available.direct && (preferences.reversed ? filters.directReturn : filters.directOutbound),
     };
 }
 function filterControls() {
     const available = filterAvailability(preferences.neiwan, preferences.other);
-    if (!available.reserved && !available.direct) return "";
+    if (!available.reserved && !available.direct && !mixedRouteAvailable(preferences.neiwan, preferences.other)) return "";
     const active = activeRouteFilters();
-    return `<div class="journey-filters" aria-label="行程篩選">${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${available.reserved ? '<p class="filter-note">主要幹線搭對號列車；內灣線、六家線，以及無對號列車停靠的小站與其他支線，保留必要的區間車接駁。</p>' : ""}</div>`;
+    return `<div class="journey-filters" aria-label="行程篩選">${mixedRouteAvailable(preferences.neiwan, preferences.other) ? `<label class="checkbox"><input id="mixed-filter" type="checkbox" ${active.includeThsr ? "checked" : ""}>包含高鐵轉乘</label>` : ""}${available.reserved ? `<label class="checkbox"><input id="reserved-filter" type="checkbox" ${active.reservedOnly ? "checked" : ""}>主要幹線僅搭對號列車</label>` : ""}${available.direct && !active.includeThsr ? `<label class="checkbox"><input id="direct-filter" type="checkbox" ${active.directOnly ? "checked" : ""}>內灣新竹直達車</label>` : ""}${active.includeThsr ? '<p class="filter-note">經六家／高鐵新竹及可步行銜接的台鐵站轉乘；保留必要的台鐵接駁，不含公車。高鐵轉乘間隔依設定範圍篩選，包含步行時間。內灣新竹直達車篩選暫停套用。</p>' : ""}${available.reserved ? '<p class="filter-note">主要幹線搭對號列車；內灣線、六家線，以及無對號列車停靠的小站與其他支線，保留必要的區間車接駁。</p>' : ""}</div>`;
 }
 function persistFilters() {
     if (!saveFilters(storage, filters)) notice = "瀏覽器目前無法儲存篩選偏好；本次仍可正常查詢。";
@@ -208,7 +211,7 @@ function settingsDialog() {
                 <div class="settings-group">
                     <h4>轉乘間隔</h4><p>前一班抵達到下一班出發的時間，只顯示設定範圍內的組合，包含下限與上限。</p>
                     ${transferFields("tra", "台鐵", preferences.traMinMinutes, preferences.traMaxMinutes, 5, 30, "")}
-                    ${transferFields("thsr", "高鐵", preferences.thsrMinMinutes, preferences.thsrMaxMinutes, 10, 40, "包含六家站與高鐵新竹站之間的步行。")}
+                    ${transferFields("thsr", "高鐵", preferences.thsrMinMinutes, preferences.thsrMaxMinutes, 10, 40, "包含高鐵與台鐵站之間的步行，依設定的下限與上限篩選。")}
                     ${transferFields("metro", "機捷", preferences.metroMinMinutes, preferences.metroMaxMinutes, 10, 40, "包含高鐵桃園站與機捷 A18 站之間的步行。")}
                 </div>
                 <div class="settings-group departure-settings">
@@ -248,10 +251,11 @@ function render() {
 function on(id: string, event: string, handler: (event: Event) => void) { document.getElementById(id)?.addEventListener(event, handler); }
 function openSettings() { analytics.track("open_settings"); document.querySelector<HTMLDialogElement>("#settings-dialog")!.showModal(); }
 function bind() {
+    on("mixed-filter", "change", event => { filters.includeThsr = (event.target as HTMLInputElement).checked; persistFilters(); showAll = showPast; void refresh(); });
     on("reserved-filter", "change", event => { filters.reservedOnly = (event.target as HTMLInputElement).checked; persistFilters(); showAll = showPast; void refresh(); });
     on("direct-filter", "change", event => { filters[preferences.reversed ? "directReturn" : "directOutbound"] = (event.target as HTMLInputElement).checked; persistFilters(); showAll = showPast; void refresh(); });
     on("clear-filters", "click", () => {
-        filters.reservedOnly = false;
+        filters.includeThsr = false; filters.reservedOnly = false;
         filters[preferences.reversed ? "directReturn" : "directOutbound"] = false;
         persistFilters(); void refresh();
     });
@@ -407,7 +411,7 @@ setInterval(() => {
         void refresh();
     } else if (!document.querySelector("dialog[open]") && !isPrivacyPage) {
         const resultsElement = document.getElementById("results");
-        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(true); }); }
+        if (resultsElement) { resultsElement.innerHTML = results(); on("clear-filters", "click", () => { filters.includeThsr = false; filters.reservedOnly = false; filters[preferences.reversed ? "directReturn" : "directOutbound"] = false; persistFilters(); void refresh(); }); on("show-all", "click", () => { showAll = !showAll; render(); }); on("retry", "click", () => { void refresh(true); }); }
     }
 }, 30000);
 
