@@ -26,6 +26,10 @@ export function highSpeedSpan(origin: string, destination: string): number {
 
 /** Do not ride past a closer rail gateway and then return a long distance by TRA. */
 export function usefulInterchange(interchange: RailInterchange, remote: string): boolean {
+    // A destination with an explicit local gateway should not use HSR for only
+    // part of the mainline and then require another long-distance TRA leg.
+    const destinationGateways = railInterchanges.filter(candidate => candidate.localHubs.includes(remote));
+    if (destinationGateways.length && !destinationGateways.some(candidate => candidate.highSpeed === interchange.highSpeed)) return false;
     if (remote !== interchange.rail && passedRailStations(interchange.rail, remote).some(station => localStations.has(station))) return false;
     const anchor = highSpeedOrder.indexOf("thsr:1030"), target = highSpeedOrder.indexOf(interchange.highSpeed);
     const distance = railDistance(interchange.rail, remote);

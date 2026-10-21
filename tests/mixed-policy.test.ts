@@ -3,6 +3,13 @@ import { allowsLocalConnection } from "../src/domain/endpoint-connection";
 import { mixedConnectionEdges, railInterchanges, usefulInterchange } from "../src/domain/mixed-policy";
 import type { Train } from "../src/domain/types";
 
+it.each(railInterchanges.flatMap(interchange => interchange.localHubs.map(remote => ({ remote, highSpeed: interchange.highSpeed }))))(
+    "已有在地高鐵接駁的目的地 $remote 只使用該接點 $highSpeed",
+    ({ remote, highSpeed }) => {
+        expect(railInterchanges.filter(interchange => usefulInterchange(interchange, remote)).map(interchange => interchange.highSpeed)).toEqual([highSpeed]);
+    },
+);
+
 it("轉乘站不得越過更接近目的地的高鐵接點，仍允許新烏日回接台中", () => {
     const allowed = (remote: string) => railInterchanges.filter(interchange => usefulInterchange(interchange, remote)).map(interchange => interchange.highSpeed);
     expect(allowed("tra:3300")).toContain("thsr:1040");

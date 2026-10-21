@@ -254,3 +254,30 @@ it.each([false, true])("保留新烏日至台中區間接駁並排除左營大�
     const highSpeed = journeys[0].legs.find(leg => leg.operator === "thsr")!;
     expect(reversed ? highSpeed.origin : highSpeed.destination).toBe("thsr:1040");
 });
+
+it.each([false, true].flatMap(reversed => [false, true].map(reservedOnly => ({ reversed, reservedOnly }))))(
+    "台南使用高鐵台南接沙崙，排除台中下車接長途台鐵（回程：$reversed，對號：$reservedOnly）",
+    ({ reversed, reservedOnly }) => {
+        const services = [
+            ...outbound.slice(0, 2),
+            train("hsr-south", "thsr", [["thsr:1030", "08:50"], ["thsr:1040", "09:20"], ["thsr:1060", "10:20"]]),
+            train("early-local", "tra", [["tra:3340", "09:30"], ["tra:3360", "09:40"]]),
+            train("long-mainline", "tra", [["tra:3360", "09:50"], ["tra:4220", "11:30"]], true),
+            train("tainan-access", "tra", [["tra:4272", "10:30"], ["tra:4220", "10:55"]]),
+            train("pure-mainline", "tra", [["tra:1193", "08:45"], ["tra:4220", "12:00"]], true),
+        ];
+        const trains = reversed ? services.map(service => ({ ...service, stops: [...service.stops].reverse().map(stop => ({
+            ...stop, arrival: at("23:00") - (stop.departure - at("00:00")), departure: at("23:00") - (stop.arrival - at("00:00")),
+        })) })) : services;
+        const journeys = planJourneys(trains, reversed ? "tra:4220" : "tra:1208", reversed ? "tra:1208" : "tra:4220", date,
+            { includeThsr: true, reservedOnly });
+        const mixed = journeys.filter(journey => journey.legs.some(leg => leg.operator === "thsr"));
+        expect(mixed).toHaveLength(1);
+        expect(mixed[0].legs.map(leg => leg.trip)).toContain("tainan-access");
+        expect(mixed[0].legs.map(leg => leg.trip)).not.toContain("long-mainline");
+        const pure = planJourneys(trains, reversed ? "tra:4220" : "tra:1208", reversed ? "tra:1208" : "tra:4220", date,
+            { includeThsr: false, reservedOnly });
+        expect(pure.length).toBeGreaterThan(0);
+        expect(journeys.filter(journey => journey.legs.every(leg => leg.operator === "tra"))).toEqual(pure);
+    },
+);
