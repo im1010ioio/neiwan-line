@@ -235,3 +235,22 @@ it.each([false, true])("高鐵台北接基隆遵守幹線對號篩選，僅保�
     const unrestricted = planJourneys(trains, origin, destination, date, { includeThsr: true, reservedOnly: false });
     expect(unrestricted.some(journey => journey.legs.some(leg => leg.trip === "long-local"))).toBe(true);
 });
+
+it.each([false, true])("保留新烏日至台中區間接駁並排除左營大幅折返（回程：%s）", reversed => {
+    const services = [
+        ...outbound.slice(0, 2),
+        train("hsr", "thsr", [["thsr:1030", "08:50"], ["thsr:1040", "09:20"], ["thsr:1070", "10:20"]]),
+        train("local-access", "tra", [["tra:3340", "09:30"], ["tra:3300", "09:45"]]),
+        train("occasional-reserved", "tra", [["tra:3340", "07:00"], ["tra:3300", "07:15"]], true),
+        train("long-return", "tra", [["tra:4340", "10:30"], ["tra:3300", "13:00"]], true),
+    ];
+    const trains = reversed ? services.map(service => ({ ...service, stops: [...service.stops].reverse().map(stop => ({
+        ...stop, arrival: at("23:00") - (stop.departure - at("00:00")), departure: at("23:00") - (stop.arrival - at("00:00")),
+    })) })) : services;
+    const journeys = planJourneys(trains, reversed ? "tra:3300" : "tra:1208", reversed ? "tra:1208" : "tra:3300", date, { includeThsr: true, reservedOnly: true });
+    expect(journeys).toHaveLength(1);
+    expect(journeys[0].legs.some(leg => leg.trip === "local-access")).toBe(true);
+    expect(journeys[0].legs.some(leg => leg.trip === "long-return")).toBe(false);
+    const highSpeed = journeys[0].legs.find(leg => leg.operator === "thsr")!;
+    expect(reversed ? highSpeed.origin : highSpeed.destination).toBe("thsr:1040");
+});

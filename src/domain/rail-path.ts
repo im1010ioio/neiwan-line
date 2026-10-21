@@ -79,3 +79,10 @@ export function sameMainlineTransfer(previousStation: string, interchange: strin
     const after = edgeLines.get(`${interchange}>${outgoing[0]}`);
     return [...(before ?? [])].some(line => mainlines.has(line) && after?.has(line));
 }
+
+/** Shortest railway distance in kilometres, using the existing official topology cache. */
+export function railDistance(from: string, to: string): number {
+    if (!graph.has(from) || !graph.has(to)) return Infinity;
+    passedRailStations(from, to);
+    return distanceMaps.get(from)?.get(to) ?? Infinity;
+}
