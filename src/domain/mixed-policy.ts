@@ -30,6 +30,10 @@ export function usefulInterchange(interchange: RailInterchange, remote: string):
     // part of the mainline and then require another long-distance TRA leg.
     const destinationGateways = railInterchanges.filter(candidate => candidate.localHubs.includes(remote));
     if (destinationGateways.length && !destinationGateways.some(candidate => candidate.highSpeed === interchange.highSpeed)) return false;
+    // Do not pass the destination on the mainline and return from an HSR gateway.
+    // Explicit local access (for example Xinwuri to Taichung) remains available.
+    if (remote !== interchange.rail && !interchange.localHubs.includes(remote)
+        && passedRailStations("tra:1210", interchange.rail).includes(remote)) return false;
     if (remote !== interchange.rail && passedRailStations(interchange.rail, remote).some(station => localStations.has(station))) return false;
     const anchor = highSpeedOrder.indexOf("thsr:1030"), target = highSpeedOrder.indexOf(interchange.highSpeed);
     const distance = railDistance(interchange.rail, remote);

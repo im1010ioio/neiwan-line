@@ -40,3 +40,9 @@ it.each(railInterchanges.flatMap(interchange => interchange.localHubs.flatMap(hu
     const edges = mixedConnectionEdges([service], stations[0], stations[1], interchange);
     expect(allowsLocalConnection(edges, stations[0], stations[1])).toBe(true);
 });
+
+it.each(["tra:1080", "tra:1100", "tra:1120", "tra:1170"])("不越過沿途目的地 %s 後再由北部高鐵接點折返", remote => {
+    for (const interchange of railInterchanges.filter(item => ["thsr:0990", "thsr:1000", "thsr:1010"].includes(item.highSpeed))) {
+        expect(usefulInterchange(interchange, remote)).toBe(false);
+    }
+});

@@ -282,3 +282,20 @@ it.each([false, true].flatMap(reversed => [false, true].map(reservedOnly => ({ r
         expect(journeys.filter(journey => journey.legs.every(leg => leg.operator === "tra"))).toEqual(pure);
     },
 );
+
+it.each([false, true])("往返中壢不經板橋高鐵折返，保留直接台鐵（回程：%s）", reversed => {
+    const services = [
+        ...outbound.slice(0, 2),
+        train("hsr-banqiao", "thsr", [["thsr:1030", "08:50"], ["thsr:1010", "09:20"]]),
+        train("backtrack", "tra", [["tra:1020", "09:35"], ["tra:1100", "10:00"]], true),
+        train("shuttle", "tra", [["tra:1193", "08:35"], ["tra:1210", "08:50"]]),
+        train("direct", "tra", [["tra:1210", "09:00"], ["tra:1100", "09:30"]], true),
+    ];
+    const trains = reversed ? services.map(service => ({ ...service, stops: [...service.stops].reverse().map(stop => ({
+        ...stop, arrival: at("23:00") - (stop.departure - at("00:00")), departure: at("23:00") - (stop.arrival - at("00:00")),
+    })) })) : services;
+    const journeys = planJourneys(trains, reversed ? "tra:1100" : "tra:1208", reversed ? "tra:1208" : "tra:1100", date, { includeThsr: true, reservedOnly: true });
+    expect(journeys.length).toBeGreaterThan(0);
+    expect(journeys.every(journey => journey.legs.every(leg => leg.operator === "tra"))).toBe(true);
+    expect(journeys.some(journey => journey.legs.some(leg => leg.trip === "direct"))).toBe(true);
+});
