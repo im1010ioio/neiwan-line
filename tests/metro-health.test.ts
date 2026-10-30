@@ -26,14 +26,14 @@ describe("機捷更新品質", () => {
         expect(metroHealth({ ...fresh(), timetables: [] }, today, now).usable).toBe(false);
         expect(metroHealth({ ...fresh(), validity: { from: "2026-09-01", through: "2026-09-23" } }, today, now).usable).toBe(false);
     });
-    it("拒絕車站缺漏、異常旅行時間與大量班次減少", () => {
+    it("拒絕車站缺漏、異常旅行時間，接受大量班次減少", () => {
         expect(() => validateMetro({ ...fresh(), timetables: [] }, source, today)).toThrow();
         const invalid = fresh();
         invalid.travelTimes[0].TravelTimes[0].RunTime = -1;
         expect(() => validateMetro(invalid, source, today)).toThrow("旅行時間");
         const reduced = fresh();
         reduced.timetables.forEach(row => row.Timetables = row.Timetables.slice(0, 1));
-        expect(() => validateMetro(reduced, source, today)).toThrow("班次減少");
+        expect(() => validateMetro(reduced, source, today)).not.toThrow();
     });
     it("完整樣本涵蓋查詢範圍與雙向車站", () => {
         expect(() => validateMetro(fresh(), undefined, today)).not.toThrow();

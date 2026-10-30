@@ -7,6 +7,8 @@ export interface MetroVersion {
     generatedAt: string;
     updateFailedAt?: string;
     validity?: { from: string; through: string };
+    /** Local adoption date for a current feed without an official validity period. */
+    effectiveFrom?: string;
     /** Explicit last service date for a retained version whose source has no validity. */
     staleAfter?: string;
     timetables: {
@@ -34,9 +36,9 @@ export const METRO_FALLBACK_DAYS = 7;
 
 /** Select by operating day; a superseded timetable must not return after its replacement expires. */
 export function metroSnapshotForDate(snapshot: MetroSnapshot, serviceDate: string): MetroVersion | undefined {
-    const candidates = [snapshot, ...(snapshot.future ?? []).filter(version => version.validity)]
-        .filter(version => !version.validity || version.validity.from <= serviceDate)
-        .sort((a, b) => (b.validity?.from ?? "").localeCompare(a.validity?.from ?? "")
+    const candidates = [snapshot, ...(snapshot.future ?? []).filter(version => version.validity || version.effectiveFrom)]
+        .filter(version => (version.validity?.from ?? version.effectiveFrom ?? "") <= serviceDate)
+        .sort((a, b) => (b.validity?.from ?? b.effectiveFrom ?? "").localeCompare(a.validity?.from ?? a.effectiveFrom ?? "")
             || Date.parse(b.generatedAt) - Date.parse(a.generatedAt));
     const selected = candidates[0];
     if (!selected || (selected.validity && serviceDate > selected.validity.through)

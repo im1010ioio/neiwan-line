@@ -70,6 +70,7 @@ function validateVersion(version: MetroVersion, label: string, errors: Set<strin
     if (!validTimestamp(version.generatedAt)) fail("資料取得時間異常");
     if (version.validity && (!validDate(version.validity.from) || !validDate(version.validity.through)
         || version.validity.from > version.validity.through)) fail("適用期間異常");
+    if (version.effectiveFrom !== undefined && !validDate(version.effectiveFrom)) fail("現行班表採用日期異常");
     if (version.staleAfter !== undefined && !validDate(version.staleAfter)) fail("舊資料保留期限異常");
     if (!Array.isArray(version.timetables) || !Array.isArray(version.patterns) || !Array.isArray(version.travelTimes)) {
         fail("資料格式異常");
@@ -77,6 +78,7 @@ function validateVersion(version: MetroVersion, label: string, errors: Set<strin
     }
     const stations = new Set(version.timetables.map(row => row?.StationID));
     if (expectedStations.some(station => !stations.has(station))) fail("車站資料不完整");
+    if (!version.timetables.some(row => Array.isArray(row?.Timetables) && row.Timetables.length)) fail("來源沒有任何班次，無法確認是否完整");
     const patterns = new Map<string, string[]>();
     for (const pattern of version.patterns) {
         if (!pattern || typeof pattern.StoppingPatternID !== "string" || !pattern.StoppingPatternID
@@ -212,7 +214,7 @@ export function assessMetro(snapshot: MetroSnapshot, previous: MetroSnapshot | u
     validateVersion(snapshot, "目前版", errors);
     if (snapshot.future !== undefined && !Array.isArray(snapshot.future)) errors.add("機捷未來版本格式異常");
     else for (const [index, version] of (snapshot.future ?? []).entries()) {
-        if (!version.validity) errors.add(`機捷未來版 ${index + 1} 缺少明確適用期間`);
+        if (!version.validity && !version.effectiveFrom) errors.add(`機捷未來版 ${index + 1} 缺少明確適用期間`);
         validateVersion(version, `未來版 ${index + 1}`, errors);
     }
     if (errors.size) return { errors: [...errors], changes };
@@ -231,7 +233,6 @@ export function assessMetro(snapshot: MetroSnapshot, previous: MetroSnapshot | u
         const old = previous && metroSnapshotForDate(previous, date) ? summarizePrevious?.(date) : undefined;
         for (const [from, to] of pairs) {
             const next = current.get(`${from}:${to}`)!;
-            if (!next.count) errors.add(`機捷 ${date} ${from}→${to} 缺少班次`);
             const prior = old?.get(`${from}:${to}`);
             if (!prior?.count) continue;
             const reasons: string[] = [];
@@ -250,8 +251,4 @@ export function assessMetro(snapshot: MetroSnapshot, previous: MetroSnapshot | u
 export function validateMetro(snapshot: MetroSnapshot, previous: MetroSnapshot | undefined, today: string): void {
     const assessment = assessMetro(snapshot, previous, today);
     if (assessment.errors.length) throw Error(assessment.errors.join("；"));
-    if (assessment.changes.length) {
-        const first = assessment.changes[0];
-        throw Error(`機捷 ${first.date} ${first.from}→${first.to} ${first.reasons.join("、")}，需核對官方來源後確認`);
-    }
 }

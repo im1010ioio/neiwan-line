@@ -151,8 +151,8 @@ export function mergeMetroVersions(previous: MetroSnapshot | undefined, candidat
         const { future: _future, ...plain } = version as MetroSnapshot;
         return structuredClone(plain);
     }) : [];
-    const from = candidate.validity?.from ?? today;
-    const retained = (candidate.validity ? prior : []).filter(version => !version.validity || version.validity.from < from).flatMap(version => {
+    const from = candidate.validity?.from ?? candidate.effectiveFrom ?? today;
+    const retained = (candidate.validity || candidate.effectiveFrom ? prior : []).filter(version => (version.validity?.from ?? version.effectiveFrom ?? "") < from).flatMap(version => {
         const through = version.validity?.through && version.validity.through < from ? version.validity.through : addDays(from, -1);
         if (through < addDays(today, -1)) return [];
         if (version.validity) version.validity.through = through;
@@ -160,14 +160,8 @@ export function mergeMetroVersions(previous: MetroSnapshot | undefined, candidat
         return [version];
     });
     const later = prior.filter(version => version.validity && version.validity.from > from && version.validity.through >= today);
-    // An unqualified feed must not overwrite an explicitly dated active/future timetable.
-    if (!candidate.validity && previous) {
-        const active = metroSnapshotForDate(previous, today);
-        if (active?.validity) throw Error("新機捷來源未提供適用日期，無法覆蓋已核實的有效班表，需核對改班期間");
-    }
-    const versions = [...retained, base, ...later].sort((a, b) => (a.validity?.from ?? "").localeCompare(b.validity?.from ?? ""));
+    const versions = [...retained, base, ...later].sort((a, b) => (a.validity?.from ?? a.effectiveFrom ?? "").localeCompare(b.validity?.from ?? b.effectiveFrom ?? ""));
     const first = versions.shift()!;
-    delete first.updateFailedAt;
     return { ...first, ...(versions.length ? { future: versions } : {}) };
 }
 
@@ -189,7 +183,7 @@ export function prepareMetroUpdate(raw: MetroVersion, previous: MetroSnapshot | 
         } else {
             candidate = normalizeMetroDirections(raw);
             const active = previous && metroSnapshotForDate(previous, today);
-            if (!candidate.validity && active?.validity) {
+            if (!candidate.validity && active?.validity && assessMetro(candidate, undefined, today).errors.length) {
                 const repaired = repairEquivalentSource(candidate, active, reviews, today);
                 candidate = repaired.candidate;
                 report.corrections = repaired.corrections;
@@ -201,26 +195,27 @@ export function prepareMetroUpdate(raw: MetroVersion, previous: MetroSnapshot | 
         report.errors.push(...sourceAssessment.errors);
         if (report.errors.length) return { report };
         let projected = projectMetro(candidate);
-        if (!candidate.validity && previous) {
-            const active = metroSnapshotForDate(previous, today);
-            if (!active?.validity) {
-                if ([previous, ...(previous.future ?? [])].some(version => version.validity)) {
-                    report.status = "needs-review";
-                    report.reason = "先前核實班表不適用今日，不能沿用效期；需核對新來源的適用期間";
-                    return { report };
-                }
-            } else {
+        if (!candidate.validity) {
+            const active = previous && metroSnapshotForDate(previous, today);
+            if (active) {
                 const comparison = compareMetroService(active, projected);
                 report.equivalence = { matched: comparison.equivalent, supplements: comparison.supplements,
                     validity: active.validity, removed: comparison.removed, added: comparison.added };
-                if (!comparison.equivalent) {
+                // Reused structural repairs are safe only while the complete service still matches.
+                if (report.corrections && !comparison.equivalent) {
                     report.status = "needs-review";
-                    report.reason = "實際班次內容已變動，但新來源未提供適用日期；需核對改班期間與差異";
+                    report.reason = "來源仍需舊結構修正且服務已變動，需核對新停站定義";
                     return { report };
                 }
                 projected = comparison.candidate;
-                projected.validity = { ...active.validity };
-                report.reason = "來源格式已變動，本站使用的實際服務內容相同；沿用原核實期間，不延長效期";
+                if (comparison.equivalent && active.validity) {
+                    projected.validity = { ...active.validity };
+                    report.reason = "實際服務相同，沿用原核實期間，不延長效期";
+                }
+            }
+            if (!projected.validity) {
+                projected.effectiveFrom = today;
+                report.reason = "採用最新現行班表，自取得日起推算；來源未提供適用期間";
             }
         }
         const snapshot = mergeMetroVersions(previous, projected, today);
@@ -228,10 +223,6 @@ export function prepareMetroUpdate(raw: MetroVersion, previous: MetroSnapshot | 
         report.errors.push(...assessment.errors);
         report.changes = assessment.changes;
         if (report.errors.length) return { report };
-        if (report.changes.length && !review) {
-            report.status = "needs-review";
-            return { report };
-        }
         report.status = candidate.validity && candidate.validity.from > today ? "scheduled" : "accepted";
         return { snapshot, report };
     } catch (error) {

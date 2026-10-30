@@ -13,6 +13,7 @@ function projectVersion(snapshot: MetroVersion): MetroVersion {
         generatedAt: snapshot.generatedAt,
         updateFailedAt: snapshot.updateFailedAt,
         validity: snapshot.validity,
+        effectiveFrom: snapshot.effectiveFrom,
         staleAfter: snapshot.staleAfter,
         timetables: snapshot.timetables.map(({ StationID, Direction, DestinationStaionID, ServiceDay, Timetables }) => ({
             StationID, Direction, DestinationStaionID, ServiceDay,
@@ -21,7 +22,7 @@ function projectVersion(snapshot: MetroVersion): MetroVersion {
                 .map(({ DepartureTime, TrainType, StoppingPatternID, DestinationStationID, RunTimeByDestination, ServiceName }) => ({
                     DepartureTime, TrainType, StoppingPatternID, DestinationStationID, RunTimeByDestination, ServiceName,
                 })),
-        })).filter(row => row.Timetables.length),
+        })),
         patterns,
         travelTimes: snapshot.travelTimes.map(({ TrainType, TravelTimes }) => ({ TrainType,
             TravelTimes: TravelTimes.filter(time => time.FromStationID === "A18" || time.ToStationID === "A18")

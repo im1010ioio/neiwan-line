@@ -62,20 +62,21 @@ describe("機捷資料結構與改班複核", () => {
         expect(assessMetro(snapshot, undefined, today).errors.join("；")).toContain("每班旅行時間或停靠站異常");
     });
 
-    it("逐日驗證每站雙向服務，不能被同站另一方向的資料掩蓋", () => {
+    it("行駛日明確停駛的方向不補回舊班次", () => {
         const snapshot = fixture();
         snapshot.timetables.find(row => row.StationID === "A12" && row.Direction === 0)!.ServiceDay.Wednesday = false;
-        expect(assessMetro(snapshot, undefined, today).errors).toContain("機捷 2026-10-14 A12→A18 缺少班次");
+        expect(assessMetro(snapshot, undefined, today).errors).toEqual([]);
+        expect(metroLegs(snapshot, "tymc:A12", "tymc:A18", today, "all").filter(leg => leg.departure < Date.parse("2026-10-15T00:00:00+08:00"))).toEqual([]);
     });
 
-    it("減班超過三成產生逐日差異，維持需要複核的阻擋", () => {
+    it("減班超過三成產生逐日差異，不阻擋更新", () => {
         const previous = fixture(), snapshot = fixture();
         snapshot.timetables.find(row => row.StationID === "A1")!.Timetables.splice(1, 1);
         const result = assessMetro(snapshot, previous, today);
         expect(result.errors).toEqual([]);
         expect(result.changes[0]).toEqual({ date: today, from: "A1", to: "A18", previousCount: 3, count: 2,
             previousFirst: "06:00", first: "06:00", previousLast: "22:00", last: "22:00", reasons: ["班次減少超過三成"] });
-        expect(() => validateMetro(snapshot, previous, today)).toThrow("需核對官方來源後確認");
+        expect(() => validateMetro(snapshot, previous, today)).not.toThrow();
     });
 
     it("一般增班、減班與小幅時間調整不要求人工確認", () => {
@@ -89,7 +90,7 @@ describe("機捷資料結構與改班複核", () => {
         expect(assessMetro(snapshot, previous, today)).toEqual({ errors: [], changes: [] });
     });
 
-    it("首末班移動一小時需要複核，即使總班數不變", () => {
+    it("首末班移動一小時留下差異，即使總班數不變", () => {
         const previous = fixture(), snapshot = fixture();
         snapshot.timetables[0].Timetables[0].DepartureTime = "07:00";
         snapshot.timetables[0].Timetables[2].DepartureTime = "23:00";

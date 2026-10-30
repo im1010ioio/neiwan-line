@@ -39,14 +39,14 @@ describe("機捷更新決策與版本保存", () => {
         expect(next).toEqual(before);
     });
 
-    it("大量減班必須核實精確版本，重新下載或別版紀錄不能放行", () => {
+    it("大量減班自動採用並保留逐日差異", () => {
         const previous = createMetroFixture(), next = createMetroFixture();
         next.timetables[0].Timetables.splice(1, 1);
         const rejected = prepareMetroUpdate(next, previous, today, []);
-        expect(rejected.report.status).toBe("needs-review");
-        expect(rejected.snapshot).toBeUndefined();
+        expect(rejected.report.status).toBe("accepted");
+        expect(rejected.snapshot).toBeDefined();
         expect(rejected.report.changes[0]).toMatchObject({ previousCount: 3, count: 2 });
-        expect(prepareMetroUpdate(next, previous, today, [reviewOf(previous)]).snapshot).toBeUndefined();
+        expect(prepareMetroUpdate(next, previous, today, [reviewOf(previous)]).snapshot).toBeDefined();
         const accepted = prepareMetroUpdate(next, previous, today, [reviewOf(next)]);
         expect(accepted.report.status).toBe("accepted");
         expect(accepted.report.changes.length).toBeGreaterThan(0);
@@ -133,13 +133,14 @@ describe("機捷更新決策與版本保存", () => {
         expect(metroSnapshotForDate(merged, "2026-11-01")).toBeDefined();
     });
 
-    it("未提供日期且實際改班的新來源須核實期間並列出差異", () => {
+    it("未提供日期的現行改班自取得日採用並列出差異", () => {
         const next = createMetroFixture();
         delete next.validity;
         next.timetables[0].Timetables[0].DepartureTime = "06:05";
         const result = prepareMetroUpdate(next, createMetroFixture(), today, []);
-        expect(result.snapshot).toBeUndefined();
-        expect(result.report.status).toBe("needs-review");
+        expect(metroSnapshotForDate(result.snapshot!, today)?.validity).toBeUndefined();
+        expect(metroSnapshotForDate(result.snapshot!, today)?.effectiveFrom).toBe(today);
+        expect(result.report.status).toBe("accepted");
         expect(result.report.errors).toEqual([]);
         expect(result.report.equivalence?.added[0].departure).toBe("06:05");
         expect(result.report.equivalence?.removed[0].departure).toBe("06:00");
@@ -164,14 +165,14 @@ describe("機捷更新決策與版本保存", () => {
         expect(next).toEqual(input);
     });
 
-    it("行駛日拆成多列仍能辨識相同服務，任何一天減班都會攔下", () => {
+    it("行駛日拆成多列仍能辨識相同服務，任何一天減班都採用新資料", () => {
         const previous = createMetroFixture(), next = createMetroFixture();
         delete next.validity;
         next.timetables = next.timetables.flatMap(row => Object.keys(row.ServiceDay).map(day => ({ ...row,
             ServiceDay: Object.fromEntries(Object.keys(row.ServiceDay).map(key => [key, key === day])) })));
         expect(prepareMetroUpdate(next, previous, today, []).report.status).toBe("accepted");
         next.timetables[0] = { ...next.timetables[0], Timetables: next.timetables[0].Timetables.slice(1) };
-        expect(prepareMetroUpdate(next, previous, today, []).report.status).toBe("needs-review");
+        expect(prepareMetroUpdate(next, previous, today, []).report.status).toBe("accepted");
     });
 
     it.each(["stops", "terminal", "duration", "duplicate", "type"])("實際 %s 差異不可當成格式變動", kind => {
@@ -189,8 +190,9 @@ describe("機捷更新決策與版本保存", () => {
             row.Timetables[0].TrainType = 2;
         }
         const result = prepareMetroUpdate(next, previous, today, []);
-        expect(result.snapshot).toBeUndefined();
-        expect(["needs-review", "invalid"]).toContain(result.report.status);
+        expect(result.snapshot).toBeDefined();
+        expect(result.report.status).toBe("accepted");
+        expect(result.report.equivalence?.matched).toBe(false);
     });
 
     it("只對完全相符班次沿用已核實旅行時間，後續刷新仍保留且不延長效期", () => {
@@ -224,8 +226,8 @@ describe("機捷更新決策與版本保存", () => {
             row.Timetables[0].StoppingPatternID = "skip";
         }
         const result = prepareMetroUpdate(next, previous, today, []);
-        expect(result.snapshot).toBeUndefined();
-        expect(result.report.status).toBe("needs-review");
+        expect(result.snapshot).toBeDefined();
+        expect(result.report.status).toBe("accepted");
         expect(result.report.equivalence?.supplements).toBe(0);
     });
 
@@ -234,8 +236,8 @@ describe("機捷更新決策與版本保存", () => {
         delete next.validity;
         previous.validity = kind === "expired" ? { from: "2026-10-01", through: "2026-10-13" } : { from: "2026-10-15", through: "2026-11-11" };
         const result = prepareMetroUpdate(next, previous, today, []);
-        expect(result.snapshot).toBeUndefined();
-        expect(result.report.status).toBe("needs-review");
+        expect(result.report.status).toBe("accepted");
+        expect(metroSnapshotForDate(result.snapshot!, today)?.validity).toBeUndefined();
     });
 
     it("相同服務刷新保留另存的未來班表，不能提前使用或延長舊版", () => {
@@ -285,6 +287,50 @@ describe("機捷更新決策與版本保存", () => {
         expect(result.report.corrections).toBe(1);
         expect(result.report.status).toBe("needs-review");
         expect(result.report.equivalence?.matched).toBe(false);
+    });
+
+    it("新現行班表保留前一營運日午夜班次，隔日刷新不復活舊版", () => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        previous.generatedAt = "2026-10-13T00:00:00Z";
+        previous.updateFailedAt = "2026-10-13T23:00:00Z";
+        previous.timetables.forEach(row => row.Timetables.push({ DepartureTime: "00:10", TrainType: 1, StoppingPatternID: "local" }));
+        delete next.validity;
+        next.timetables[0].Timetables[0].DepartureTime = "07:00";
+        const first = prepareMetroUpdate(next, previous, today, []);
+        expect(first.report.status).toBe("accepted");
+        expect(metroSnapshotForDate(first.snapshot!, "2026-10-13")?.updateFailedAt).toBe(previous.updateFailedAt);
+        expect(metroSnapshotForDate(first.snapshot!, today)?.validity).toBeUndefined();
+        expect(metroSnapshotForDate(first.snapshot!, today)?.updateFailedAt).toBeUndefined();
+        expect(metroLegs(first.snapshot!, "tymc:A18", "tymc:A1", today, "all")[0].departure)
+            .toBe(Date.parse("2026-10-14T00:10:00+08:00"));
+        next.generatedAt = "2026-10-15T00:00:00Z";
+        const second = prepareMetroUpdate(next, first.snapshot, "2026-10-15", []);
+        expect(second.report.status).toBe("accepted");
+        expect(metroSnapshotForDate(second.snapshot!, "2026-10-15")?.effectiveFrom).toBe("2026-10-15");
+        expect(metroSnapshotForDate(second.snapshot!, "2026-10-14")?.effectiveFrom).toBe(today);
+        expect(metroSnapshotForDate(second.snapshot!, "2026-11-12")?.validity).toBeUndefined();
+    });
+
+    it("明確空班次列代表該站無服務，缺少整站或整份空資料仍拒絕", () => {
+        const previous = createMetroFixture(), next = createMetroFixture();
+        delete next.validity;
+        next.timetables.filter(row => row.StationID === "A8").forEach(row => row.Timetables = []);
+        const result = prepareMetroUpdate(next, previous, today, []);
+        expect(result.report.status).toBe("accepted");
+        expect(metroLegs(result.snapshot!, "tymc:A8", "tymc:A18", today, "all")).toEqual([]);
+        next.timetables.forEach(row => row.Timetables = []);
+        expect(prepareMetroUpdate(next, previous, today, []).report.status).toBe("invalid");
+    });
+
+    it("新來源已明確提供不同停站時，不套用舊結構修正", () => {
+        const { previous, raw, review, row } = structuralRepairCase();
+        row.Timetables[0].StoppingPatternID = "local";
+        raw.patterns.push({ StoppingPatternID: "skip", Stations: raw.patterns[0].Stations.filter(stop => stop.StationID !== "A10") });
+        row.Timetables[0].StoppingPatternID = "skip";
+        const result = prepareMetroUpdate(raw, previous, today, [review]);
+        expect(result.report.status).toBe("accepted");
+        expect(result.report.corrections).toBe(0);
+        expect(metroLegs(result.snapshot!, "tymc:A18", "tymc:A10", today, "all").some(leg => leg.departure === Date.parse(`${today}T06:00:00+08:00`))).toBe(false);
     });
 
     it("提前取得下週班表保留今天版本，到期不復活舊版", () => {
