@@ -1,15 +1,6 @@
 {
-    "generatedAt": "2026-11-01T23:49:40.781Z",
+    "generatedAt": "2026-11-03T02:34:20.908Z",
     "days": [
-        {
-            "date": "2026-11-02",
-            "file": "2026-11-02.json",
-            "coverage": {
-                "tra": true,
-                "thsr": true
-            },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
-        },
         {
             "date": "2026-11-03",
             "file": "2026-11-03.json",
@@ -17,7 +8,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-04",
@@ -26,7 +17,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-05",
@@ -35,7 +26,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-06",
@@ -44,7 +35,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-07",
@@ -53,7 +44,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-08",
@@ -62,7 +53,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-09",
@@ -71,7 +62,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-10",
@@ -80,7 +71,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-11",
@@ -89,7 +80,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-12",
@@ -98,7 +89,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-13",
@@ -107,7 +98,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-14",
@@ -116,7 +107,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-15",
@@ -125,7 +116,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-16",
@@ -134,7 +125,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-17",
@@ -143,7 +134,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-18",
@@ -152,7 +143,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-19",
@@ -161,7 +152,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-20",
@@ -170,7 +161,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-21",
@@ -179,7 +170,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-22",
@@ -188,7 +179,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-23",
@@ -197,7 +188,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-24",
@@ -206,7 +197,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-25",
@@ -215,7 +206,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-26",
@@ -224,7 +215,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-27",
@@ -233,7 +224,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-28",
@@ -242,7 +233,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         },
         {
             "date": "2026-11-29",
@@ -251,7 +242,16 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-01T23:49:40.781Z"
+            "generatedAt": "2026-11-03T02:34:20.908Z"
+        },
+        {
+            "date": "2026-11-30",
+            "file": "2026-11-30.json",
+            "coverage": {
+                "tra": true,
+                "thsr": true
+            },
+            "generatedAt": "2026-11-03T02:34:20.908Z"
         }
     ]
 }
