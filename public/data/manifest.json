@@ -1,15 +1,6 @@
 {
-    "generatedAt": "2026-11-04T00:48:43.970Z",
+    "generatedAt": "2026-11-05T01:00:19.877Z",
     "days": [
-        {
-            "date": "2026-11-04",
-            "file": "2026-11-04.json",
-            "coverage": {
-                "tra": true,
-                "thsr": true
-            },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
-        },
         {
             "date": "2026-11-05",
             "file": "2026-11-05.json",
@@ -17,7 +8,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-06",
@@ -26,7 +17,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-07",
@@ -35,7 +26,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-08",
@@ -44,7 +35,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-09",
@@ -53,7 +44,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-10",
@@ -62,7 +53,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-11",
@@ -71,7 +62,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-12",
@@ -80,7 +71,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-13",
@@ -89,7 +80,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-14",
@@ -98,7 +89,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-15",
@@ -107,7 +98,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-16",
@@ -116,7 +107,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-17",
@@ -125,7 +116,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-18",
@@ -134,7 +125,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-19",
@@ -143,7 +134,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-20",
@@ -152,7 +143,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-21",
@@ -161,7 +152,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-22",
@@ -170,7 +161,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-23",
@@ -179,7 +170,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-24",
@@ -188,7 +179,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-25",
@@ -197,7 +188,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-26",
@@ -206,7 +197,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-27",
@@ -215,7 +206,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-28",
@@ -224,7 +215,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-29",
@@ -233,7 +224,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-11-30",
@@ -242,7 +233,7 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         },
         {
             "date": "2026-12-01",
@@ -251,7 +242,16 @@
                 "tra": true,
                 "thsr": true
             },
-            "generatedAt": "2026-11-04T00:48:43.970Z"
+            "generatedAt": "2026-11-05T01:00:19.877Z"
+        },
+        {
+            "date": "2026-12-02",
+            "file": "2026-12-02.json",
+            "coverage": {
+                "tra": true,
+                "thsr": true
+            },
+            "generatedAt": "2026-11-05T01:00:19.877Z"
         }
     ]
 }
