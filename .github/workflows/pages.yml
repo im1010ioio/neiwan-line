@@ -15,9 +15,11 @@ concurrency:
 jobs:
     publish:
         runs-on: ubuntu-latest
+        env:
+            PAGES_ARTIFACT: github-pages-${{ github.run_attempt }}
         environment:
             name: github-pages
-            url: ${{ steps.deployment.outputs.page_url }}
+            url: ${{ steps.retry_deployment.outputs.page_url || steps.deployment.outputs.page_url }}
         steps:
             - uses: actions/checkout@v4
               with:
@@ -39,5 +41,23 @@ jobs:
             - uses: actions/upload-pages-artifact@v3
               with:
                   path: dist
+                  name: ${{ env.PAGES_ARTIFACT }}
             - id: deployment
               uses: actions/deploy-pages@v4
+              continue-on-error: true
+              with:
+                  artifact_name: ${{ env.PAGES_ARTIFACT }}
+            # deploy-pages sets page_url after creation, before checking deployment status.
+            - name: Wait before retrying Pages deployment creation
+              if: steps.deployment.outcome == 'failure' && !steps.deployment.outputs.page_url
+              run: sleep 15
+            - id: retry_deployment
+              if: steps.deployment.outcome == 'failure' && !steps.deployment.outputs.page_url
+              uses: actions/deploy-pages@v4
+              with:
+                  artifact_name: ${{ env.PAGES_ARTIFACT }}
+            - name: Report failed Pages deployment
+              if: steps.deployment.outcome == 'failure' && steps.deployment.outputs.page_url
+              run: |
+                  echo '::error::The existing Pages deployment failed. See the deployment log.'
+                  exit 1

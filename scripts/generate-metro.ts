@@ -26,7 +26,7 @@ try {
     await writeFile(`${reportDirectory}/candidate.json`, JSON.stringify(result.snapshot));
     await writeFile("public/data/metro.tmp", JSON.stringify(result.snapshot));
     await rename("public/data/metro.tmp", "public/data/metro.json");
-    console.log(`機捷班表${report.status === "scheduled" ? "已保存，於生效日自動切換" : "更新完成"}，TDX 資料請求 3 次，核實修正 ${report.corrections} 筆。`);
+    console.log(`機捷班表${report.status === "scheduled" ? "已保存，於生效日自動切換" : "更新完成"}，TDX 資料請求 ${client.dataRequests} 次，核實修正 ${report.corrections} 筆。`);
 } catch (error) {
     if (!report) report = { generatedAt, sourceHash: "", status: "fetch-failed", errors: [String(error)], changes: [], corrections: 0 };
     if (previous) {
